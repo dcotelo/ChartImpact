@@ -166,7 +166,14 @@ export class HelmService {
       }
 
       // Build dependencies after copying the chart
-      await this.buildChartDependencies(targetPath);
+      // Note: This might fail if repositories aren't available yet, 
+      // but we'll try again in renderHelmTemplate after all repos are added
+      try {
+        await this.buildChartDependencies(targetPath);
+      } catch (error: any) {
+        // Log but don't fail here - we'll retry in renderHelmTemplate
+        console.warn(`Warning: Failed to build dependencies during version extraction: ${error.message}`);
+      }
     } catch (error: any) {
       throw new Error(`Failed to extract version ${version}: ${error.message || error}`);
     }
@@ -224,38 +231,62 @@ export class HelmService {
   }
 
   private async buildChartDependencies(chartPath: string): Promise<void> {
+    const chartYamlPath = path.join(chartPath, 'Chart.yaml');
+    
+    // Check if Chart.yaml exists
     try {
-      const chartYamlPath = path.join(chartPath, 'Chart.yaml');
-      
-      // Check if Chart.yaml exists
-      try {
-        await fs.access(chartYamlPath);
-      } catch {
-        // No Chart.yaml, no dependencies to build
-        return;
-      }
+      await fs.access(chartYamlPath);
+    } catch {
+      // No Chart.yaml, no dependencies to build
+      return;
+    }
 
-      // Parse Chart.yaml for dependencies
-      const chartYamlContent = await fs.readFile(chartYamlPath, 'utf-8');
-      const dependencies = this.parseChartDependencies(chartYamlContent);
+    // Parse Chart.yaml for dependencies
+    let chartYamlContent: string;
+    try {
+      chartYamlContent = await fs.readFile(chartYamlPath, 'utf-8');
+    } catch (error: any) {
+      throw new Error(`Failed to read Chart.yaml: ${error.message}`);
+    }
 
-      if (dependencies.length === 0) {
+    const dependencies = this.parseChartDependencies(chartYamlContent);
+
+    if (dependencies.length === 0) {
+      // Check if Chart.yaml mentions dependencies at all
+      if (chartYamlContent.includes('dependencies:')) {
+        // Has dependencies section but no URLs found - might be using conditionals or oci://
+        // Try to build anyway, helm will handle it
+      } else {
         // No dependencies, nothing to build
         return;
       }
-
+    } else {
       // Add required Helm repositories
-      await this.addChartRepositories(dependencies);
+      try {
+        await this.addChartRepositories(dependencies);
+      } catch (error: any) {
+        throw new Error(`Failed to add Helm repositories: ${error.message}`);
+      }
+    }
 
-      // Build dependencies
-      const env = {
-        ...process.env,
-        GIT_TERMINAL_PROMPT: '0',
-        GIT_ASKPASS: '',
-        GIT_CREDENTIAL_HELPER: ''
-      };
+    // Build dependencies
+    const env = {
+      ...process.env,
+      GIT_TERMINAL_PROMPT: '0',
+      GIT_ASKPASS: '',
+      GIT_CREDENTIAL_HELPER: ''
+    };
 
-      await execAsync(
+    try {
+      // Ensure charts directory exists (helm dependency build will create it, but just in case)
+      const chartsDir = path.join(chartPath, 'charts');
+      try {
+        await fs.mkdir(chartsDir, { recursive: true });
+      } catch {
+        // Directory might already exist, ignore
+      }
+
+      const { stdout, stderr } = await execAsync(
         `helm dependency build ${chartPath}`,
         {
           timeout: 120000,
@@ -263,38 +294,97 @@ export class HelmService {
           env
         }
       );
+      
+      // Log output for debugging
+      if (stdout) {
+        console.log('Helm dependency build output:', stdout);
+      }
+      
+      // Check stderr for actual errors (warnings are okay)
+      if (stderr) {
+        const errorLines = stderr.split('\n').filter((line: string) => 
+          line.trim() && 
+          !line.toLowerCase().includes('warning') &&
+          !line.toLowerCase().includes('info')
+        );
+        
+        if (errorLines.length > 0) {
+          const errorMsg = errorLines.join('; ');
+          console.warn('Helm dependency build had errors:', errorMsg);
+        }
+      }
+
+      // Verify dependencies were actually built by checking charts directory
+      // This helps catch cases where helm dependency build claims success but didn't download anything
+      try {
+        const chartsContents = await fs.readdir(chartsDir);
+        // Charts directory should contain .tgz files or directories for dependencies
+        // If Chart.yaml has dependencies but charts/ is empty, something went wrong
+        if (chartYamlContent.includes('dependencies:') && chartsContents.length === 0) {
+          console.warn('Warning: Chart.yaml has dependencies but charts/ directory is empty after build');
+        }
+      } catch {
+        // Charts directory might not exist if no dependencies, which is fine
+      }
     } catch (error: any) {
-      // If dependency build fails, we still try to render
-      // The error will be caught during helm template if dependencies are truly missing
-      console.warn('Failed to build chart dependencies:', error.message);
+      // Extract meaningful error message
+      let errorMessage = 'Unknown error';
+      if (error.stderr) {
+        errorMessage = error.stderr.trim();
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      // Check if it's a repository-related error
+      if (errorMessage.includes('no repository definition') || errorMessage.includes('repository')) {
+        throw new Error(
+          `Failed to build chart dependencies: ${errorMessage}. ` +
+          `Required Helm repositories may not be accessible or properly configured. ` +
+          `Please check that all repository URLs in Chart.yaml are valid and accessible.`
+        );
+      }
+      
+      throw new Error(
+        `Failed to build chart dependencies: ${errorMessage}. ` +
+        `Please ensure Helm can access chart repositories and all dependencies are available.`
+      );
     }
   }
 
   private parseChartDependencies(chartYaml: string): string[] {
     const repositories: Set<string> = new Set();
     
-    // Match dependencies section
-    const dependenciesMatch = chartYaml.match(/^dependencies:\s*\n((?:[ \t]+-.*\n?)+)/m);
-    if (dependenciesMatch) {
-      const dependenciesBlock = dependenciesMatch[1];
+    // Match dependencies section - handle both YAML formats
+    // Format 1: dependencies:\n  - name: ...\n    repository: ...
+    // Format 2: dependencies:\n  - repository: ... (without name)
+    const dependenciesSection = chartYaml.match(/^dependencies:\s*\n((?:[ \t]+.*\n?)+)/m);
+    if (dependenciesSection) {
+      const dependenciesBlock = dependenciesSection[1];
       
       // Extract repository URLs from dependencies
-      const repoMatches = dependenciesBlock.matchAll(/repository:\s*["']?([^"'\n]+)["']?/g);
+      // Match: repository: "url" or repository: 'url' or repository: url
+      // Handle multiline YAML (indented lines after repository)
+      const repoMatches = dependenciesBlock.matchAll(/repository:\s*["']?([^"'\n\s]+[^"'\n]*)["']?/g);
       for (const match of repoMatches) {
-        if (match[1] && !match[1].startsWith('@')) {
-          repositories.add(match[1].trim());
+        const repoUrl = match[1]?.trim();
+        if (repoUrl && 
+            !repoUrl.startsWith('@') && 
+            !repoUrl.startsWith('oci://') && 
+            (repoUrl.startsWith('http://') || repoUrl.startsWith('https://'))) {
+          repositories.add(repoUrl);
         }
       }
     }
 
     // Also check for repositories section (deprecated but still used)
-    const repositoriesMatch = chartYaml.match(/^repositories:\s*\n((?:[ \t]+-.*\n?)+)/m);
+    const repositoriesMatch = chartYaml.match(/^repositories:\s*\n((?:[ \t]+.*\n?)+)/m);
     if (repositoriesMatch) {
       const repositoriesBlock = repositoriesMatch[1];
-      const urlMatches = repositoriesBlock.matchAll(/url:\s*["']?([^"'\n]+)["']?/g);
+      const urlMatches = repositoriesBlock.matchAll(/url:\s*["']?([^"'\n\s]+[^"'\n]*)["']?/g);
       for (const match of urlMatches) {
-        if (match[1]) {
-          repositories.add(match[1].trim());
+        const repoUrl = match[1]?.trim();
+        if (repoUrl && (repoUrl.startsWith('http://') || repoUrl.startsWith('https://'))) {
+          repositories.add(repoUrl);
         }
       }
     }
