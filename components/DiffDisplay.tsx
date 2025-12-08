@@ -313,56 +313,60 @@ export function DiffDisplay({ result, ignoreLabels = false }: DiffDisplayProps) 
   if (ignoreLabels && filteredDiff) {
     const lines = filteredDiff.split('\n');
     const filteredLines: string[] = [];
-    let skipSection = false;
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const trimmed = line.trim();
       
-      // Check if this line indicates a label change (metadata.labels.*)
-      if (trimmed.includes('metadata.labels') || trimmed.match(/labels\.[^)]+/)) {
-        // Mark that we should skip this section
-        skipSection = true;
+      // Check if this line indicates a label change
+      // Format: "metadata.labels.xxx  (resource)" or contains "metadata.labels"
+      const isLabelChange = trimmed.includes('metadata.labels') || 
+                            trimmed.match(/^metadata\.labels\./);
+      
+      if (isLabelChange) {
+        // Skip this entire section until we hit the next resource or blank line sequence
+        // Find where this section ends (blank line or new resource)
+        let skipUntil = i + 1;
+        let foundEnd = false;
         
-        // Skip this line and all lines until we hit a blank line or a new resource identifier
-        let j = i;
-        while (j < lines.length) {
-          const nextLine = lines[j];
+        // Skip until we find:
+        // 1. Two consecutive blank lines (end of section)
+        // 2. A new resource identifier that's not a label change
+        while (skipUntil < lines.length && !foundEnd) {
+          const nextLine = lines[skipUntil];
           const nextTrimmed = nextLine.trim();
           
-          // Stop skipping if we hit a blank line followed by a non-label resource identifier
-          if (nextTrimmed === '' && j + 1 < lines.length) {
-            const afterBlank = lines[j + 1].trim();
-            // If next line is a resource identifier that's not a label, stop skipping
-            if (afterBlank.match(/\([^)]+\)/) && !afterBlank.includes('metadata.labels')) {
-              skipSection = false;
-              i = j; // Continue from here
-              break;
+          // Check if next line starts a new non-label resource
+          if (nextTrimmed.match(/\([^)]+\)/) && !nextTrimmed.includes('metadata.labels')) {
+            foundEnd = true;
+            i = skipUntil - 1; // Will increment, so we process the new resource
+            break;
+          }
+          
+          // If we find a blank line, check if next non-blank line is a new resource
+          if (nextTrimmed === '' && skipUntil + 1 < lines.length) {
+            // Look ahead for next non-blank line
+            for (let k = skipUntil + 1; k < lines.length; k++) {
+              const aheadTrimmed = lines[k].trim();
+              if (aheadTrimmed === '') continue;
+              
+              // If it's a new resource (not labels), we've reached the end
+              if (aheadTrimmed.match(/\([^)]+\)/)) {
+                if (!aheadTrimmed.includes('metadata.labels')) {
+                  foundEnd = true;
+                  i = k - 1; // Process the new resource next
+                  break;
+                }
+              }
+              break; // Not a resource identifier, just continue
             }
           }
           
-          // If we hit a new resource identifier that's not labels, stop skipping
-          if (nextTrimmed.match(/\([^)]+\)/) && !nextTrimmed.includes('metadata.labels') && j > i) {
-            skipSection = false;
-            i = j - 1; // Go back one line to process this resource
-            break;
-          }
-          
-          // Stop at blank line (end of current section)
-          if (nextTrimmed === '' && j > i) {
-            skipSection = false;
-            i = j - 1;
-            break;
-          }
-          
-          j++;
+          skipUntil++;
         }
         
-        // Skip to the end of the section
-        if (skipSection) {
-          i = j - 1;
-          skipSection = false;
-        }
+        // Skip the entire label section
+        i = skipUntil - 1; // Will increment in loop
       } else {
         // Not a label change, include the line
         filteredLines.push(line);
