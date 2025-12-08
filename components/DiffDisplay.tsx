@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CompareResponse } from '@/lib/types';
 
 interface DiffDisplayProps {
@@ -238,9 +238,14 @@ export function DiffDisplay({ result }: DiffDisplayProps) {
   const kinds = Object.keys(groupedByKind).sort();
   
   // Initialize with all kinds expanded
-  const [expandedKinds, setExpandedKinds] = useState<Set<string>>(() => {
-    return new Set(kinds);
-  });
+  const [expandedKinds, setExpandedKinds] = useState<Set<string>>(new Set());
+  
+  // Expand all kinds when result changes
+  useEffect(() => {
+    if (kinds.length > 0) {
+      setExpandedKinds(new Set(kinds));
+    }
+  }, [result.diff, kinds.length]);
   
   const toggleKind = (kind: string) => {
     setExpandedKinds(prev => {
