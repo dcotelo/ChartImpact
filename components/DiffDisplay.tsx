@@ -242,13 +242,13 @@ export function DiffDisplay({ result }: DiffDisplayProps) {
   
   // Expand all kinds when result changes
   useEffect(() => {
-    const currentKinds = Object.keys(groupedByKind).sort();
-    if (currentKinds.length > 0) {
-      setExpandedKinds(new Set(currentKinds));
+    if (kinds.length > 0) {
+      setExpandedKinds(new Set(kinds));
     } else {
       setExpandedKinds(new Set());
     }
-  }, [result.version1, result.version2, JSON.stringify(kinds)]); // Expand when comparison changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result.version1, result.version2]); // Expand when comparison changes
   
   const toggleKind = (kind: string) => {
     setExpandedKinds(prev => {
