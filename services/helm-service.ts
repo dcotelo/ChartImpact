@@ -164,6 +164,9 @@ export class HelmService {
       } catch {
         throw new Error(`Chart path not found: ${chartPath} at version ${version}`);
       }
+
+      // Build dependencies after copying the chart
+      await this.buildChartDependencies(targetPath);
     } catch (error: any) {
       throw new Error(`Failed to extract version ${version}: ${error.message || error}`);
     }
@@ -190,10 +193,24 @@ export class HelmService {
     valuesFile?: string
   ): Promise<string> {
     try {
+      // Build dependencies before rendering
+      await this.buildChartDependencies(chartPath);
+      
       const valuesFlag = valuesFile ? `-f ${valuesFile}` : '';
+      const env = {
+        ...process.env,
+        GIT_TERMINAL_PROMPT: '0',
+        GIT_ASKPASS: '',
+        GIT_CREDENTIAL_HELPER: ''
+      };
+      
       const { stdout, stderr } = await execAsync(
         `helm template app ${chartPath} ${valuesFlag}`,
-        { timeout: 30000 }
+        { 
+          timeout: 60000,
+          maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large outputs
+          env
+        }
       );
       
       if (stderr && !stderr.includes('Warning')) {
@@ -203,6 +220,155 @@ export class HelmService {
       return stdout;
     } catch (error: any) {
       throw new Error(`Failed to render Helm template: ${error.message}`);
+    }
+  }
+
+  private async buildChartDependencies(chartPath: string): Promise<void> {
+    try {
+      const chartYamlPath = path.join(chartPath, 'Chart.yaml');
+      
+      // Check if Chart.yaml exists
+      try {
+        await fs.access(chartYamlPath);
+      } catch {
+        // No Chart.yaml, no dependencies to build
+        return;
+      }
+
+      // Parse Chart.yaml for dependencies
+      const chartYamlContent = await fs.readFile(chartYamlPath, 'utf-8');
+      const dependencies = this.parseChartDependencies(chartYamlContent);
+
+      if (dependencies.length === 0) {
+        // No dependencies, nothing to build
+        return;
+      }
+
+      // Add required Helm repositories
+      await this.addChartRepositories(dependencies);
+
+      // Build dependencies
+      const env = {
+        ...process.env,
+        GIT_TERMINAL_PROMPT: '0',
+        GIT_ASKPASS: '',
+        GIT_CREDENTIAL_HELPER: ''
+      };
+
+      await execAsync(
+        `helm dependency build ${chartPath}`,
+        {
+          timeout: 120000,
+          maxBuffer: 5 * 1024 * 1024, // 5MB buffer
+          env
+        }
+      );
+    } catch (error: any) {
+      // If dependency build fails, we still try to render
+      // The error will be caught during helm template if dependencies are truly missing
+      console.warn('Failed to build chart dependencies:', error.message);
+    }
+  }
+
+  private parseChartDependencies(chartYaml: string): string[] {
+    const repositories: Set<string> = new Set();
+    
+    // Match dependencies section
+    const dependenciesMatch = chartYaml.match(/^dependencies:\s*\n((?:[ \t]+-.*\n?)+)/m);
+    if (dependenciesMatch) {
+      const dependenciesBlock = dependenciesMatch[1];
+      
+      // Extract repository URLs from dependencies
+      const repoMatches = dependenciesBlock.matchAll(/repository:\s*["']?([^"'\n]+)["']?/g);
+      for (const match of repoMatches) {
+        if (match[1] && !match[1].startsWith('@')) {
+          repositories.add(match[1].trim());
+        }
+      }
+    }
+
+    // Also check for repositories section (deprecated but still used)
+    const repositoriesMatch = chartYaml.match(/^repositories:\s*\n((?:[ \t]+-.*\n?)+)/m);
+    if (repositoriesMatch) {
+      const repositoriesBlock = repositoriesMatch[1];
+      const urlMatches = repositoriesBlock.matchAll(/url:\s*["']?([^"'\n]+)["']?/g);
+      for (const match of urlMatches) {
+        if (match[1]) {
+          repositories.add(match[1].trim());
+        }
+      }
+    }
+
+    return Array.from(repositories);
+  }
+
+  private async addChartRepositories(repositoryUrls: string[]): Promise<void> {
+    const env = {
+      ...process.env,
+      GIT_TERMINAL_PROMPT: '0',
+      GIT_ASKPASS: '',
+      GIT_CREDENTIAL_HELPER: ''
+    };
+
+    for (const repoUrl of repositoryUrls) {
+      if (!repoUrl || repoUrl.trim() === '') continue;
+
+      // Generate a safe repository name from URL
+      // Use domain name as base, replace special chars with hyphens
+      let repoName = repoUrl
+        .replace(/^https?:\/\//, '')
+        .replace(/^www\./, '')
+        .replace(/[^a-z0-9-]/gi, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .toLowerCase()
+        .substring(0, 50); // Limit length
+
+      if (!repoName) {
+        repoName = `repo-${Math.random().toString(36).substr(2, 9)}`;
+      }
+
+      try {
+        // Add repository (idempotent - will update if exists)
+        await execAsync(
+          `helm repo add ${repoName} "${repoUrl}"`,
+          {
+            timeout: 30000,
+            maxBuffer: 2 * 1024 * 1024, // 2MB buffer
+            env
+          }
+        );
+      } catch (error: any) {
+        // Repository might already exist, try to update
+        try {
+          await execAsync(
+            `helm repo update ${repoName}`,
+            {
+              timeout: 30000,
+              maxBuffer: 2 * 1024 * 1024,
+              env
+            }
+          );
+        } catch (updateError) {
+          // Ignore update errors, continue with other repos
+          console.warn(`Failed to add/update repository ${repoName}:`, error.message);
+        }
+      }
+    }
+
+    // Update all repositories
+    try {
+      await execAsync(
+        `helm repo update`,
+        {
+          timeout: 60000,
+          maxBuffer: 5 * 1024 * 1024, // 5MB buffer
+          env
+        }
+      );
+    } catch (error) {
+      // Non-fatal, continue anyway
+      console.warn('Failed to update Helm repositories:', error);
     }
   }
 
@@ -219,7 +385,10 @@ export class HelmService {
       try {
         const { stdout } = await execAsync(
           `dyff between "${tmp1}" "${tmp2}" --omit-header`,
-          { timeout: 10000 }
+          { 
+            timeout: 10000,
+            maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
+          }
         );
         
         // Cleanup temp files
