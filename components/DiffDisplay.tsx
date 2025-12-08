@@ -242,10 +242,13 @@ export function DiffDisplay({ result }: DiffDisplayProps) {
   
   // Expand all kinds when result changes
   useEffect(() => {
-    if (kinds.length > 0) {
-      setExpandedKinds(new Set(kinds));
+    const currentKinds = Object.keys(groupedByKind).sort();
+    if (currentKinds.length > 0) {
+      setExpandedKinds(new Set(currentKinds));
+    } else {
+      setExpandedKinds(new Set());
     }
-  }, [result.diff, kinds.length]);
+  }, [result.version1, result.version2, JSON.stringify(kinds)]); // Expand when comparison changes
   
   const toggleKind = (kind: string) => {
     setExpandedKinds(prev => {
