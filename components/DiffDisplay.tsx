@@ -231,17 +231,16 @@ function renderDiffLine(line: string, index: number): JSX.Element {
 
 export function DiffDisplay({ result }: DiffDisplayProps) {
   const hasDiff = result.diff && result.diff.trim().length > 0;
-  const [expandedKinds, setExpandedKinds] = useState<Set<string>>(new Set());
   
   // Parse and group by kind
   const resources = hasDiff ? parseDiffByResources(result.diff || '') : [];
   const groupedByKind = groupResourcesByKind(resources);
   const kinds = Object.keys(groupedByKind).sort();
   
-  // Expand all by default
-  if (kinds.length > 0 && expandedKinds.size === 0) {
-    setExpandedKinds(new Set(kinds));
-  }
+  // Initialize with all kinds expanded
+  const [expandedKinds, setExpandedKinds] = useState<Set<string>>(() => {
+    return new Set(kinds);
+  });
   
   const toggleKind = (kind: string) => {
     setExpandedKinds(prev => {
