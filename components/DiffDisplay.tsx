@@ -257,37 +257,25 @@ function groupResourcesByKind(resources: ResourceDiff[]): Record<string, Resourc
   return grouped;
 }
 
-// Render diff lines with green/red colors
+// Render diff lines without colors
 function renderDiffLine(line: string, index: number): JSX.Element {
   const trimmed = line.trim();
   const isHeader = line.startsWith('+++') || line.startsWith('---');
   const isAddition = line.startsWith('+') && !isHeader;
   const isRemoval = line.startsWith('-') && !isHeader;
-  const isContext = !isAddition && !isRemoval && !isHeader;
   
-  let bgColor = '#1e1e1e';
-  let textColor = '#d4d4d4';
-  let borderColor = 'transparent';
   let displayMarker = ' ';
   let displayContent = line;
   
   if (isAddition) {
-    bgColor = '#1e4620'; // Dark green background
-    textColor = '#9fdf9f'; // Light green text
-    borderColor = '#4caf50'; // Green border
     displayMarker = '+';
     displayContent = line.substring(1); // Remove the + marker
   } else if (isRemoval) {
-    bgColor = '#5c1a1a'; // Dark red background
-    textColor = '#ff9999'; // Light red text
-    borderColor = '#f44336'; // Red border
     displayMarker = '-';
     displayContent = line.substring(1); // Remove the - marker
   } else if (isHeader) {
     // Headers like +++ or --- should be displayed as-is
     displayContent = line;
-    bgColor = '#2d2d2d';
-    textColor = '#888';
   } else {
     // Context lines (may start with space or have no marker)
     displayContent = line;
@@ -299,9 +287,8 @@ function renderDiffLine(line: string, index: number): JSX.Element {
       key={index}
       style={{
         padding: '0.25rem 1rem',
-        background: bgColor,
-        color: textColor,
-        borderLeft: `3px solid ${borderColor}`,
+        background: '#1e1e1e',
+        color: '#d4d4d4',
         fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
         fontSize: '0.875rem',
         lineHeight: '1.6',
