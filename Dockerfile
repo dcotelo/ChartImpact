@@ -37,7 +37,10 @@ RUN adduser --system --uid 1001 nextjs
 RUN apk add --no-cache curl git tar && \
     curl -fsSL https://get.helm.sh/helm-v3.14.0-linux-amd64.tar.gz | tar -xz && \
     mv linux-amd64/helm /usr/local/bin/helm && \
-    rm -rf linux-amd64
+    rm -rf linux-amd64 && \
+    # Configure Git to not prompt for credentials
+    git config --global credential.helper "" && \
+    git config --global init.defaultBranch main
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
@@ -48,6 +51,8 @@ EXPOSE 3000
 
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
+ENV GIT_TERMINAL_PROMPT=0
+ENV GIT_ASKPASS=""
 
 CMD ["node", "server.js"]
 

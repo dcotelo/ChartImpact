@@ -73,7 +73,12 @@ export default function Home() {
         <DemoExamples onSelectExample={(data) => {
           setFormData(data);
         }} />
-        <CompareForm onSubmit={handleCompare} loading={loading} initialData={formData} />
+        <CompareForm 
+          key={formData ? JSON.stringify(formData) : 'empty'}
+          onSubmit={handleCompare} 
+          loading={loading} 
+          initialData={formData} 
+        />
 
         {error && (
           <div style={{

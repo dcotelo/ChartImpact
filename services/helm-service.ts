@@ -77,14 +77,25 @@ export class HelmService {
   private async cloneRepository(repo: string, targetPath: string): Promise<void> {
     try {
       await fs.mkdir(targetPath, { recursive: true });
+      
+      // Set environment variables to prevent Git from prompting for credentials
+      const env = {
+        ...process.env,
+        GIT_TERMINAL_PROMPT: '0',
+        GIT_ASKPASS: '',
+        GIT_CREDENTIAL_HELPER: ''
+      };
+      
       // Clone the repository (full clone to get all tags and branches)
       // Use --no-single-branch to fetch all branches
       await execAsync(`git clone --no-single-branch ${repo} ${targetPath}`, {
-        timeout: 120000
+        timeout: 120000,
+        env
       });
       // Explicitly fetch all tags after cloning
       await execAsync(`git -C ${targetPath} fetch --tags`, {
-        timeout: 30000
+        timeout: 30000,
+        env
       });
     } catch (error) {
       throw new Error(`Failed to clone repository: ${error}`);
@@ -98,10 +109,19 @@ export class HelmService {
     targetPath: string
   ): Promise<void> {
     try {
+      // Set environment variables to prevent Git from prompting for credentials
+      const env = {
+        ...process.env,
+        GIT_TERMINAL_PROMPT: '0',
+        GIT_ASKPASS: '',
+        GIT_CREDENTIAL_HELPER: ''
+      };
+      
       // Ensure we have all refs, including tags and branches
       // Fetch all tags in case they weren't included in the clone
       await execAsync(`git -C ${repoPath} fetch --all --tags --prune`, {
-        timeout: 60000
+        timeout: 60000,
+        env
       });
       
       // Escape the version to handle special characters and shell injection
@@ -110,15 +130,16 @@ export class HelmService {
       // Try to checkout - Git will automatically resolve tags, branches, or commits
       try {
         await execAsync(`git -C ${repoPath} checkout ${escapedVersion} 2>&1`, {
-          timeout: 15000
+          timeout: 15000,
+          env
         });
       } catch (checkoutError: any) {
         // The version might not exist - provide a helpful error message
         // First, let's check what refs are available
         let availableRefs = '';
         try {
-          const { stdout: tagsStdout } = await execAsync(`git -C ${repoPath} tag -l`, { timeout: 5000 });
-          const { stdout: branchesStdout } = await execAsync(`git -C ${repoPath} branch -r --format='%(refname:short)'`, { timeout: 5000 });
+          const { stdout: tagsStdout } = await execAsync(`git -C ${repoPath} tag -l`, { timeout: 5000, env });
+          const { stdout: branchesStdout } = await execAsync(`git -C ${repoPath} branch -r --format='%(refname:short)'`, { timeout: 5000, env });
           const tags = tagsStdout.trim().split('\n').filter(t => t).slice(0, 10).join(', ');
           const branches = branchesStdout.trim().split('\n').filter(b => b).slice(0, 10).join(', ');
           availableRefs = `\nAvailable tags (sample): ${tags || 'none'}\nAvailable branches (sample): ${branches || 'none'}`;

@@ -10,18 +10,29 @@ interface CompareFormProps {
 }
 
 export function CompareForm({ onSubmit, loading, initialData }: CompareFormProps) {
-  const [formData, setFormData] = useState<CompareRequest>(initialData || {
+  const defaultFormData: CompareRequest = {
     repository: '',
     chartPath: 'charts/app',
     version1: '',
     version2: '',
     valuesFile: '',
     valuesContent: ''
-  });
+  };
+
+  const [formData, setFormData] = useState<CompareRequest>(() => initialData || defaultFormData);
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData({
+        repository: initialData.repository || '',
+        chartPath: initialData.chartPath || 'charts/app',
+        version1: initialData.version1 || '',
+        version2: initialData.version2 || '',
+        valuesFile: initialData.valuesFile || '',
+        valuesContent: initialData.valuesContent || ''
+      });
+    } else {
+      setFormData({ ...defaultFormData });
     }
   }, [initialData]);
 

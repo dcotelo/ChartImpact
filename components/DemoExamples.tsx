@@ -10,32 +10,32 @@ interface DemoExample {
 
 const demoExamples: DemoExample[] = [
   {
-    name: 'Example 1: Basic Chart Comparison',
-    description: 'Compare the same branch (will show no differences, but demonstrates the tool)',
+    name: 'Example 1: Compare Main to Previous Tag',
+    description: 'Compare the latest main branch to the previous release tag',
     data: {
-      repository: 'https://github.com/helm/examples.git',
-      chartPath: 'charts/nginx',
+      repository: 'https://github.com/bitnami/charts.git',
+      chartPath: 'bitnami/nginx',
       version1: 'main',
-      version2: 'main',
-      valuesFile: 'values.yaml',
+      version2: 'nginx-18.0.0',
     }
   },
   {
     name: 'Example 2: With Custom Values',
     description: 'Use custom values content for comparison',
     data: {
-      repository: 'https://github.com/helm/examples.git',
-      chartPath: 'charts/nginx',
+      repository: 'https://github.com/bitnami/charts.git',
+      chartPath: 'bitnami/nginx',
       version1: 'main',
       version2: 'main',
       valuesContent: `replicaCount: 3
 image:
-  repository: nginx
-  tag: "1.21"
-  pullPolicy: IfNotPresent
+  registry: docker.io
+  repository: bitnami/nginx
+  tag: "1.25.3"
 service:
   type: ClusterIP
-  port: 80
+  ports:
+    http: 80
 resources:
   limits:
     cpu: 200m
@@ -46,14 +46,14 @@ resources:
     }
   },
   {
-    name: 'Example 3: Using Your Own Repository',
-    description: 'Template - replace with your own repo URL, chart path, and versions',
+    name: 'Example 3: Compare with Values File',
+    description: 'Compare nginx chart configurations using a values file from the repository',
     data: {
-      repository: 'https://github.com/your-org/your-helm-charts.git',
-      chartPath: 'charts/myapp',
+      repository: 'https://github.com/bitnami/charts.git',
+      chartPath: 'bitnami/nginx',
       version1: 'main',
-      version2: 'develop',
-      valuesFile: 'values.yaml',
+      version2: 'main',
+      valuesFile: 'bitnami/nginx/values.yaml',
     }
   }
 ];
