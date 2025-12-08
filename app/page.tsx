@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CompareForm } from '@/components/CompareForm';
 import { DiffDisplay } from '@/components/DiffDisplay';
 import { DemoExamples } from '@/components/DemoExamples';
+import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { CompareResponse, CompareRequest } from '@/lib/types';
 
 export default function Home() {
@@ -11,13 +12,16 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<CompareRequest | undefined>(undefined);
+  const [progressMessage, setProgressMessage] = useState<string>('');
 
   const handleCompare = async (formData: CompareRequest) => {
     setLoading(true);
     setError(null);
     setResult(null);
+    setProgressMessage('Initializing comparison...');
 
     try {
+      setProgressMessage('Cloning repository...');
       const response = await fetch('/api/compare', {
         method: 'POST',
         headers: {
@@ -26,15 +30,32 @@ export default function Home() {
         body: JSON.stringify(formData),
       });
 
+      setProgressMessage('Processing results...');
       const data: CompareResponse = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to compare versions');
+        const errorMsg = data.error || 'Failed to compare versions';
+        throw new Error(errorMsg);
       }
 
+      setProgressMessage('Comparison complete!');
       setResult(data);
+      
+      // Clear progress message after a brief delay
+      setTimeout(() => setProgressMessage(''), 1000);
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      let errorMessage = 'An error occurred';
+      
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err instanceof TypeError && err.message.includes('fetch')) {
+        errorMessage = 'Network error: Could not connect to the server. Please check your connection and try again.';
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      setProgressMessage('');
     } finally {
       setLoading(false);
     }
@@ -80,16 +101,41 @@ export default function Home() {
           initialData={formData} 
         />
 
+        {loading && progressMessage && (
+          <ProgressIndicator 
+            message={progressMessage}
+            step={progressMessage.includes('complete') ? 5 : undefined}
+            totalSteps={5}
+          />
+        )}
+
         {error && (
           <div style={{
             marginTop: '1.5rem',
-            padding: '1rem',
+            padding: '1.5rem',
             background: '#fee',
             border: '1px solid #fcc',
             borderRadius: '8px',
             color: '#c33'
           }}>
-            <strong>Error:</strong> {error}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginBottom: '0.5rem'
+            }}>
+              <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+              <strong style={{ fontSize: '1.1rem' }}>Error</strong>
+            </div>
+            <div style={{
+              paddingLeft: '1.75rem',
+              fontSize: '0.95rem',
+              lineHeight: '1.6',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word'
+            }}>
+              {error}
+            </div>
           </div>
         )}
 
