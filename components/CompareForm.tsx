@@ -9,17 +9,17 @@ interface CompareFormProps {
   initialData?: CompareRequest;
 }
 
-export function CompareForm({ onSubmit, loading, initialData }: CompareFormProps) {
-  const defaultFormData: CompareRequest = {
-    repository: '',
-    chartPath: 'charts/app',
-    version1: '',
-    version2: '',
-    valuesFile: '',
-    valuesContent: '',
-    ignoreLabels: false
-  };
+const defaultFormData: CompareRequest = {
+  repository: '',
+  chartPath: 'charts/app',
+  version1: '',
+  version2: '',
+  valuesFile: '',
+  valuesContent: '',
+  ignoreLabels: false
+};
 
+export function CompareForm({ onSubmit, loading, initialData }: CompareFormProps) {
   const [formData, setFormData] = useState<CompareRequest>(() => initialData || defaultFormData);
 
   useEffect(() => {
@@ -232,7 +232,7 @@ export function CompareForm({ onSubmit, loading, initialData }: CompareFormProps
           </span>
         </label>
         <small style={{ color: '#666', fontSize: '0.875rem', display: 'block', marginTop: '0.25rem', marginLeft: '1.75rem' }}>
-          Hide changes to labels and annotations (metadata updates that don't affect resource behavior)
+          Hide changes to labels and annotations (metadata updates that don&apos;t affect resource behavior)
         </small>
       </div>
 
