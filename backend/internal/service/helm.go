@@ -23,6 +23,9 @@ import (
 	"github.com/dcotelo/chartimpact/backend/internal/models"
 )
 
+// Compiled regex for cleaning up excessive empty lines in diff output
+var excessiveNewlinesRegex = regexp.MustCompile(`\n{3,}`)
+
 // HelmService handles Helm chart operations using the Helm Go SDK
 type HelmService struct {
 	settings *cli.EnvSettings
@@ -128,7 +131,7 @@ func (h *HelmService) CompareVersions(ctx context.Context, req *models.CompareRe
 	}
 
 	// Compare the rendered templates
-	diff, err := h.compareRendered(ctx, rendered1, rendered2)
+	diff, err := h.compareRendered(ctx, rendered1, rendered2, req.IgnoreLabels)
 	if err != nil {
 		return &models.CompareResponse{
 			Success: false,
@@ -408,14 +411,15 @@ func (h *HelmService) renderTemplate(ctx context.Context, chartDir string, value
 
 // compareRendered compares two rendered YAML manifests
 // First attempts to use dyff if enabled, falls back to simple diff
-func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 string) (string, error) {
+// If ignoreLabels is true, filters out metadata.labels and metadata.annotations changes
+func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 string, ignoreLabels bool) (string, error) {
 	log.Info("Comparing rendered templates")
 
 	// Check if dyff is enabled
 	dyffEnabled := os.Getenv("DYFF_ENABLED")
 	if dyffEnabled == "true" || dyffEnabled == "" {
 		// Try using dyff
-		diff, err := h.dyffCompare(ctx, rendered1, rendered2)
+		diff, err := h.dyffCompare(ctx, rendered1, rendered2, ignoreLabels)
 		if err == nil {
 			return diff, nil
 		}
@@ -428,7 +432,8 @@ func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 
 
 // dyffCompare uses the dyff tool for enhanced YAML comparison
 // Creates temporary files and runs dyff between command
-func (h *HelmService) dyffCompare(ctx context.Context, rendered1, rendered2 string) (string, error) {
+// If ignoreLabels is true, filters out metadata.labels and metadata.annotations from the output
+func (h *HelmService) dyffCompare(ctx context.Context, rendered1, rendered2 string, ignoreLabels bool) (string, error) {
 	// Check if dyff is available
 	if _, err := exec.LookPath("dyff"); err != nil {
 		return "", fmt.Errorf("dyff not found in PATH")
@@ -455,12 +460,22 @@ func (h *HelmService) dyffCompare(ctx context.Context, rendered1, rendered2 stri
 	// Exit code 1 means differences found (expected), not an error
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
-			return string(output), nil
+			result := string(output)
+			// Filter metadata changes if requested
+			if ignoreLabels {
+				result = h.filterMetadataChanges(result)
+			}
+			return result, nil
 		}
 		return "", fmt.Errorf("dyff command failed: %w\nOutput: %s", err, string(output))
 	}
 
-	return string(output), nil
+	result := string(output)
+	// Filter metadata changes if requested
+	if ignoreLabels {
+		result = h.filterMetadataChanges(result)
+	}
+	return result, nil
 }
 
 // simpleDiff provides a basic line-by-line diff as fallback
@@ -477,6 +492,76 @@ func (h *HelmService) simpleDiff(content1, content2 string) string {
 	diff.WriteString(fmt.Sprintf("\n\n=== Summary ===\nVersion 1: %d lines\nVersion 2: %d lines\n", len(lines1), len(lines2)))
 
 	return diff.String()
+}
+
+// filterMetadataChanges filters out metadata.labels and metadata.annotations changes from dyff output
+// Parses the dyff output line by line and removes sections related to metadata changes
+// Handles both top-level and nested metadata paths (e.g., spec.template.metadata.labels)
+func (h *HelmService) filterMetadataChanges(diffOutput string) string {
+	lines := strings.Split(diffOutput, "\n")
+	var filteredLines []string
+	skipSection := false
+
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		// Check if this is a path line that starts a new diff section
+		if !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") {
+			// This could be a dyff path line
+			if h.isMetadataPath(trimmed) {
+				skipSection = true
+				continue
+			} else if h.isDyffPathLine(trimmed) {
+				// New non-metadata path line, stop skipping
+				skipSection = false
+			}
+		}
+
+		// Skip lines in filtered sections
+		if skipSection {
+			// Continue skipping until we find a new section or empty line
+			if trimmed == "" && i+1 < len(lines) {
+				// Check if next line starts a new section
+				nextTrimmed := strings.TrimSpace(lines[i+1])
+				if h.isDyffPathLine(lines[i+1]) && nextTrimmed != "" {
+					skipSection = false
+				}
+			}
+			continue
+		}
+
+		filteredLines = append(filteredLines, line)
+	}
+
+	result := strings.Join(filteredLines, "\n")
+
+	// Clean up excessive empty lines using pre-compiled regex
+	result = excessiveNewlinesRegex.ReplaceAllString(result, "\n\n")
+
+	return strings.TrimSpace(result)
+}
+
+// isMetadataPath checks if a path contains metadata.labels or metadata.annotations
+// Handles both direct paths like "metadata.labels.app" and nested paths like "spec.template.metadata.labels.app"
+func (h *HelmService) isMetadataPath(path string) bool {
+	return strings.Contains(path, "metadata.labels") || strings.Contains(path, "metadata.annotations")
+}
+
+// isDyffPathLine checks if a line is a dyff path line (not indented and not containing diff markers)
+// Path lines in dyff output are not indented and don't start with diff marker characters
+// This is more precise than checking if markers exist anywhere in the line
+func (h *HelmService) isDyffPathLine(line string) bool {
+	if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
+		return false
+	}
+	trimmed := strings.TrimSpace(line)
+	if trimmed == "" {
+		return false
+	}
+	// Path lines don't start with diff markers (±, +, -, or whitespace)
+	// This is more reliable than checking for markers anywhere in the string
+	firstChar := trimmed[0]
+	return firstChar != '±' && firstChar != '+' && firstChar != '-' && firstChar != ' '
 }
 
 // suggestChartPath searches for Chart.yaml files and suggests valid chart paths
