@@ -13,6 +13,8 @@ const mockWriteFile = jest.fn();
 const mockCopyFile = jest.fn();
 const mockRm = jest.fn();
 const mockUnlink = jest.fn();
+const mockStat = jest.fn();
+const mockReadFile = jest.fn();
 
 jest.mock('fs/promises', () => ({
   mkdir: (...args: any[]) => mockMkdir(...args),
@@ -22,6 +24,8 @@ jest.mock('fs/promises', () => ({
   copyFile: (...args: any[]) => mockCopyFile(...args),
   rm: (...args: any[]) => mockRm(...args),
   unlink: (...args: any[]) => mockUnlink(...args),
+  stat: (...args: any[]) => mockStat(...args),
+  readFile: (...args: any[]) => mockReadFile(...args),
 }));
 
 describe('HelmService', () => {
@@ -38,6 +42,15 @@ describe('HelmService', () => {
     mockCopyFile.mockResolvedValue(undefined);
     mockRm.mockResolvedValue(undefined);
     mockUnlink.mockResolvedValue(undefined);
+    mockStat.mockImplementation(async (targetPath: string) => {
+      if (targetPath.includes('templates')) {
+        const error: NodeJS.ErrnoException = new Error('Not found');
+        error.code = 'ENOENT';
+        throw error;
+      }
+      return { isDirectory: () => true } as any;
+    });
+    mockReadFile.mockResolvedValue('apiVersion: v2\nname: test\nversion: 0.1.0');
     mockExec.mockImplementation((command: string, options: any, callback?: any) => {
       const cb = callback || options;
       cb(null, { stdout: '', stderr: '' });

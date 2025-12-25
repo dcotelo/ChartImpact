@@ -34,10 +34,10 @@ describe('DiffDisplay', () => {
 
     render(<DiffDisplay result={result} />);
 
-    expect(screen.getByText(/no differences found/i)).toBeInTheDocument();
+    expect(screen.getByText(/no differences found between versions/i)).toBeInTheDocument();
   });
 
-  it('should show "differences detected" message when diff exists', () => {
+  it('should show comparison summary when diff exists', () => {
     const result: CompareResponse = {
       success: true,
       diff: '--- version1\n+++ version2\n@@ -1,3 +1,3 @@\n-replicaCount: 1\n+replicaCount: 3',
@@ -47,7 +47,7 @@ describe('DiffDisplay', () => {
 
     render(<DiffDisplay result={result} />);
 
-    expect(screen.getByText(/differences detected/i)).toBeInTheDocument();
+    expect(screen.getByText(/Enhanced Statistics Dashboard/i)).toBeInTheDocument();
   });
 
   it('should display diff content when present', () => {
@@ -61,9 +61,8 @@ describe('DiffDisplay', () => {
 
     render(<DiffDisplay result={result} />);
 
-    // The SyntaxHighlighter component should render the diff
-    // We can check that the component renders without errors
-    expect(screen.getByText(/differences detected/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/replicaCount: 1/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/replicaCount: 3/i).length).toBeGreaterThan(0);
   });
 
   it('should handle whitespace-only diff as no differences', () => {

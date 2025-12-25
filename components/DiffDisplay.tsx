@@ -1596,13 +1596,15 @@ export function DiffDisplay({
               </div>
             ) : (
               <div>
-                <div style={{
-                  padding: '0.75rem 1rem',
-                  background: '#2d2d2d',
-                  borderBottom: '1px solid #444',
-                  color: '#fff',
-                  fontSize: '0.9rem'
-                }}>
+                <div
+                  style={{
+                    padding: '0.75rem 1rem',
+                    background: '#2d2d2d',
+                    borderBottom: '1px solid #444',
+                    color: '#fff',
+                    fontSize: '0.9rem'
+                  }}
+                >
                   ⚠️ Differences detected
                 </div>
                 <div style={{

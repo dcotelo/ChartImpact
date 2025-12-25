@@ -1,10 +1,18 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import * as fs from 'fs/promises';
+import * as fsPromises from 'fs/promises';
 import * as path from 'path';
 import { tmpdir } from 'os';
 
 const execAsync = promisify(exec);
+
+type ExecFunction = (command: string, options?: Record<string, any>) => Promise<{ stdout: string; stderr: string }>;
+
+export interface HelmServiceDependencies {
+  exec?: ExecFunction;
+  fs?: typeof fsPromises;
+  workDir?: string;
+}
 
 export interface HelmCompareOptions {
   repository: string;
@@ -17,10 +25,14 @@ export interface HelmCompareOptions {
 }
 
 export class HelmService {
-  private workDir: string;
+  private readonly workDir: string;
+  private readonly execFn: ExecFunction;
+  private readonly fs: typeof fsPromises;
 
-  constructor() {
-    this.workDir = path.join(tmpdir(), 'helm-diff-viewer');
+  constructor(deps: HelmServiceDependencies = {}) {
+    this.execFn = deps.exec ?? execAsync;
+    this.fs = deps.fs ?? fsPromises;
+    this.workDir = deps.workDir ?? path.join(tmpdir(), 'helm-diff-viewer');
   }
 
   async compareVersions(options: HelmCompareOptions): Promise<{ diff: string; hasDiff: boolean }> {
@@ -32,7 +44,7 @@ export class HelmService {
     
     try {
       // Ensure work directory exists
-      await fs.mkdir(workPath, { recursive: true });
+      await this.fs.mkdir(workPath, { recursive: true });
       
       // Clone repository
       const repoPath = path.join(workPath, 'repo');
@@ -49,7 +61,7 @@ export class HelmService {
       let valuesFilePath: string | undefined;
       if (valuesContent) {
         valuesFilePath = path.join(workPath, 'values.yaml');
-        await fs.writeFile(valuesFilePath, valuesContent, 'utf-8');
+        await this.fs.writeFile(valuesFilePath, valuesContent, 'utf-8');
       } else if (valuesFile) {
         valuesFilePath = path.join(repoPath, valuesFile);
       }
@@ -73,7 +85,7 @@ export class HelmService {
 
   private async cloneRepository(repo: string, targetPath: string): Promise<void> {
     try {
-      await fs.mkdir(targetPath, { recursive: true });
+      await this.fs.mkdir(targetPath, { recursive: true });
       
       // Set environment variables to prevent Git from prompting for credentials
       const env = {
@@ -85,12 +97,12 @@ export class HelmService {
       
       // Clone the repository (full clone to get all tags and branches)
       // Use --no-single-branch to fetch all branches
-      await execAsync(`git clone --no-single-branch ${repo} ${targetPath}`, {
+      await this.execFn(`git clone --no-single-branch ${repo} ${targetPath}`, {
         timeout: 120000,
         env
       });
       // Explicitly fetch all tags after cloning
-      await execAsync(`git -C ${targetPath} fetch --tags`, {
+      await this.execFn(`git -C ${targetPath} fetch --tags`, {
         timeout: 30000,
         env
       });
@@ -116,7 +128,7 @@ export class HelmService {
       
       // Ensure we have all refs, including tags and branches
       // Fetch all tags in case they weren't included in the clone
-      await execAsync(`git -C ${repoPath} fetch --all --tags --prune`, {
+      await this.execFn(`git -C ${repoPath} fetch --all --tags --prune`, {
         timeout: 60000,
         env
       });
@@ -126,7 +138,7 @@ export class HelmService {
       
       // Try to checkout - Git will automatically resolve tags, branches, or commits
       try {
-        await execAsync(`git -C ${repoPath} checkout ${escapedVersion} 2>&1`, {
+        await this.execFn(`git -C ${repoPath} checkout ${escapedVersion} 2>&1`, {
           timeout: 15000,
           env
         });
@@ -135,8 +147,8 @@ export class HelmService {
         // First, let's check what refs are available
         let availableRefs = '';
         try {
-          const { stdout: tagsStdout } = await execAsync(`git -C ${repoPath} tag -l`, { timeout: 5000, env });
-          const { stdout: branchesStdout } = await execAsync(`git -C ${repoPath} branch -r --format='%(refname:short)'`, { timeout: 5000, env });
+          const { stdout: tagsStdout } = await this.execFn(`git -C ${repoPath} tag -l`, { timeout: 5000, env });
+          const { stdout: branchesStdout } = await this.execFn(`git -C ${repoPath} branch -r --format='%(refname:short)'`, { timeout: 5000, env });
           const tags = tagsStdout.trim().split('\n').filter(t => t).slice(0, 10).join(', ');
           const branches = branchesStdout.trim().split('\n').filter(b => b).slice(0, 10).join(', ');
           availableRefs = `\nAvailable tags (sample): ${tags || 'none'}\nAvailable branches (sample): ${branches || 'none'}`;
@@ -154,11 +166,11 @@ export class HelmService {
       // Normalize chart path - remove leading/trailing slashes and handle relative paths
       const normalizedChartPath = chartPath.replace(/^\/+|\/+$/g, '');
       const sourceChartPath = path.join(repoPath, normalizedChartPath);
-      await fs.mkdir(targetPath, { recursive: true });
+      await this.fs.mkdir(targetPath, { recursive: true });
       
       // Check if chart path exists and is a directory
       try {
-        const stats = await fs.stat(sourceChartPath);
+        const stats = await this.fs.stat(sourceChartPath);
         if (!stats.isDirectory()) {
           throw new Error(`Chart path exists but is not a directory: ${chartPath}`);
         }
@@ -166,12 +178,12 @@ export class HelmService {
         // Verify it's a valid Helm chart by checking for Chart.yaml
         const chartYamlPath = path.join(sourceChartPath, 'Chart.yaml');
         try {
-          await fs.access(chartYamlPath);
+          await this.fs.access(chartYamlPath);
         } catch {
           // Try templates/ directory as alternative indicator (some charts might not have Chart.yaml at root)
           const templatesPath = path.join(sourceChartPath, 'templates');
           try {
-            const templatesStats = await fs.stat(templatesPath);
+            const templatesStats = await this.fs.stat(templatesPath);
             if (!templatesStats.isDirectory()) {
               throw new Error(`Chart path does not appear to be a valid Helm chart: ${chartPath} (missing Chart.yaml or templates/)`);
             }
@@ -193,7 +205,7 @@ export class HelmService {
           for (const dir of commonChartDirs) {
             const dirPath = path.join(repoPath, dir);
             try {
-              const entries = await fs.readdir(dirPath, { withFileTypes: true });
+              const entries = await this.fs.readdir(dirPath, { withFileTypes: true });
               const subdirs = entries
                 .filter(e => e.isDirectory())
                 .map(e => path.join(dir, e.name))
@@ -206,7 +218,7 @@ export class HelmService {
           
           // Also check root level for chart directories
           try {
-            const rootEntries = await fs.readdir(repoPath, { withFileTypes: true });
+            const rootEntries = await this.fs.readdir(repoPath, { withFileTypes: true });
             const rootDirs = rootEntries
               .filter(e => e.isDirectory() && !e.name.startsWith('.'))
               .map(e => e.name)
@@ -250,17 +262,17 @@ export class HelmService {
   }
 
   private async copyDirectory(src: string, dest: string): Promise<void> {
-    const entries = await fs.readdir(src, { withFileTypes: true });
+    const entries = await this.fs.readdir(src, { withFileTypes: true });
     
     for (const entry of entries) {
       const srcPath = path.join(src, entry.name);
       const destPath = path.join(dest, entry.name);
       
       if (entry.isDirectory()) {
-        await fs.mkdir(destPath, { recursive: true });
+        await this.fs.mkdir(destPath, { recursive: true });
         await this.copyDirectory(srcPath, destPath);
       } else {
-        await fs.copyFile(srcPath, destPath);
+        await this.fs.copyFile(srcPath, destPath);
       }
     }
   }
@@ -281,7 +293,7 @@ export class HelmService {
         GIT_CREDENTIAL_HELPER: ''
       };
       
-      const { stdout, stderr } = await execAsync(
+      const { stdout, stderr } = await this.execFn(
         `helm template app ${chartPath} ${valuesFlag}`,
         { 
           timeout: 60000,
@@ -305,7 +317,7 @@ export class HelmService {
     
     // Check if Chart.yaml exists
     try {
-      await fs.access(chartYamlPath);
+      await this.fs.access(chartYamlPath);
     } catch {
       // No Chart.yaml, no dependencies to build
       return;
@@ -314,7 +326,7 @@ export class HelmService {
     // Parse Chart.yaml for dependencies
     let chartYamlContent: string;
     try {
-      chartYamlContent = await fs.readFile(chartYamlPath, 'utf-8');
+      chartYamlContent = await this.fs.readFile(chartYamlPath, 'utf-8');
     } catch (error: any) {
       throw new Error(`Failed to read Chart.yaml: ${error.message}`);
     }
@@ -351,7 +363,7 @@ export class HelmService {
       // Ensure charts directory exists (helm dependency build will create it, but just in case)
       const chartsDir = path.join(chartPath, 'charts');
       try {
-        await fs.mkdir(chartsDir, { recursive: true });
+        await this.fs.mkdir(chartsDir, { recursive: true });
       } catch {
         // Directory might already exist, ignore
       }
@@ -359,7 +371,7 @@ export class HelmService {
       // First, try to update dependencies (downloads missing dependencies)
       // This is necessary when dependencies are declared but not present
       try {
-        const { stdout: updateStdout, stderr: updateStderr } = await execAsync(
+        const { stdout: updateStdout, stderr: updateStderr } = await this.execFn(
           `helm dependency update ${chartPath}`,
           {
             timeout: 120000,
@@ -390,7 +402,7 @@ export class HelmService {
       }
 
       // Then build dependencies (rebuilds Chart.lock and ensures consistency)
-      const { stdout, stderr } = await execAsync(
+      const { stdout, stderr } = await this.execFn(
         `helm dependency build ${chartPath}`,
         {
           timeout: 120000,
@@ -421,7 +433,7 @@ export class HelmService {
       // Verify dependencies were actually built by checking charts directory
       // This helps catch cases where helm dependency build claims success but didn't download anything
       try {
-        const chartsContents = await fs.readdir(chartsDir);
+        const chartsContents = await this.fs.readdir(chartsDir);
         // Charts directory should contain .tgz files or directories for dependencies
         // If Chart.yaml has dependencies but charts/ is empty, something went wrong
         if (chartYamlContent.includes('dependencies:') && chartsContents.length === 0) {
@@ -538,7 +550,7 @@ export class HelmService {
 
       try {
         // Add repository (idempotent - will update if exists)
-        await execAsync(
+        await this.execFn(
           `helm repo add ${repoName} "${repoUrl}"`,
           {
             timeout: 30000,
@@ -549,7 +561,7 @@ export class HelmService {
       } catch (error: any) {
         // Repository might already exist, try to update
         try {
-          await execAsync(
+          await this.execFn(
             `helm repo update ${repoName}`,
             {
               timeout: 30000,
@@ -566,7 +578,7 @@ export class HelmService {
 
     // Update all repositories
     try {
-      await execAsync(
+      await this.execFn(
         `helm repo update`,
         {
           timeout: 60000,
@@ -594,7 +606,7 @@ export class HelmService {
 
     // Check if dyff is installed
     try {
-      await execAsync('dyff version', { timeout: 5000, env });
+      await this.execFn('dyff version', { timeout: 5000, env });
     } catch {
       throw new Error(
         'dyff is not installed. Please install it with one of the following:\n' +
@@ -609,7 +621,7 @@ export class HelmService {
     const releaseName = 'diff-comparison';
 
     // Render both chart versions to YAML
-    const { stdout: rendered1 } = await execAsync(
+    const { stdout: rendered1 } = await this.execFn(
       `helm template ${releaseName} ${chartPath1} ${valuesFlag}`,
       {
         timeout: 60000,
@@ -618,7 +630,7 @@ export class HelmService {
       }
     );
 
-    const { stdout: rendered2 } = await execAsync(
+    const { stdout: rendered2 } = await this.execFn(
       `helm template ${releaseName} ${chartPath2} ${valuesFlag}`,
       {
         timeout: 60000,
@@ -631,13 +643,13 @@ export class HelmService {
     const tmp1 = path.join(this.workDir, `dyff-v1-${Date.now()}.yaml`);
     const tmp2 = path.join(this.workDir, `dyff-v2-${Date.now()}.yaml`);
     
-    await fs.writeFile(tmp1, rendered1, 'utf-8');
-    await fs.writeFile(tmp2, rendered2, 'utf-8');
+    await this.fs.writeFile(tmp1, rendered1, 'utf-8');
+    await this.fs.writeFile(tmp2, rendered2, 'utf-8');
 
     try {
       // Use dyff between to compare the two YAML files
       // --omit-header removes the header for cleaner output
-      const { stdout, stderr } = await execAsync(
+      const { stdout, stderr } = await this.execFn(
         `dyff between "${tmp1}" "${tmp2}" --omit-header`,
         {
           timeout: 30000,
@@ -647,15 +659,15 @@ export class HelmService {
       );
 
       // Cleanup temp files
-      await fs.unlink(tmp1).catch(() => {});
-      await fs.unlink(tmp2).catch(() => {});
+      await this.fs.unlink(tmp1).catch(() => {});
+      await this.fs.unlink(tmp2).catch(() => {});
 
       // Return raw dyff output
       return (stdout || stderr || '').trim();
     } catch (error: any) {
       // Cleanup temp files
-      await fs.unlink(tmp1).catch(() => {});
-      await fs.unlink(tmp2).catch(() => {});
+      await this.fs.unlink(tmp1).catch(() => {});
+      await this.fs.unlink(tmp2).catch(() => {});
 
       // dyff exits with code 1 when differences are found (expected behavior)
       // Exit code 0 = no differences, 1 = differences found
@@ -685,11 +697,11 @@ export class HelmService {
       const tmp1 = path.join(this.workDir, `tmp1-${Date.now()}.yaml`);
       const tmp2 = path.join(this.workDir, `tmp2-${Date.now()}.yaml`);
       
-      await fs.writeFile(tmp1, yaml1, 'utf-8');
-      await fs.writeFile(tmp2, yaml2, 'utf-8');
+      await this.fs.writeFile(tmp1, yaml1, 'utf-8');
+      await this.fs.writeFile(tmp2, yaml2, 'utf-8');
       
       try {
-        const { stdout } = await execAsync(
+        const { stdout } = await this.execFn(
           `dyff between "${tmp1}" "${tmp2}" --omit-header`,
           { 
             timeout: 10000,
@@ -698,14 +710,14 @@ export class HelmService {
         );
         
         // Cleanup temp files
-        await fs.unlink(tmp1).catch(() => {});
-        await fs.unlink(tmp2).catch(() => {});
+        await this.fs.unlink(tmp1).catch(() => {});
+        await this.fs.unlink(tmp2).catch(() => {});
         
         return stdout;
       } catch {
         // Cleanup temp files
-        await fs.unlink(tmp1).catch(() => {});
-        await fs.unlink(tmp2).catch(() => {});
+        await this.fs.unlink(tmp1).catch(() => {});
+        await this.fs.unlink(tmp2).catch(() => {});
         throw new Error('dyff failed');
       }
     } catch {
@@ -737,7 +749,7 @@ export class HelmService {
 
   private async cleanup(workPath: string): Promise<void> {
     try {
-      await fs.rm(workPath, { recursive: true, force: true });
+      await this.fs.rm(workPath, { recursive: true, force: true });
     } catch (error) {
       // Ignore cleanup errors
       console.error('Cleanup error:', error);
