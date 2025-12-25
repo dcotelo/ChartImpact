@@ -128,7 +128,7 @@ func (h *HelmService) CompareVersions(ctx context.Context, req *models.CompareRe
 	}
 
 	// Compare the rendered templates
-	diff, err := h.compareRendered(ctx, rendered1, rendered2)
+	diff, err := h.compareRendered(ctx, rendered1, rendered2, req.IgnoreLabels)
 	if err != nil {
 		return &models.CompareResponse{
 			Success: false,
@@ -408,14 +408,15 @@ func (h *HelmService) renderTemplate(ctx context.Context, chartDir string, value
 
 // compareRendered compares two rendered YAML manifests
 // First attempts to use dyff if enabled, falls back to simple diff
-func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 string) (string, error) {
+// If ignoreLabels is true, filters out metadata.labels and metadata.annotations changes
+func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 string, ignoreLabels bool) (string, error) {
 	log.Info("Comparing rendered templates")
 
 	// Check if dyff is enabled
 	dyffEnabled := os.Getenv("DYFF_ENABLED")
 	if dyffEnabled == "true" || dyffEnabled == "" {
 		// Try using dyff
-		diff, err := h.dyffCompare(ctx, rendered1, rendered2)
+		diff, err := h.dyffCompare(ctx, rendered1, rendered2, ignoreLabels)
 		if err == nil {
 			return diff, nil
 		}
@@ -428,7 +429,8 @@ func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 
 
 // dyffCompare uses the dyff tool for enhanced YAML comparison
 // Creates temporary files and runs dyff between command
-func (h *HelmService) dyffCompare(ctx context.Context, rendered1, rendered2 string) (string, error) {
+// If ignoreLabels is true, adds exclude paths for metadata.labels and metadata.annotations
+func (h *HelmService) dyffCompare(ctx context.Context, rendered1, rendered2 string, ignoreLabels bool) (string, error) {
 	// Check if dyff is available
 	if _, err := exec.LookPath("dyff"); err != nil {
 		return "", fmt.Errorf("dyff not found in PATH")
@@ -448,8 +450,19 @@ func (h *HelmService) dyffCompare(ctx context.Context, rendered1, rendered2 stri
 	}
 	defer os.Remove(file2)
 
+	// Build dyff command with optional exclude paths
+	args := []string{"between", "--omit-header"}
+	
+	// Add exclude paths if ignoreLabels is enabled
+	if ignoreLabels {
+		args = append(args, "--exclude", "/metadata/labels")
+		args = append(args, "--exclude", "/metadata/annotations")
+	}
+	
+	args = append(args, file1, file2)
+
 	// Run dyff
-	cmd := exec.CommandContext(ctx, "dyff", "between", "--omit-header", file1, file2)
+	cmd := exec.CommandContext(ctx, "dyff", args...)
 	output, err := cmd.CombinedOutput()
 
 	// Exit code 1 means differences found (expected), not an error

@@ -54,7 +54,8 @@ export async function POST(request: NextRequest) {
         version1: body.version1,
         version2: body.version2,
         valuesFile: body.valuesFile,
-        valuesContent: body.valuesContent
+        valuesContent: body.valuesContent,
+        ignoreLabels: body.ignoreLabels
       }),
     });
 
