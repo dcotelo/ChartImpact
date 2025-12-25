@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Helm Chart Diff Viewer',
+  title: 'Chart Impact',
   description: 'Compare differences between two Helm chart versions',
 }
 

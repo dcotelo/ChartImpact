@@ -1,6 +1,6 @@
 # Testing Guide
 
-This guide covers how to test the Helm Chart Diff Viewer application, including both manual testing and automated testing.
+This guide covers how to test the Chart Impact application, including both manual testing and automated testing.
 
 ## 📋 Table of Contents
 
