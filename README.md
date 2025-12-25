@@ -1,62 +1,109 @@
+![ChartInspect](ChartInspect.png)
+
 # Chart Impact
 
-A modern web application for comparing differences between two Helm chart versions. Built with Next.js, TypeScript, and designed to work seamlessly with Git repositories.
+A modern web application for comparing differences between two Helm chart versions. Built with a **Go backend** using the Helm SDK and a **Next.js frontend** for a fast, scalable, and maintainable architecture.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## ✨ Features
 
 - 🔍 **Version Comparison** - Compare any two versions (tags, branches, or commits) of a Helm chart
-- 📊 **Visual Diff Display** - Beautiful syntax-highlighted diff output
+- 📊 **Visual Diff Display** - Beautiful syntax-highlighted diff output with dyff integration
 - 🎨 **Modern UI** - Clean, responsive interface built with React and Next.js
-- ⚡ **Fast & Efficient** - Optimized for quick comparisons
+- ⚡ **Fast & Efficient** - Go backend with Helm Go SDK for optimal performance
 - 🔧 **Flexible** - Support for custom values files or inline values content
-- 🚀 **Easy Deployment** - Ready for deployment on Vercel, Docker, or any Node.js hosting
+- 🚀 **Easy Deployment** - Docker Compose setup with separate backend/frontend containers
+- 🛡️ **Production Ready** - Comprehensive error handling, logging, and health checks
 
 ## 📋 Table of Contents
 
+- [Architecture](#-architecture)
 - [Getting Started](#-getting-started)
 - [Usage](#-usage)
 - [API Reference](#-api-reference)
-- [Requirements](#-requirements)
-- [Deployment](#-deployment)
 - [Development](#-development)
+- [Deployment](#-deployment)
 - [Contributing](#-contributing)
 - [License](#-license)
 
+## 🏗️ Architecture
+
+ChartImpact uses a modern separated architecture:
+
+```
+┌─────────────────┐         ┌──────────────────┐
+│                 │         │                  │
+│  Next.js        │  HTTP   │  Go Backend      │
+│  Frontend       ├────────►│  (Port 8080)     │
+│  (Port 3000)    │         │                  │
+│                 │         │  - Helm SDK      │
+│  - React UI     │         │  - Git Ops       │
+│  - TypeScript   │         │  - dyff          │
+│                 │         │                  │
+└─────────────────┘         └──────────────────┘
+```
+
+**Backend** (`/backend`):
+- Go 1.21+ with Helm Go SDK
+- REST API with gorilla/mux
+- Structured logging with logrus
+- Docker containerized
+
+**Frontend** (`/frontend`):
+- Next.js 14 with App Router
+- TypeScript and React 18
+- TailwindCSS for styling
+- Docker containerized
+
 ## 🚀 Getting Started
 
-### Prerequisites
+### Option 1: Docker Compose (Recommended)
 
-- Node.js 18+ and npm 9+
-- Helm 3.x installed on the system
-- Git (for cloning repositories)
-- (Optional) dyff for enhanced diff output
-
-### Installation
-
-1. **Clone the repository**
+The easiest way to run both backend and frontend:
 
 ```bash
-git clone https://github.com/your-username/helm-chart-diff-viewer.git
-cd helm-chart-diff-viewer
+# Clone the repository
+git clone https://github.com/your-username/chartimpact.git
+cd chartimpact
+
+# Start both services
+docker-compose up
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8080
+# Health Check: http://localhost:8080/api/health
 ```
 
-2. **Install dependencies**
+### Option 2: Local Development
 
+**Prerequisites:**
+- Go 1.21+ - [Download](https://golang.org/dl/)
+- Node.js 18+ and npm 9+ - [Download](https://nodejs.org/)
+- Helm 3.x - [Install](https://helm.sh/docs/intro/install/)
+- Git
+- (Optional) dyff - `brew install homeport/tap/dyff`
+
+**Backend:**
 ```bash
+cd backend
+cp .env.example .env
+# Edit .env with your settings
+go mod download
+go run cmd/server/main.go
+# Server runs on http://localhost:8080
+```
+
+**Frontend:**
+```bash
+cd frontend
+cp .env.example .env
+# Edit .env to set NEXT_PUBLIC_API_URL=http://localhost:8080
 npm install
-```
-
-3. **Run the development server**
-
-```bash
 npm run dev
+# Frontend runs on http://localhost:3000
 ```
-
-4. **Open your browser**
-
-Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 📖 Usage
 
@@ -87,6 +134,8 @@ Values File: values/prod.yaml
 
 ## 🔌 API Reference
 
+The Go backend exposes the following REST API endpoints:
+
 ### POST `/api/compare`
 
 Compare two Helm chart versions.
@@ -95,9 +144,66 @@ Compare two Helm chart versions.
 
 ```json
 {
-  "repository": "https://github.com/user/repo.git",
-  "chartPath": "charts/app",
-  "version1": "v1.0.0",
+  "repository": "https://github.com/argoproj/argo-helm.git",
+  "chartPath": "charts/argo-cd",
+  "version1": "5.0.0",
+  "version2": "5.1.0",
+  "valuesFile": "values/production.yaml",  // optional
+  "valuesContent": "replicaCount: 3\n",    // optional
+  "ignoreLabels": false                     // optional
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "diff": "... dyff or plain diff output ...",
+  "version1": "5.0.0",
+  "version2": "5.1.0"
+}
+```
+
+### POST `/api/versions`
+
+Fetch available versions (tags and branches) from a repository.
+
+**Request Body:**
+
+```json
+{
+  "repository": "https://github.com/argoproj/argo-helm.git"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "tags": ["5.1.0", "5.0.0", "4.10.0", ...],
+  "branches": ["main", "develop", ...]
+}
+```
+
+### GET `/api/health`
+
+Health check endpoint.
+
+**Response:**
+
+```json
+{
+  "status": "ok",
+  "version": "1.0.0",
+  "helmOk": true,
+  "gitOk": true,
+  "dyffOk": true
+}
+```
+
+For detailed API documentation, see [backend/README.md](backend/README.md).
   "version2": "v1.1.0",
   "valuesFile": "values/prod.yaml",
   "valuesContent": "replicaCount: 3\nimage:\n  tag: latest"
