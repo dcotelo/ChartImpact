@@ -1,4 +1,4 @@
-module github.com/yourusername/chartimpact/backend
+module github.com/dcotelo/chartimpact/backend
 
 go 1.21
 

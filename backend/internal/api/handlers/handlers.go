@@ -11,8 +11,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/yourusername/chartimpact/backend/internal/models"
-	"github.com/yourusername/chartimpact/backend/internal/service"
+	"github.com/dcotelo/chartimpact/backend/internal/models"
+	"github.com/dcotelo/chartimpact/backend/internal/service"
 )
 
 // CompareHandler handles requests to compare two Helm chart versions

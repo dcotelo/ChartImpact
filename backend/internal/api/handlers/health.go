@@ -6,7 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/yourusername/chartimpact/backend/internal/models"
+	"github.com/dcotelo/chartimpact/backend/internal/models"
 )
 
 // HealthHandler handles GET /api/health requests

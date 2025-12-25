@@ -19,7 +19,7 @@ import (
 	"helm.sh/helm/v3/pkg/cli"
 	"sigs.k8s.io/yaml"
 
-	"github.com/yourusername/chartimpact/backend/internal/models"
+	"github.com/dcotelo/chartimpact/backend/internal/models"
 )
 
 // HelmService handles Helm chart operations using the Helm Go SDK

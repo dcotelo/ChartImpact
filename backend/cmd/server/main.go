@@ -13,9 +13,9 @@ import (
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 
-	apiHandlers "github.com/yourusername/chartimpact/backend/internal/api/handlers"
-	"github.com/yourusername/chartimpact/backend/internal/api/middleware"
-	"github.com/yourusername/chartimpact/backend/internal/service"
+	apiHandlers "github.com/dcotelo/chartimpact/backend/internal/api/handlers"
+	"github.com/dcotelo/chartimpact/backend/internal/api/middleware"
+	"github.com/dcotelo/chartimpact/backend/internal/service"
 )
 
 func main() {
