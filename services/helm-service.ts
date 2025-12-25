@@ -678,63 +678,6 @@ export class HelmService {
     }
   }
 
-  private async compareYamlFallback(yaml1: string, yaml2: string): Promise<string> {
-    // Try to use dyff if available, otherwise fallback to diff
-    try {
-      // Write to temp files for dyff
-      const tmp1 = path.join(this.workDir, `tmp1-${Date.now()}.yaml`);
-      const tmp2 = path.join(this.workDir, `tmp2-${Date.now()}.yaml`);
-      
-      await fs.writeFile(tmp1, yaml1, 'utf-8');
-      await fs.writeFile(tmp2, yaml2, 'utf-8');
-      
-      try {
-        const { stdout } = await execAsync(
-          `dyff between "${tmp1}" "${tmp2}" --omit-header`,
-          { 
-            timeout: 10000,
-            maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
-          }
-        );
-        
-        // Cleanup temp files
-        await fs.unlink(tmp1).catch(() => {});
-        await fs.unlink(tmp2).catch(() => {});
-        
-        return stdout;
-      } catch {
-        // Cleanup temp files
-        await fs.unlink(tmp1).catch(() => {});
-        await fs.unlink(tmp2).catch(() => {});
-        throw new Error('dyff failed');
-      }
-    } catch {
-      // Fallback to simple diff or custom comparison
-      return this.simpleYamlDiff(yaml1, yaml2);
-    }
-  }
-
-  private simpleYamlDiff(yaml1: string, yaml2: string): string {
-    // Simple text-based diff as fallback
-    const lines1 = yaml1.split('\n');
-    const lines2 = yaml2.split('\n');
-    
-    const diff: string[] = [];
-    const maxLen = Math.max(lines1.length, lines2.length);
-    
-    for (let i = 0; i < maxLen; i++) {
-      const line1 = lines1[i] || '';
-      const line2 = lines2[i] || '';
-      
-      if (line1 !== line2) {
-        if (line1) diff.push(`- ${line1}`);
-        if (line2) diff.push(`+ ${line2}`);
-      }
-    }
-    
-    return diff.join('\n');
-  }
-
   private async cleanup(workPath: string): Promise<void> {
     try {
       await fs.rm(workPath, { recursive: true, force: true });
