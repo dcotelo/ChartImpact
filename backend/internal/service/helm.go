@@ -23,6 +23,9 @@ import (
 	"github.com/dcotelo/chartimpact/backend/internal/models"
 )
 
+// Compiled regex for cleaning up excessive empty lines in diff output
+var excessiveNewlinesRegex = regexp.MustCompile(`\n{3,}`)
+
 // HelmService handles Helm chart operations using the Helm Go SDK
 type HelmService struct {
 	settings *cli.EnvSettings
@@ -532,8 +535,8 @@ func (h *HelmService) filterMetadataChanges(diffOutput string) string {
 
 	result := strings.Join(filteredLines, "\n")
 	
-	// Clean up excessive empty lines
-	result = regexp.MustCompile(`\n{3,}`).ReplaceAllString(result, "\n\n")
+	// Clean up excessive empty lines using pre-compiled regex
+	result = excessiveNewlinesRegex.ReplaceAllString(result, "\n\n")
 	
 	return strings.TrimSpace(result)
 }
@@ -545,7 +548,8 @@ func (h *HelmService) isMetadataPath(path string) bool {
 }
 
 // isDyffPathLine checks if a line is a dyff path line (not indented and not containing diff markers)
-// Path lines in dyff output are not indented and don't contain ±, +, or - symbols
+// Path lines in dyff output are not indented and don't start with diff marker characters
+// This is more precise than checking if markers exist anywhere in the line
 func (h *HelmService) isDyffPathLine(line string) bool {
 	if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
 		return false
@@ -554,10 +558,10 @@ func (h *HelmService) isDyffPathLine(line string) bool {
 	if trimmed == "" {
 		return false
 	}
-	// Path lines don't contain diff markers
-	return !strings.Contains(trimmed, "±") && 
-		   !strings.Contains(trimmed, "+") && 
-		   !strings.Contains(trimmed, "-")
+	// Path lines don't start with diff markers (±, +, -, or whitespace)
+	// This is more reliable than checking for markers anywhere in the string
+	firstChar := trimmed[0]
+	return firstChar != '±' && firstChar != '+' && firstChar != '-' && firstChar != ' '
 }
 
 // suggestChartPath searches for Chart.yaml files and suggests valid chart paths
