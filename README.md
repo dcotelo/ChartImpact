@@ -1,4 +1,4 @@
-# Helm Chart Diff Viewer
+# Chart Impact
 
 A modern web application for comparing differences between two Helm chart versions. Built with Next.js, TypeScript, and designed to work seamlessly with Git repositories.
 

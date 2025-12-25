@@ -1,6 +1,6 @@
-# Getting Started with Helm Chart Diff Viewer
+# Getting Started with Chart Impact
 
-This guide will help you quickly get started with the Helm Chart Diff Viewer web application.
+This guide will help you quickly get started with the Chart Impact web application.
 
 ## 🚀 Quick Start
 

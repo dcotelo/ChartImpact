@@ -16,6 +16,18 @@ const mockUnlink = jest.fn();
 const mockStat = jest.fn();
 const mockReadFile = jest.fn();
 
+const mockFs = {
+  mkdir: mockMkdir,
+  access: mockAccess,
+  readdir: mockReaddir,
+  writeFile: mockWriteFile,
+  copyFile: mockCopyFile,
+  rm: mockRm,
+  unlink: mockUnlink,
+  stat: mockStat,
+  readFile: mockReadFile,
+} as any;
+
 jest.mock('fs/promises', () => ({
   mkdir: (...args: any[]) => mockMkdir(...args),
   access: (...args: any[]) => mockAccess(...args),
@@ -32,7 +44,7 @@ describe('HelmService', () => {
   let helmService: HelmService;
 
   beforeEach(() => {
-    helmService = new HelmService();
+    helmService = new HelmService({ fs: mockFs });
     jest.clearAllMocks();
     // Reset all mocks to default successful behavior
     mockMkdir.mockResolvedValue(undefined);
@@ -43,10 +55,9 @@ describe('HelmService', () => {
     mockRm.mockResolvedValue(undefined);
     mockUnlink.mockResolvedValue(undefined);
     mockStat.mockImplementation(async (targetPath: string) => {
-      if (targetPath.includes('templates')) {
-        const error: NodeJS.ErrnoException = new Error('Not found');
-        error.code = 'ENOENT';
-        throw error;
+      // Return directory stat for chart paths (e.g., /path/to/repo/charts/app)
+      if (targetPath.includes('charts/app') || targetPath.includes('templates')) {
+        return { isDirectory: () => true } as any;
       }
       return { isDirectory: () => true } as any;
     });
@@ -69,9 +80,16 @@ describe('HelmService', () => {
     it('should successfully compare two versions', async () => {
       // Mock file system operations - access is called for each version (2 times)
       mockMkdir.mockResolvedValue(undefined);
+      
+      // Mock stat to return directory for chart paths
+      mockStat.mockImplementation(async (targetPath: string) => {
+        return { isDirectory: () => true } as any;
+      });
+      
       mockAccess
-        .mockResolvedValueOnce(undefined) // version1 access check
-        .mockResolvedValueOnce(undefined); // version2 access check
+        .mockResolvedValueOnce(undefined) // Chart.yaml check for version1
+        .mockResolvedValueOnce(undefined); // Chart.yaml check for version2
+      
       // Mock readdir for copyDirectory - called for each version's chart directory
       mockReaddir
         .mockResolvedValueOnce([{ name: 'Chart.yaml', isDirectory: () => false }] as any) // version1
@@ -109,6 +127,9 @@ describe('HelmService', () => {
 
     it('should handle missing chart path', async () => {
       mockMkdir.mockResolvedValue(undefined);
+      
+      // Mock stat to throw ENOENT error to simulate chart path not existing
+      mockStat.mockRejectedValue(Object.assign(new Error('ENOENT: no such file or directory'), { code: 'ENOENT' }));
       mockAccess.mockRejectedValue(new Error('File not found'));
 
       mockExec.mockImplementation((command: string, options: any, callback?: any) => {
@@ -150,9 +171,16 @@ describe('HelmService', () => {
 
     it('should use valuesContent when provided', async () => {
       mockMkdir.mockResolvedValue(undefined);
+      
+      // Mock stat to return directory for chart paths
+      mockStat.mockImplementation(async (targetPath: string) => {
+        return { isDirectory: () => true } as any;
+      });
+      
       mockAccess
-        .mockResolvedValueOnce(undefined) // version1 access check
-        .mockResolvedValueOnce(undefined); // version2 access check
+        .mockResolvedValueOnce(undefined) // Chart.yaml check for version1
+        .mockResolvedValueOnce(undefined); // Chart.yaml check for version2
+        
       // Mock readdir for copyDirectory - called for each version's chart directory
       mockReaddir
         .mockResolvedValueOnce([{ name: 'Chart.yaml', isDirectory: () => false }] as any) // version1

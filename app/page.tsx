@@ -142,7 +142,7 @@ export default function Home() {
           marginBottom: '0.5rem',
           fontWeight: 'bold'
         }}>
-          🔍 Helm Chart Diff Viewer
+          🔍 Chart Impact
         </h1>
         <p style={{
           fontSize: '1.1rem',
