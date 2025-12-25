@@ -6,7 +6,6 @@ export interface CompareRequest {
   valuesFile?: string;
   valuesContent?: string;
   ignoreLabels?: boolean;
-  normalizeManifests?: boolean;
   secretHandling?: 'suppress' | 'show' | 'decode';
   contextLines?: number;
   suppressKinds?: string[];
