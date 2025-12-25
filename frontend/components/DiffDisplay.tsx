@@ -944,7 +944,7 @@ export function DiffDisplay({
   // Initialize with all categories expanded
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   
-  // Expand all categories when result changes
+  // Expand all categories when result changes or ignoreLabels changes
   useEffect(() => {
     if (categories.length > 0) {
       setExpandedCategories(new Set(categories));
@@ -952,7 +952,7 @@ export function DiffDisplay({
       setExpandedCategories(new Set());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result.version1, result.version2]);
+  }, [result.version1, result.version2, ignoreLabels]);
   
   const toggleCategory = (category: string) => {
     setExpandedCategories(prev => {

@@ -50,8 +50,7 @@ describe('CompareForm', () => {
         version1: 'v1.0.0',
         version2: 'v1.1.0',
         valuesFile: '',
-        valuesContent: '',
-        ignoreLabels: false,
+        valuesContent: ''
       });
     });
   });
@@ -111,6 +110,49 @@ describe('CompareForm', () => {
         })
       );
     });
+  });
+
+  it('should render ignore labels checkbox when onIgnoreLabelsChange is provided', () => {
+    const mockOnIgnoreLabelsChange = jest.fn();
+    render(
+      <CompareForm 
+        onSubmit={mockOnSubmit} 
+        loading={false} 
+        ignoreLabels={false}
+        onIgnoreLabelsChange={mockOnIgnoreLabelsChange}
+      />
+    );
+
+    const checkbox = screen.getByRole('checkbox', { name: /ignore metadata\/tag updates/i });
+    expect(checkbox).toBeInTheDocument();
+    expect(checkbox).not.toBeChecked();
+  });
+
+  it('should call onIgnoreLabelsChange when checkbox is toggled', async () => {
+    const mockOnIgnoreLabelsChange = jest.fn();
+    render(
+      <CompareForm 
+        onSubmit={mockOnSubmit} 
+        loading={false} 
+        ignoreLabels={false}
+        onIgnoreLabelsChange={mockOnIgnoreLabelsChange}
+      />
+    );
+
+    const checkbox = screen.getByRole('checkbox', { name: /ignore metadata\/tag updates/i });
+    
+    await act(async () => {
+      await user.click(checkbox);
+    });
+
+    expect(mockOnIgnoreLabelsChange).toHaveBeenCalledWith(true);
+  });
+
+  it('should not render ignore labels checkbox when onIgnoreLabelsChange is not provided', () => {
+    render(<CompareForm onSubmit={mockOnSubmit} loading={false} />);
+
+    const checkbox = screen.queryByRole('checkbox', { name: /ignore metadata\/tag updates/i });
+    expect(checkbox).not.toBeInTheDocument();
   });
 });
 

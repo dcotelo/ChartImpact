@@ -16,6 +16,7 @@ export default function Home() {
   const [progressMessage, setProgressMessage] = useState<string>('');
   const [progressStep, setProgressStep] = useState<number>(0);
   const [progressTotal] = useState<number>(7);
+  const [ignoreLabels, setIgnoreLabels] = useState<boolean>(false);
 
   const handleCompare = async (formData: CompareRequest) => {
     setLoading(true);
@@ -67,7 +68,11 @@ export default function Home() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            ...formData,
+            // Always request full diff from backend; filtering happens client-side
+            ignoreLabels: false
+          }),
         });
 
         if (progressInterval) clearInterval(progressInterval);
@@ -161,7 +166,9 @@ export default function Home() {
           key={formData ? JSON.stringify(formData) : 'empty'}
           onSubmit={handleCompare} 
           loading={loading} 
-          initialData={formData} 
+          initialData={formData}
+          ignoreLabels={ignoreLabels}
+          onIgnoreLabelsChange={setIgnoreLabels}
         />
 
         {loading && progressMessage && (
@@ -206,7 +213,7 @@ export default function Home() {
           <div style={{ marginTop: '2rem' }}>
             <DiffDisplay 
               result={result} 
-              ignoreLabels={formData?.ignoreLabels}
+              ignoreLabels={ignoreLabels}
             />
           </div>
         )}
