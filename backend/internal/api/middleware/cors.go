@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // CORS middleware handles Cross-Origin Resource Sharing
