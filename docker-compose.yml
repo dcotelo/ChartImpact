@@ -1,16 +1,53 @@
 version: '3.8'
 
 services:
-  app:
+  # Backend API (Go)
+  backend:
     build:
-      context: .
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - HOST=0.0.0.0
+      - TEMP_DIR=/tmp/chartimpact
+      - GIT_TERMINAL=dumb
+      - GIT_ASKPASS=echo
+      - LOG_LEVEL=info
+      - LOG_FORMAT=text
+      - DYFF_ENABLED=true
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://frontend:3000
+    volumes:
+      - /tmp/chartimpact:/tmp/chartimpact
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - chartimpact
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-    volumes:
-      - /tmp:/tmp
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - chartimpact
+
+networks:
+  chartimpact:
+    driver: bridge
     # Ensure Helm and Git are available in container
     # These should be installed in the Dockerfile
 
