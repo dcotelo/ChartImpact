@@ -16,6 +16,7 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/cli"
 	"sigs.k8s.io/yaml"
 
@@ -373,6 +374,14 @@ func (h *HelmService) renderTemplate(ctx context.Context, chartDir string, value
 	client.ClientOnly = true
 	client.IncludeCRDs = true
 	client.Namespace = h.settings.Namespace()
+
+	// Set Kubernetes version to latest stable to avoid kubeVersion compatibility issues
+	// This allows charts requiring newer Kubernetes versions to render
+	client.KubeVersion = &chartutil.KubeVersion{
+		Version: "v1.29.0",
+		Major:   "1",
+		Minor:   "29",
+	}
 
 	// Load the chart
 	chart, err := loader.Load(chartDir)
