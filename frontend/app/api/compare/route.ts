@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { HelmService } from '@/services/helm-service';
 import { CompareRequest, CompareResponse } from '@/lib/types';
 
 export const runtime = 'nodejs';
@@ -42,16 +41,29 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const helmService = new HelmService();
-    
-    const result = await helmService.compareVersions({
-      repository: body.repository,
-      chartPath: body.chartPath,
-      version1: body.version1,
-      version2: body.version2,
-      valuesFile: body.valuesFile,
-      valuesContent: body.valuesContent
+    // Make API call to backend service
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const response = await fetch(`${apiUrl}/api/compare`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        repository: body.repository,
+        chartPath: body.chartPath,
+        version1: body.version1,
+        version2: body.version2,
+        valuesFile: body.valuesFile,
+        valuesContent: body.valuesContent
+      }),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Backend comparison failed');
+    }
+
+    const result = await response.json();
 
     return NextResponse.json<CompareResponse>({
       success: true,
