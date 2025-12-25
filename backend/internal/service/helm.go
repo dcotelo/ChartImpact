@@ -534,10 +534,10 @@ func (h *HelmService) filterMetadataChanges(diffOutput string) string {
 	}
 
 	result := strings.Join(filteredLines, "\n")
-	
+
 	// Clean up excessive empty lines using pre-compiled regex
 	result = excessiveNewlinesRegex.ReplaceAllString(result, "\n\n")
-	
+
 	return strings.TrimSpace(result)
 }
 
