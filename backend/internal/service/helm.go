@@ -429,7 +429,7 @@ func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 
 
 // dyffCompare uses the dyff tool for enhanced YAML comparison
 // Creates temporary files and runs dyff between command
-// If ignoreLabels is true, adds exclude paths for metadata.labels and metadata.annotations
+// If ignoreLabels is true, filters out metadata.labels and metadata.annotations from the output
 func (h *HelmService) dyffCompare(ctx context.Context, rendered1, rendered2 string, ignoreLabels bool) (string, error) {
 	// Check if dyff is available
 	if _, err := exec.LookPath("dyff"); err != nil {
@@ -450,30 +450,29 @@ func (h *HelmService) dyffCompare(ctx context.Context, rendered1, rendered2 stri
 	}
 	defer os.Remove(file2)
 
-	// Build dyff command with optional exclude paths
-	args := []string{"between", "--omit-header"}
-	
-	// Add exclude paths if ignoreLabels is enabled
-	if ignoreLabels {
-		args = append(args, "--exclude", "/metadata/labels")
-		args = append(args, "--exclude", "/metadata/annotations")
-	}
-	
-	args = append(args, file1, file2)
-
 	// Run dyff
-	cmd := exec.CommandContext(ctx, "dyff", args...)
+	cmd := exec.CommandContext(ctx, "dyff", "between", "--omit-header", file1, file2)
 	output, err := cmd.CombinedOutput()
 
 	// Exit code 1 means differences found (expected), not an error
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
-			return string(output), nil
+			result := string(output)
+			// Filter metadata changes if requested
+			if ignoreLabels {
+				result = h.filterMetadataChanges(result)
+			}
+			return result, nil
 		}
 		return "", fmt.Errorf("dyff command failed: %w\nOutput: %s", err, string(output))
 	}
 
-	return string(output), nil
+	result := string(output)
+	// Filter metadata changes if requested
+	if ignoreLabels {
+		result = h.filterMetadataChanges(result)
+	}
+	return result, nil
 }
 
 // simpleDiff provides a basic line-by-line diff as fallback
@@ -490,6 +489,55 @@ func (h *HelmService) simpleDiff(content1, content2 string) string {
 	diff.WriteString(fmt.Sprintf("\n\n=== Summary ===\nVersion 1: %d lines\nVersion 2: %d lines\n", len(lines1), len(lines2)))
 
 	return diff.String()
+}
+
+// filterMetadataChanges filters out metadata.labels and metadata.annotations changes from dyff output
+// Parses the dyff output line by line and removes sections related to metadata changes
+func (h *HelmService) filterMetadataChanges(diffOutput string) string {
+	lines := strings.Split(diffOutput, "\n")
+	var filteredLines []string
+	skipSection := false
+
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		// Check if this is a path line that starts a new diff section
+		// dyff format: "metadata.labels.key" or "metadata.annotations.key"
+		if !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") {
+			// This could be a path line
+			if strings.HasPrefix(trimmed, "metadata.labels") ||
+				strings.HasPrefix(trimmed, "metadata.annotations") {
+				skipSection = true
+				continue
+			} else if trimmed != "" && !strings.Contains(trimmed, "±") && 
+					  !strings.Contains(trimmed, "+") && !strings.Contains(trimmed, "-") {
+				// New path line, stop skipping
+				skipSection = false
+			}
+		}
+
+		// Skip lines in filtered sections
+		if skipSection {
+			// Continue skipping until we find a new section or empty line
+			if trimmed == "" && i+1 < len(lines) {
+				// Check if next line starts a new section
+				nextTrimmed := strings.TrimSpace(lines[i+1])
+				if !strings.HasPrefix(lines[i+1], " ") && !strings.HasPrefix(lines[i+1], "\t") && nextTrimmed != "" {
+					skipSection = false
+				}
+			}
+			continue
+		}
+
+		filteredLines = append(filteredLines, line)
+	}
+
+	result := strings.Join(filteredLines, "\n")
+	
+	// Clean up excessive empty lines
+	result = regexp.MustCompile(`\n{3,}`).ReplaceAllString(result, "\n\n")
+	
+	return strings.TrimSpace(result)
 }
 
 // suggestChartPath searches for Chart.yaml files and suggests valid chart paths
