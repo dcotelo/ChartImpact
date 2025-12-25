@@ -63,15 +63,17 @@ export default function Home() {
           }
         }, 2000);
 
+        // Explicitly exclude ignoreLabels from request - filtering happens client-side
+        const { ignoreLabels: _, ...requestData } = formData;
+        
         const response = await fetch(API_ENDPOINTS.compare, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            ...formData,
-            // Always request full diff from backend; filtering happens client-side
-            ignoreLabels: false
+            ...requestData,
+            ignoreLabels: false  // Always request full diff from backend
           }),
         });
 
