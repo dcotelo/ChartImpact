@@ -1,3 +1,5 @@
+![ChartInspect](../ChartInspect.png)
+
 # ChartImpact Backend
 
 Go-based REST API for comparing Helm chart versions using the Helm Go SDK.

@@ -1,3 +1,5 @@
+![ChartInspect](ChartInspect.png)
+
 # Chart Impact
 
 A modern web application for comparing differences between two Helm chart versions. Built with a **Go backend** using the Helm SDK and a **Next.js frontend** for a fast, scalable, and maintainable architecture.
