@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CompareForm } from '../CompareForm';
 
@@ -14,9 +14,9 @@ describe('CompareForm', () => {
     render(<CompareForm onSubmit={mockOnSubmit} loading={false} />);
 
     expect(screen.getByPlaceholderText(/github.com\/user\/repo/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('charts/app')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('v1.0.0')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('v1.1.0')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('charts/datadog or charts/datadog-operator')).toBeInTheDocument();
+    const versionInputs = screen.getAllByPlaceholderText('Enter version manually');
+    expect(versionInputs.length).toBeGreaterThanOrEqual(2);
     expect(screen.getByPlaceholderText('values/prod.yaml')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/replicaCount: 3/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /compare versions/i })).toBeInTheDocument();
@@ -25,21 +25,23 @@ describe('CompareForm', () => {
   it('should have default value for chart path', () => {
     render(<CompareForm onSubmit={mockOnSubmit} loading={false} />);
 
-    const chartPathInput = screen.getByPlaceholderText('charts/app') as HTMLInputElement;
+    const chartPathInput = screen.getByPlaceholderText('charts/datadog or charts/datadog-operator') as HTMLInputElement;
     expect(chartPathInput.value).toBe('charts/app');
   });
 
   it('should call onSubmit with form data when submitted', async () => {
     render(<CompareForm onSubmit={mockOnSubmit} loading={false} />);
 
-    await user.type(screen.getByPlaceholderText(/github.com\/user\/repo/i), 'https://github.com/test/repo.git');
-    const chartPathInput = screen.getByPlaceholderText('charts/app');
-    await user.clear(chartPathInput);
-    await user.type(chartPathInput, 'charts/myapp');
-    await user.type(screen.getByPlaceholderText('v1.0.0'), 'v1.0.0');
-    await user.type(screen.getByPlaceholderText('v1.1.0'), 'v1.1.0');
-
-    await user.click(screen.getByRole('button', { name: /compare versions/i }));
+    await act(async () => {
+      await user.type(screen.getByPlaceholderText(/github.com\/user\/repo/i), 'https://github.com/test/repo.git');
+      const chartPathInput = screen.getByPlaceholderText('charts/datadog or charts/datadog-operator');
+      await user.clear(chartPathInput);
+      await user.type(chartPathInput, 'charts/myapp');
+      const versionInputs2 = screen.getAllByPlaceholderText('Enter version manually');
+      await user.type(versionInputs2[0], 'v1.0.0');
+      await user.type(versionInputs2[1], 'v1.1.0');
+      await user.click(screen.getByRole('button', { name: /compare versions/i }));
+    });
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith({
@@ -49,6 +51,7 @@ describe('CompareForm', () => {
         version2: 'v1.1.0',
         valuesFile: '',
         valuesContent: '',
+        ignoreLabels: false,
       });
     });
   });
@@ -69,12 +72,14 @@ describe('CompareForm', () => {
   it('should allow optional values file input', async () => {
     render(<CompareForm onSubmit={mockOnSubmit} loading={false} />);
 
-    await user.type(screen.getByPlaceholderText(/github.com\/user\/repo/i), 'https://github.com/test/repo.git');
-    await user.type(screen.getByPlaceholderText('v1.0.0'), 'v1.0.0');
-    await user.type(screen.getByPlaceholderText('v1.1.0'), 'v1.1.0');
-    await user.type(screen.getByPlaceholderText('values/prod.yaml'), 'values/prod.yaml');
-
-    await user.click(screen.getByRole('button', { name: /compare versions/i }));
+    await act(async () => {
+      await user.type(screen.getByPlaceholderText(/github.com\/user\/repo/i), 'https://github.com/test/repo.git');
+      const versionInputs3 = screen.getAllByPlaceholderText('Enter version manually');
+      await user.type(versionInputs3[0], 'v1.0.0');
+      await user.type(versionInputs3[1], 'v1.1.0');
+      await user.type(screen.getByPlaceholderText('values/prod.yaml'), 'values/prod.yaml');
+      await user.click(screen.getByRole('button', { name: /compare versions/i }));
+    });
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith(
@@ -88,14 +93,16 @@ describe('CompareForm', () => {
   it('should allow optional values content input', async () => {
     render(<CompareForm onSubmit={mockOnSubmit} loading={false} />);
 
-    await user.type(screen.getByPlaceholderText(/github.com\/user\/repo/i), 'https://github.com/test/repo.git');
-    await user.type(screen.getByPlaceholderText('v1.0.0'), 'v1.0.0');
-    await user.type(screen.getByPlaceholderText('v1.1.0'), 'v1.1.0');
-    const textarea = screen.getByPlaceholderText(/replicaCount: 3/i);
-    await user.clear(textarea);
-    await user.type(textarea, 'replicaCount: 3\nimage:\n  tag: latest');
-
-    await user.click(screen.getByRole('button', { name: /compare versions/i }));
+    await act(async () => {
+      await user.type(screen.getByPlaceholderText(/github.com\/user\/repo/i), 'https://github.com/test/repo.git');
+      const versionInputs4 = screen.getAllByPlaceholderText('Enter version manually');
+      await user.type(versionInputs4[0], 'v1.0.0');
+      await user.type(versionInputs4[1], 'v1.1.0');
+      const textarea = screen.getByPlaceholderText(/replicaCount: 3/i);
+      await user.clear(textarea);
+      await user.type(textarea, 'replicaCount: 3\nimage:\n  tag: latest');
+      await user.click(screen.getByRole('button', { name: /compare versions/i }));
+    });
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith(
