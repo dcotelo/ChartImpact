@@ -493,6 +493,7 @@ func (h *HelmService) simpleDiff(content1, content2 string) string {
 
 // filterMetadataChanges filters out metadata.labels and metadata.annotations changes from dyff output
 // Parses the dyff output line by line and removes sections related to metadata changes
+// Handles both top-level and nested metadata paths (e.g., spec.template.metadata.labels)
 func (h *HelmService) filterMetadataChanges(diffOutput string) string {
 	lines := strings.Split(diffOutput, "\n")
 	var filteredLines []string
@@ -502,16 +503,13 @@ func (h *HelmService) filterMetadataChanges(diffOutput string) string {
 		trimmed := strings.TrimSpace(line)
 
 		// Check if this is a path line that starts a new diff section
-		// dyff format: "metadata.labels.key" or "metadata.annotations.key"
 		if !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") {
-			// This could be a path line
-			if strings.HasPrefix(trimmed, "metadata.labels") ||
-				strings.HasPrefix(trimmed, "metadata.annotations") {
+			// This could be a dyff path line
+			if h.isMetadataPath(trimmed) {
 				skipSection = true
 				continue
-			} else if trimmed != "" && !strings.Contains(trimmed, "±") && 
-					  !strings.Contains(trimmed, "+") && !strings.Contains(trimmed, "-") {
-				// New path line, stop skipping
+			} else if h.isDyffPathLine(trimmed) {
+				// New non-metadata path line, stop skipping
 				skipSection = false
 			}
 		}
@@ -522,7 +520,7 @@ func (h *HelmService) filterMetadataChanges(diffOutput string) string {
 			if trimmed == "" && i+1 < len(lines) {
 				// Check if next line starts a new section
 				nextTrimmed := strings.TrimSpace(lines[i+1])
-				if !strings.HasPrefix(lines[i+1], " ") && !strings.HasPrefix(lines[i+1], "\t") && nextTrimmed != "" {
+				if h.isDyffPathLine(lines[i+1]) && nextTrimmed != "" {
 					skipSection = false
 				}
 			}
@@ -538,6 +536,28 @@ func (h *HelmService) filterMetadataChanges(diffOutput string) string {
 	result = regexp.MustCompile(`\n{3,}`).ReplaceAllString(result, "\n\n")
 	
 	return strings.TrimSpace(result)
+}
+
+// isMetadataPath checks if a path contains metadata.labels or metadata.annotations
+// Handles both direct paths like "metadata.labels.app" and nested paths like "spec.template.metadata.labels.app"
+func (h *HelmService) isMetadataPath(path string) bool {
+	return strings.Contains(path, "metadata.labels") || strings.Contains(path, "metadata.annotations")
+}
+
+// isDyffPathLine checks if a line is a dyff path line (not indented and not containing diff markers)
+// Path lines in dyff output are not indented and don't contain ±, +, or - symbols
+func (h *HelmService) isDyffPathLine(line string) bool {
+	if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
+		return false
+	}
+	trimmed := strings.TrimSpace(line)
+	if trimmed == "" {
+		return false
+	}
+	// Path lines don't contain diff markers
+	return !strings.Contains(trimmed, "±") && 
+		   !strings.Contains(trimmed, "+") && 
+		   !strings.Contains(trimmed, "-")
 }
 
 // suggestChartPath searches for Chart.yaml files and suggests valid chart paths
