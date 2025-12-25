@@ -714,34 +714,6 @@ export class HelmService {
     }
   }
 
-  private async normalizeYaml(yaml: string): Promise<string> {
-    // Basic normalization: remove trailing whitespace, normalize line endings, etc.
-    // For more advanced normalization, we would need a YAML parser
-    // This is a simple implementation that handles common cases
-    
-    const lines = yaml.split('\n');
-    const normalized: string[] = [];
-    
-    for (const line of lines) {
-      // Remove trailing whitespace
-      let normalizedLine = line.replace(/\s+$/, '');
-      
-      // Normalize empty lines
-      if (normalizedLine.trim() === '') {
-        normalizedLine = '';
-      }
-      
-      normalized.push(normalizedLine);
-    }
-    
-    // Remove trailing empty lines
-    while (normalized.length > 0 && normalized[normalized.length - 1] === '') {
-      normalized.pop();
-    }
-    
-    return normalized.join('\n');
-  }
-
   private simpleYamlDiff(yaml1: string, yaml2: string): string {
     // Simple text-based diff as fallback
     const lines1 = yaml1.split('\n');
