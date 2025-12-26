@@ -20,6 +20,7 @@ import (
 	"helm.sh/helm/v3/pkg/cli"
 	"sigs.k8s.io/yaml"
 
+	"github.com/dcotelo/chartimpact/backend/internal/diff"
 	"github.com/dcotelo/chartimpact/backend/internal/models"
 )
 
@@ -410,10 +411,26 @@ func (h *HelmService) renderTemplate(ctx context.Context, chartDir string, value
 }
 
 // compareRendered compares two rendered YAML manifests
-// First attempts to use dyff if enabled, falls back to simple diff
+// Tries internal diff engine first (if enabled), then dyff, then falls back to simple diff
 // If ignoreLabels is true, filters out metadata.labels and metadata.annotations changes
 func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 string, ignoreLabels bool) (string, error) {
 	log.Info("Comparing rendered templates")
+
+	// Check if internal diff engine is enabled
+	internalDiffEnabled := os.Getenv("INTERNAL_DIFF_ENABLED")
+	if internalDiffEnabled == "true" {
+		log.Info("Using internal diff engine")
+		diffEngine := diff.NewEngine()
+		diffEngine.IgnoreLabels = ignoreLabels
+		diffEngine.IgnoreAnnotations = ignoreLabels
+
+		result, err := diffEngine.Compare(rendered1, rendered2)
+		if err == nil {
+			log.Info("Internal diff engine comparison completed successfully")
+			return result.Raw, nil
+		}
+		log.Warnf("Internal diff engine failed, falling back to dyff: %v", err)
+	}
 
 	// Check if dyff is enabled
 	dyffEnabled := os.Getenv("DYFF_ENABLED")
