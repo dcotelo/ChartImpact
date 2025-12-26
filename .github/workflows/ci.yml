@@ -28,6 +28,14 @@ jobs:
         working-directory: ./backend
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
+      - name: Verify structured diff availability flag
+        working-directory: ./backend
+        run: go test -v ./internal/service -run TestStructuredDiffAvailableFlag
+
+      - name: Verify DiffResultV2 schema validation
+        working-directory: ./backend
+        run: go test -v ./internal/models -run TestCompareResponse
+
       - name: Upload Go coverage
         uses: codecov/codecov-action@v3
         with:
@@ -75,6 +83,11 @@ jobs:
       - name: Run tests
         working-directory: ./frontend
         run: npm test
+
+      - name: Test Explorer v2 with demo data
+        working-directory: ./frontend
+        run: npm test -- DiffExplorer.test.tsx
+        continue-on-error: false
 
       - name: Generate test coverage
         working-directory: ./frontend

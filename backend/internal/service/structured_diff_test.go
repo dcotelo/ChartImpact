@@ -179,3 +179,84 @@ metadata:
 	// Modified resource should have changes
 	assert.Greater(t, len(modified.Changes), 0)
 }
+
+// TestStructuredDiffAvailableFlag tests that the structuredDiffAvailable flag is set correctly
+func TestStructuredDiffAvailableFlag(t *testing.T) {
+	t.Run("flag is true when internal diff engine is enabled", func(t *testing.T) {
+		// Ensure internal diff is enabled
+		originalValue := os.Getenv("INTERNAL_DIFF_ENABLED")
+		os.Setenv("INTERNAL_DIFF_ENABLED", "true")
+		defer os.Setenv("INTERNAL_DIFF_ENABLED", originalValue)
+
+		service := NewHelmService()
+		ctx := context.Background()
+
+		manifest1 := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  key: value1
+`
+
+		manifest2 := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  key: value2
+`
+
+		diffResult, diffRaw, err := service.compareRendered(ctx, manifest1, manifest2, false)
+		require.NoError(t, err)
+		require.NotNil(t, diffResult)
+		require.NotEmpty(t, diffRaw)
+
+		// Use the service helper method to build response
+		response := service.buildCompareResponse("v1", "v2", diffRaw, diffResult)
+
+		assert.True(t, response.StructuredDiffAvailable, "structuredDiffAvailable should be true when internal diff engine is enabled")
+		assert.NotNil(t, response.StructuredDiff, "structuredDiff should not be nil")
+	})
+
+	t.Run("flag is false when internal diff engine is disabled", func(t *testing.T) {
+		// Disable internal diff engine
+		originalValue := os.Getenv("INTERNAL_DIFF_ENABLED")
+		os.Setenv("INTERNAL_DIFF_ENABLED", "false")
+		defer os.Setenv("INTERNAL_DIFF_ENABLED", originalValue)
+
+		service := NewHelmService()
+		ctx := context.Background()
+
+		manifest1 := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  key: value1
+`
+
+		manifest2 := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  key: value2
+`
+
+		diffResult, diffRaw, err := service.compareRendered(ctx, manifest1, manifest2, false)
+		require.NoError(t, err)
+		require.NotEmpty(t, diffRaw)
+
+		// Use the service helper method to build response
+		response := service.buildCompareResponse("v1", "v2", diffRaw, diffResult)
+
+		assert.False(t, response.StructuredDiffAvailable, "structuredDiffAvailable should be false when internal diff engine is disabled")
+		assert.Nil(t, response.StructuredDiff, "structuredDiff should be nil")
+	})
+}
+

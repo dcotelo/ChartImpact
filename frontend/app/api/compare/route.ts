@@ -70,7 +70,10 @@ export async function POST(request: NextRequest) {
       success: true,
       diff: result.diff,
       version1: body.version1,
-      version2: body.version2
+      version2: body.version2,
+      structuredDiff: result.structuredDiff,
+      structuredDiffAvailable: result.structuredDiffAvailable,
+      statistics: result.statistics
     });
 
   } catch (error: any) {

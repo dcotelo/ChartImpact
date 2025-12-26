@@ -143,19 +143,28 @@ func (h *HelmService) CompareVersions(ctx context.Context, req *models.CompareRe
 
 	log.Info("Chart comparison completed successfully")
 
+	response := h.buildCompareResponse(req.Version1, req.Version2, diffRaw, diffResult)
+	return response, nil
+}
+
+// buildCompareResponse constructs a CompareResponse with structured diff if available
+func (h *HelmService) buildCompareResponse(version1, version2, diffRaw string, diffResult *diff.DiffResult) *models.CompareResponse {
 	response := &models.CompareResponse{
 		Success:  true,
 		Diff:     diffRaw,
-		Version1: req.Version1,
-		Version2: req.Version2,
+		Version1: version1,
+		Version2: version2,
 	}
 
 	// Add structured diff if available
 	if diffResult != nil {
 		response.StructuredDiff = h.convertToStructuredDiff(diffResult)
+		response.StructuredDiffAvailable = true
+	} else {
+		response.StructuredDiffAvailable = false
 	}
 
-	return response, nil
+	return response
 }
 
 // createWorkDir creates a unique working directory for this comparison operation
