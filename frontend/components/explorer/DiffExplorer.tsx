@@ -28,7 +28,33 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
   const isDemoMode = diffData !== undefined && diffData !== result.structuredDiff;
 
   // Check if we have v2 data structure available
-  if (!effectiveDiffData || !effectiveDiffData.resources) {
+  if (!effectiveDiffData) {
+    return (
+      <div style={{
+        padding: '2rem',
+        background: '#f5f5f5',
+        borderRadius: '8px',
+        textAlign: 'center'
+      }}>
+        <h3 style={{ marginBottom: '1rem' }}>Diff Explorer (v2)</h3>
+        <p style={{ color: '#666', marginBottom: '1rem' }}>
+          The structured diff format is not available from the backend.
+          <br />
+          Please use the Classic view to see the comparison.
+        </p>
+        {result.diff && (
+          <p style={{ color: '#999', fontSize: '0.875rem' }}>
+            The backend returned a plain text diff. Explorer v2 requires structured diff data.
+            <br />
+            Enable INTERNAL_DIFF_ENABLED=true in the backend configuration.
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // Handle case where structured diff exists but has no resources
+  if (!effectiveDiffData.resources || effectiveDiffData.resources.length === 0) {
     return (
       <div style={{
         padding: '2rem',
@@ -38,9 +64,9 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
       }}>
         <h3 style={{ marginBottom: '1rem' }}>Diff Explorer (v2)</h3>
         <p style={{ color: '#666' }}>
-          The new structured diff format is not yet available from the backend.
+          No resource changes detected between the two versions.
           <br />
-          Please use the Classic view for now.
+          The versions appear to be identical.
         </p>
       </div>
     );

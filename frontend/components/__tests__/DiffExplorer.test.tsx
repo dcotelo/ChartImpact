@@ -31,8 +31,8 @@ describe('DiffExplorer', () => {
   it('should show blocking message when no structured diff data is available', () => {
     render(<DiffExplorer result={mockResult} />);
 
-    expect(screen.getByText(/The new structured diff format is not yet available from the backend/i)).toBeInTheDocument();
-    expect(screen.getByText(/Please use the Classic view for now/i)).toBeInTheDocument();
+    expect(screen.getByText(/The structured diff format is not available from the backend/i)).toBeInTheDocument();
+    expect(screen.getByText(/Please use the Classic view to see the comparison/i)).toBeInTheDocument();
   });
 
   it('should render explorer when structured diff is provided via result', () => {
@@ -123,6 +123,6 @@ describe('DiffExplorer', () => {
     render(<DiffExplorer result={mockResult} diffData={emptyDiffData} />);
 
     expect(screen.getByText(/Diff Explorer \(v2\)/i)).toBeInTheDocument();
-    expect(screen.getByTestId('resource-list')).toBeInTheDocument();
+    expect(screen.getByText(/No resource changes detected/i)).toBeInTheDocument();
   });
 });
