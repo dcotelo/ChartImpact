@@ -366,9 +366,9 @@ export default function DemoPage() {
           }}
         >
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#333' }}>📦 Resources</h2>
-          {mockDiffResultV2.resources.map((resource, idx) => (
+          {mockDiffResultV2.resources.map((resource) => (
             <div
-              key={idx}
+              key={`${resource.identity.kind}-${resource.identity.namespace}-${resource.identity.name}`}
               onClick={() => setSelectedResource(resource)}
               style={{
                 padding: '1rem',
@@ -446,9 +446,9 @@ export default function DemoPage() {
               No changes match the selected filters
             </div>
           ) : (
-            filteredChanges.map((change, idx) => (
+            filteredChanges.map((change) => (
               <div
-                key={idx}
+                key={`${change.resource.kind}-${change.resource.name}-${change.path}`}
                 style={{
                   padding: '1rem',
                   border: '1px solid #ddd',
@@ -510,9 +510,9 @@ export default function DemoPage() {
                 )}
                 {change.flags && change.flags.length > 0 && (
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {change.flags.map((flag, fidx) => (
+                    {change.flags.map((flag) => (
                       <span
-                        key={fidx}
+                        key={flag}
                         style={{
                           padding: '0.15rem 0.4rem',
                           background: '#e7f3ff',
