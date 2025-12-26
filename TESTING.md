@@ -20,13 +20,13 @@ Before running tests, ensure you have:
 3. **Helm 3.x** installed (for manual testing and integration tests)
 4. **Go 1.21+** installed (for backend testing)
 
-## Explorer v2 Testing
+## Explorer Testing
 
-Explorer v2 has comprehensive test coverage to ensure reliability:
+Explorer has comprehensive test coverage to ensure reliability:
 
 ### Automated Tests
 
-Run Explorer v2 tests:
+Run Explorer tests:
 ```bash
 cd frontend
 npm test -- DiffExplorer.test.tsx
@@ -43,7 +43,7 @@ These tests verify:
 
 1. Navigate to `http://localhost:3000/demo`
 2. Verify:
-   - Explorer v2 renders without backend
+   - Explorer renders without backend
    - "DEMO MODE" badge is visible
    - Resource list shows sample data
    - Filtering and navigation work
@@ -52,7 +52,7 @@ These tests verify:
 ### Manual Testing - Real Backend Data
 
 1. Perform a chart comparison from the main page
-2. Switch to "Explorer (v2)" tab
+2. Switch to "Explorer" tab
 3. Verify:
    - Explorer renders if backend provides `structuredDiff`
    - No "DEMO MODE" badge (indicates real data)

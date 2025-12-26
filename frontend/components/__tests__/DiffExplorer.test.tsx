@@ -44,7 +44,7 @@ describe('DiffExplorer', () => {
 
     render(<DiffExplorer result={resultWithStructuredDiff} />);
 
-    expect(screen.getByText(/Diff Explorer \(v2\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Diff Explorer/i)).toBeInTheDocument();
     expect(screen.getByTestId('resource-list')).toBeInTheDocument();
     expect(screen.getByTestId('view-panel')).toBeInTheDocument();
     expect(screen.queryByText(/not yet available/i)).not.toBeInTheDocument();
@@ -53,7 +53,7 @@ describe('DiffExplorer', () => {
   it('should render explorer when structured diff is provided via diffData prop', () => {
     render(<DiffExplorer result={mockResult} diffData={mockDiffResultV2} />);
 
-    expect(screen.getByText(/Diff Explorer \(v2\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Diff Explorer/i)).toBeInTheDocument();
     expect(screen.getByTestId('resource-list')).toBeInTheDocument();
     expect(screen.getByTestId('view-panel')).toBeInTheDocument();
     expect(screen.queryByText(/not yet available/i)).not.toBeInTheDocument();
@@ -111,7 +111,7 @@ describe('DiffExplorer', () => {
 
     // Should show demo mode badge since diffData prop is provided
     expect(screen.getByText(/DEMO MODE/i)).toBeInTheDocument();
-    expect(screen.getByText(/Diff Explorer \(v2\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Diff Explorer/i)).toBeInTheDocument();
   });
 
   it('should handle empty resources gracefully', () => {
@@ -122,7 +122,7 @@ describe('DiffExplorer', () => {
 
     render(<DiffExplorer result={mockResult} diffData={emptyDiffData} />);
 
-    expect(screen.getByText(/Diff Explorer \(v2\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Diff Explorer/i)).toBeInTheDocument();
     expect(screen.getByText(/No resource changes detected/i)).toBeInTheDocument();
   });
 
@@ -137,7 +137,7 @@ describe('DiffExplorer', () => {
 
     render(<DiffExplorer result={resultWithPlainDiff} />);
 
-    expect(screen.getByText(/Diff Explorer \(v2\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Diff Explorer/i)).toBeInTheDocument();
     expect(screen.getByText(/ADAPTED FROM PLAIN DIFF/i)).toBeInTheDocument();
     expect(screen.getByTestId('resource-list')).toBeInTheDocument();
   });

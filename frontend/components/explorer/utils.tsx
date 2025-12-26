@@ -1,45 +1,45 @@
 import { ResourceDiff } from '@/lib/types';
 
 /**
- * Common style constants
+ * Common style constants - Dark theme to match Classic view
  */
 export const COLORS = {
-  // Change type colors
+  // Change type colors (keep semantic colors consistent)
   added: '#4caf50',
   removed: '#f44336',
   modified: '#ff9800',
   unchanged: '#9e9e9e',
   
-  // Background colors
-  addedBg: '#e8f5e9',
-  removedBg: '#ffebee',
-  modifiedBg: '#fff3e0',
-  unchangedBg: '#f5f5f5',
+  // Background colors - Dark theme
+  addedBg: '#1e4620',
+  removedBg: '#4a1a1a',
+  modifiedBg: '#4a3510',
+  unchangedBg: '#2d2d2d',
   
-  // Text colors
-  addedText: '#2e7d32',
-  removedText: '#c62828',
-  modifiedText: '#e65100',
-  unchangedText: '#666',
+  // Text colors - Light on dark
+  addedText: '#81c784',
+  removedText: '#e57373',
+  modifiedText: '#ffb74d',
+  unchangedText: '#999',
   
   // Importance colors
-  critical: '#d32f2f',
-  high: '#f57c00',
+  critical: '#f44336',
+  high: '#ff9800',
   medium: '#fbc02d',
-  low: '#388e3c',
-  defaultImportance: '#757575',
+  low: '#4caf50',
+  defaultImportance: '#999',
   
-  // UI colors
-  primary: '#667eea',
-  text: '#333',
-  textLight: '#666',
-  textLighter: '#999',
-  border: '#ddd',
-  borderLight: '#e0e0e0',
-  bgLight: '#f5f5f5',
-  bgLighter: '#f9f9f9',
-  bgLightest: '#fafafa',
-  white: 'white',
+  // UI colors - Dark theme
+  primary: '#4caf50',
+  text: '#d4d4d4',
+  textLight: '#999',
+  textLighter: '#666',
+  border: '#444',
+  borderLight: '#333',
+  bgLight: '#2d2d2d',
+  bgLighter: '#252525',
+  bgLightest: '#1e1e1e',
+  white: '#1e1e1e',
 } as const;
 
 /**

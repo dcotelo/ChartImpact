@@ -1,4 +1,4 @@
-# DiffResultV2 - Structured Diff Format for Explorer v2
+# DiffResultV2 - Structured Diff Format for Explorer
 
 ## Overview
 
@@ -10,7 +10,7 @@ The backend now exposes structured diff data in the `structuredDiff` field of th
 - **Summary graphs and analytics**: Display aggregate statistics and change impact
 - **Frontend-only interactions**: Filter, search, and visualize without re-computing diffs
 
-## Explorer v2 Availability
+## Explorer Availability
 
 The backend explicitly indicates whether structured diff data is available through the `structuredDiffAvailable` flag in the response:
 
@@ -24,7 +24,7 @@ The backend explicitly indicates whether structured diff data is available throu
 
 ### Frontend Behavior
 
-The Explorer (v2) component intelligently handles structured diff availability:
+The Explorer component intelligently handles structured diff availability:
 
 1. **Backend provides structured diff**: Uses `result.structuredDiff` from the API response
 2. **Demo mode**: When demo data is explicitly provided via the `diffData` prop, displays a "DEMO MODE" badge
@@ -39,7 +39,7 @@ Structured diff is available when:
 
 ### Demo Mode
 
-Visit `/demo` to see Explorer v2 in action with mock data. The demo showcases all features without requiring a backend comparison.
+Visit `/demo` to see Explorer in action with mock data. The demo showcases all features without requiring a backend comparison.
 
 ## Backend Implementation
 
@@ -121,7 +121,7 @@ import { DiffResultV2, ResourceDiffV2, ChangeV2 } from '@/lib/types';
 interface CompareResponse {
   success: boolean;
   diff?: string;              // Plain text diff for Classic view
-  structuredDiff?: DiffResultV2;  // Structured diff for Explorer v2
+  structuredDiff?: DiffResultV2;  // Structured diff for Explorer
   version1?: string;
   version2?: string;
 }
@@ -174,7 +174,7 @@ Changes may have flags indicating their impact:
 
 ## Demo Route
 
-Visit `/demo` to see Explorer v2 in action with mock data. The demo showcases:
+Visit `/demo` to see Explorer in action with mock data. The demo showcases:
 
 - **Metadata display**: Engine version, compare ID, versions
 - **Statistics dashboard**: Added, modified, removed resources
@@ -183,9 +183,9 @@ Visit `/demo` to see Explorer v2 in action with mock data. The demo showcases:
 - **Change details**: View before/after values with semantic context
 - **Demo mode indicator**: Clear badge showing it's using demo data
 
-The demo works without any backend dependency, allowing you to explore all Explorer v2 features immediately.
+The demo works without any backend dependency, allowing you to explore all Explorer features immediately.
 
-## How Explorer v2 Determines Data Source
+## How Explorer Determines Data Source
 
 The `DiffExplorer` component intelligently selects data in this priority order:
 
@@ -193,7 +193,7 @@ The `DiffExplorer` component intelligently selects data in this priority order:
 2. **Backend structured diff** (from `result.structuredDiff`) - Normal mode
 3. **No data available** - Shows blocking message with Classic view suggestion
 
-This ensures Explorer v2 is always functional when data is available, whether from demo or backend.
+This ensures Explorer is always functional when data is available, whether from demo or backend.
 
 ## Usage Examples
 
@@ -257,7 +257,7 @@ DYFF_ENABLED=true           # Fallback to dyff if internal engine fails (default
 
 ## Next Steps
 
-To implement Explorer v2:
+To implement Explorer:
 
 1. **Consume structured diff**: Update components to use `structuredDiff` field
 2. **Build UI components**: Create resource browser, filter controls, importance indicators

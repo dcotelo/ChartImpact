@@ -2,7 +2,7 @@
 
 import { ResourceDiff } from '@/lib/types';
 import { useMemo } from 'react';
-import { getChangeTypeColor, getChangeTypeIcon, filterResources, getResourceId } from './utils';
+import { getChangeTypeColor, getChangeTypeIcon, filterResources, getResourceId, COLORS } from './utils';
 
 interface ResourceListProps {
   resources: ResourceDiff[];
@@ -53,7 +53,7 @@ export function ResourceList({
       <div style={{
         marginBottom: '1rem',
         fontSize: '0.9rem',
-        color: '#666',
+        color: COLORS.textLight,
         fontWeight: '500'
       }}>
         {filteredResources.length} resource{filteredResources.length !== 1 ? 's' : ''}
@@ -68,10 +68,10 @@ export function ResourceList({
             <div style={{
               fontSize: '0.85rem',
               fontWeight: '600',
-              color: '#333',
+              color: COLORS.text,
               marginBottom: '0.5rem',
               padding: '0.25rem 0.5rem',
-              background: '#e0e0e0',
+              background: COLORS.bgLight,
               borderRadius: '4px'
             }}>
               {kind} ({kindResources.length})
@@ -91,10 +91,10 @@ export function ResourceList({
                   style={{
                     padding: '0.5rem',
                     marginBottom: '0.25rem',
-                    background: isSelected ? '#667eea' : 'white',
-                    color: isSelected ? 'white' : '#333',
+                    background: isSelected ? COLORS.primary : COLORS.bgLighter,
+                    color: isSelected ? COLORS.text : COLORS.text,
                     border: '1px solid',
-                    borderColor: isSelected ? '#667eea' : '#ddd',
+                    borderColor: isSelected ? COLORS.primary : COLORS.border,
                     borderRadius: '4px',
                     cursor: 'pointer',
                     fontSize: '0.85rem',
@@ -102,12 +102,12 @@ export function ResourceList({
                   }}
                   onMouseEnter={(e) => {
                     if (!isSelected) {
-                      e.currentTarget.style.background = '#f5f5f5';
+                      e.currentTarget.style.background = COLORS.bgLight;
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isSelected) {
-                      e.currentTarget.style.background = 'white';
+                      e.currentTarget.style.background = COLORS.bgLighter;
                     }
                   }}
                 >
@@ -128,9 +128,10 @@ export function ResourceList({
                   {resource.identity.namespace && (
                     <div style={{
                       fontSize: '0.75rem',
-                      opacity: 0.8,
+                      opacity: 0.7,
                       marginTop: '0.25rem',
-                      marginLeft: '1.5rem'
+                      marginLeft: '1.5rem',
+                      color: COLORS.textLight
                     }}>
                       ns: {resource.identity.namespace}
                     </div>
@@ -138,9 +139,10 @@ export function ResourceList({
                   {resource.changes && resource.changes.length > 0 && (
                     <div style={{
                       fontSize: '0.75rem',
-                      opacity: 0.8,
+                      opacity: 0.7,
                       marginTop: '0.25rem',
-                      marginLeft: '1.5rem'
+                      marginLeft: '1.5rem',
+                      color: COLORS.textLight
                     }}>
                       {resource.changes.length} change{resource.changes.length !== 1 ? 's' : ''}
                     </div>
@@ -156,7 +158,7 @@ export function ResourceList({
         <div style={{
           padding: '2rem',
           textAlign: 'center',
-          color: '#999',
+          color: COLORS.textLight,
           fontSize: '0.9rem'
         }}>
           No resources match your filters or search query.
