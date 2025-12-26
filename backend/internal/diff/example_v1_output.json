@@ -1,0 +1,94 @@
+{
+  "metadata": {
+    "engineVersion": "1.0.0",
+    "compareId": "550e8400-e29b-41d4-a716-446655440000",
+    "generatedAt": "2025-12-26T03:30:00Z",
+    "inputs": {
+      "left": {
+        "source": "helm",
+        "chart": "my-chart",
+        "version": "1.2.3",
+        "valuesHash": "sha256:abc123..."
+      },
+      "right": {
+        "source": "helm",
+        "chart": "my-chart",
+        "version": "1.2.4",
+        "valuesHash": "sha256:def456..."
+      }
+    },
+    "normalizationRules": [
+      "normalizeDefaults"
+    ]
+  },
+  "resources": [
+    {
+      "identity": {
+        "apiVersion": "apps/v1",
+        "kind": "Deployment",
+        "name": "api",
+        "namespace": "default",
+        "uid": null
+      },
+      "changeType": "modified",
+      "beforeHash": "sha256:1234567890abcdef...",
+      "afterHash": "sha256:fedcba0987654321...",
+      "changes": [
+        {
+          "op": "replace",
+          "path": "spec.replicas",
+          "pathTokens": ["spec", "replicas"],
+          "before": 2,
+          "after": 3,
+          "valueType": "number",
+          "semanticType": "workload.replicas",
+          "changeCategory": "workload",
+          "importance": "high",
+          "flags": ["scaling-change", "runtime-impact"]
+        },
+        {
+          "op": "replace",
+          "path": "spec.template.spec.containers.0.image",
+          "pathTokens": ["spec", "template", "spec", "containers", 0, "image"],
+          "before": "api:v1.2.3",
+          "after": "api:v1.2.4",
+          "valueType": "string",
+          "semanticType": "container.image",
+          "changeCategory": "workload",
+          "importance": "high",
+          "flags": ["runtime-impact", "rollout-trigger"]
+        },
+        {
+          "op": "replace",
+          "path": "spec.template.spec.containers.0.resources.limits.cpu",
+          "pathTokens": ["spec", "template", "spec", "containers", 0, "resources", "limits", "cpu"],
+          "before": "500m",
+          "after": "1",
+          "valueType": "string",
+          "semanticType": "resources.cpu",
+          "changeCategory": "resources",
+          "importance": "medium",
+          "flags": ["runtime-impact"]
+        }
+      ],
+      "summary": {
+        "totalChanges": 3,
+        "byImportance": {
+          "high": 2,
+          "medium": 1
+        },
+        "categories": ["resources", "workload"]
+      }
+    }
+  ],
+  "stats": {
+    "resources": {
+      "added": 0,
+      "removed": 0,
+      "modified": 1
+    },
+    "changes": {
+      "total": 3
+    }
+  }
+}

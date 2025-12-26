@@ -17,12 +17,13 @@ type CompareRequest struct {
 
 // CompareResponse represents the response from a chart comparison
 type CompareResponse struct {
-	Success    bool              `json:"success"`              // Whether the comparison succeeded
-	Diff       string            `json:"diff,omitempty"`       // The diff output
-	Error      string            `json:"error,omitempty"`      // Error message if failed
-	Version1   string            `json:"version1,omitempty"`   // Resolved version 1
-	Version2   string            `json:"version2,omitempty"`   // Resolved version 2
-	Statistics *ChangeStatistics `json:"statistics,omitempty"` // Optional: statistics about changes
+	Success        bool                  `json:"success"`                  // Whether the comparison succeeded
+	Diff           string                `json:"diff,omitempty"`           // The diff output (legacy, for backwards compatibility)
+	Error          string                `json:"error,omitempty"`          // Error message if failed
+	Version1       string                `json:"version1,omitempty"`       // Resolved version 1
+	Version2       string                `json:"version2,omitempty"`       // Resolved version 2
+	Statistics     *ChangeStatistics     `json:"statistics,omitempty"`     // Optional: statistics about changes (legacy)
+	StructuredDiff *StructuredDiffResult `json:"structuredDiff,omitempty"` // v1 structured diff result
 }
 
 // ChangeStatistics provides detailed statistics about the changes between versions
@@ -90,6 +91,95 @@ type BreakingChange struct {
 	Field       string `json:"field"`       // Field that changed
 	Description string `json:"description"` // Description of the change
 	Severity    string `json:"severity"`    // high|medium|low
+}
+
+// StructuredDiffResult is an alias for the diff engine's DiffResult
+// This is exposed in the API response for frontend consumption
+type StructuredDiffResult struct {
+	Metadata  DiffMetadata   `json:"metadata"`
+	Resources []ResourceDiff `json:"resources"`
+	Stats     *DiffStats     `json:"stats,omitempty"`
+}
+
+// DiffMetadata provides traceability and context
+type DiffMetadata struct {
+	EngineVersion      string        `json:"engineVersion"`
+	CompareID          string        `json:"compareId"`
+	GeneratedAt        string        `json:"generatedAt"`
+	Inputs             InputMetadata `json:"inputs"`
+	NormalizationRules []string      `json:"normalizationRules,omitempty"`
+}
+
+// InputMetadata describes the sources being compared
+type InputMetadata struct {
+	Left  SourceMetadata `json:"left"`
+	Right SourceMetadata `json:"right"`
+}
+
+// SourceMetadata describes a single input source
+type SourceMetadata struct {
+	Source     string `json:"source"`
+	Chart      string `json:"chart,omitempty"`
+	Version    string `json:"version,omitempty"`
+	ValuesHash string `json:"valuesHash,omitempty"`
+}
+
+// DiffStats provides aggregate statistics
+type DiffStats struct {
+	Resources DiffStatsResources `json:"resources"`
+	Changes   DiffStatsChanges   `json:"changes"`
+}
+
+// DiffStatsResources provides resource-level statistics
+type DiffStatsResources struct {
+	Added    int `json:"added"`
+	Removed  int `json:"removed"`
+	Modified int `json:"modified"`
+}
+
+// DiffStatsChanges provides change-level statistics
+type DiffStatsChanges struct {
+	Total int `json:"total"`
+}
+
+// ResourceDiff represents a diff for a single resource
+type ResourceDiff struct {
+	Identity   ResourceIdentity `json:"identity"`
+	ChangeType string           `json:"changeType"`
+	BeforeHash string           `json:"beforeHash,omitempty"`
+	AfterHash  string           `json:"afterHash,omitempty"`
+	Changes    []Change         `json:"changes,omitempty"`
+	Summary    *ResourceSummary `json:"summary,omitempty"`
+}
+
+// ResourceIdentity uniquely identifies a resource
+type ResourceIdentity struct {
+	APIVersion string  `json:"apiVersion"`
+	Kind       string  `json:"kind"`
+	Name       string  `json:"name"`
+	Namespace  string  `json:"namespace"`
+	UID        *string `json:"uid"`
+}
+
+// ResourceSummary provides a derived summary of changes
+type ResourceSummary struct {
+	TotalChanges int            `json:"totalChanges"`
+	ByImportance map[string]int `json:"byImportance,omitempty"`
+	Categories   []string       `json:"categories,omitempty"`
+}
+
+// Change represents a field-level change
+type Change struct {
+	Op             string        `json:"op"`
+	Path           string        `json:"path"`
+	PathTokens     []interface{} `json:"pathTokens"`
+	Before         interface{}   `json:"before,omitempty"`
+	After          interface{}   `json:"after,omitempty"`
+	ValueType      string        `json:"valueType"`
+	SemanticType   string        `json:"semanticType,omitempty"`
+	ChangeCategory string        `json:"changeCategory,omitempty"`
+	Importance     string        `json:"importance,omitempty"`
+	Flags          []string      `json:"flags,omitempty"`
 }
 
 // VersionsRequest represents a request to fetch available versions from a repository

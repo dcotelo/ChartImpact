@@ -30,9 +30,9 @@ metadata:
 data:
   key: value
 `
-		diff, err := service.compareRendered(ctx, manifest, manifest, false)
+		_, diffRaw, err := service.compareRendered(ctx, manifest, manifest, false)
 		assert.NoError(t, err)
-		assert.Contains(t, diff, "Total Changes:      0")
+		assert.Contains(t, diffRaw, "Total Changes:      0")
 	})
 
 	t.Run("compare with added resource", func(t *testing.T) {
@@ -53,10 +53,10 @@ kind: ConfigMap
 metadata:
   name: config2
 `
-		diff, err := service.compareRendered(ctx, manifest1, manifest2, false)
+		_, diffRaw, err := service.compareRendered(ctx, manifest1, manifest2, false)
 		assert.NoError(t, err)
-		assert.Contains(t, diff, "Resources Added:    1")
-		assert.Contains(t, diff, "config2")
+		assert.Contains(t, diffRaw, "Resources Added:    1")
+		assert.Contains(t, diffRaw, "config2")
 	})
 
 	t.Run("compare with modified resource", func(t *testing.T) {
@@ -76,10 +76,10 @@ metadata:
 data:
   key: value2
 `
-		diff, err := service.compareRendered(ctx, manifest1, manifest2, false)
+		_, diffRaw, err := service.compareRendered(ctx, manifest1, manifest2, false)
 		assert.NoError(t, err)
-		assert.Contains(t, diff, "Resources Modified: 1")
-		assert.Contains(t, diff, "data.key")
+		assert.Contains(t, diffRaw, "Resources Modified: 1")
+		assert.Contains(t, diffRaw, "data.key")
 	})
 
 	t.Run("compare with label changes ignored", func(t *testing.T) {
@@ -103,9 +103,9 @@ metadata:
 data:
   key: value
 `
-		diff, err := service.compareRendered(ctx, manifest1, manifest2, true)
+		_, diffRaw, err := service.compareRendered(ctx, manifest1, manifest2, true)
 		assert.NoError(t, err)
-		assert.Contains(t, diff, "Total Changes:      0")
+		assert.Contains(t, diffRaw, "Total Changes:      0")
 	})
 
 	t.Run("compare with label changes not ignored", func(t *testing.T) {
@@ -125,10 +125,10 @@ metadata:
   labels:
     version: v2
 `
-		diff, err := service.compareRendered(ctx, manifest1, manifest2, false)
+		_, diffRaw, err := service.compareRendered(ctx, manifest1, manifest2, false)
 		assert.NoError(t, err)
-		assert.Contains(t, diff, "Resources Modified: 1")
-		assert.Contains(t, diff, "metadata.labels.version")
+		assert.Contains(t, diffRaw, "Resources Modified: 1")
+		assert.Contains(t, diffRaw, "metadata.labels.version")
 	})
 }
 
@@ -160,9 +160,9 @@ data:
 `
 
 	// This should use dyff or fall back to simple diff
-	diff, err := service.compareRendered(ctx, manifest1, manifest2, false)
+	_, diffRaw, err := service.compareRendered(ctx, manifest1, manifest2, false)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, diff)
+	assert.NotEmpty(t, diffRaw)
 	// The exact format depends on whether dyff is available
 }
 
