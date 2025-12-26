@@ -1,0 +1,3 @@
+name = "chartimpact"
+compatibility_date = "2025-12-26"
+pages_build_output_dir = ".vercel/output/static"
