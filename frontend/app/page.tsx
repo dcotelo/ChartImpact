@@ -214,6 +214,7 @@ export default function Home() {
         {result && (
           <div style={{ marginTop: '2rem' }}>
             <DiffDisplay 
+              key={`diff-${result.version1}-${result.version2}-${ignoreLabels}`}
               result={result} 
               ignoreLabels={ignoreLabels}
             />
