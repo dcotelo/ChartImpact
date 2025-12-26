@@ -5,7 +5,6 @@ export interface CompareRequest {
   version2: string;
   valuesFile?: string;
   valuesContent?: string;
-  ignoreLabels?: boolean;
   secretHandling?: 'suppress' | 'show' | 'decode';
   contextLines?: number;
   suppressKinds?: string[];

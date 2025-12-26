@@ -16,6 +16,7 @@ export default function Home() {
   const [progressMessage, setProgressMessage] = useState<string>('');
   const [progressStep, setProgressStep] = useState<number>(0);
   const [progressTotal] = useState<number>(7);
+  const [ignoreMetadata, setIgnoreMetadata] = useState<boolean>(false);
 
   const handleCompare = async (formData: CompareRequest) => {
     setLoading(true);
@@ -204,9 +205,43 @@ export default function Home() {
 
         {result && (
           <div style={{ marginTop: '2rem' }}>
+            {/* Client-side metadata filter control */}
+            <div style={{
+              marginBottom: '1rem',
+              padding: '1rem',
+              background: '#f5f5f5',
+              borderRadius: '8px',
+              border: '1px solid #ddd'
+            }}>
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                cursor: 'pointer',
+                userSelect: 'none'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={ignoreMetadata}
+                  onChange={(e) => setIgnoreMetadata(e.target.checked)}
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    cursor: 'pointer'
+                  }}
+                />
+                <span style={{ fontWeight: '500', color: '#333' }}>
+                  Ignore metadata/tag updates
+                </span>
+              </label>
+              <small style={{ color: '#666', fontSize: '0.875rem', display: 'block', marginTop: '0.25rem', marginLeft: '1.75rem' }}>
+                Hide changes to labels and annotations (metadata updates that don&apos;t affect resource behavior)
+              </small>
+            </div>
+            
             <DiffDisplay 
               result={result} 
-              ignoreLabels={formData?.ignoreLabels}
+              ignoreLabels={ignoreMetadata}
             />
           </div>
         )}
