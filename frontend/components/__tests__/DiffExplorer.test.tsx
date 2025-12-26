@@ -23,16 +23,16 @@ jest.mock('../explorer/SearchBar', () => ({
 describe('DiffExplorer', () => {
   const mockResult: CompareResponse = {
     success: true,
-    diff: 'Mock diff output...',
+    diff: '', // Empty diff - no data at all
     version1: 'v1.0.0',
     version2: 'v2.0.0',
   };
 
-  it('should show blocking message when no structured diff data is available', () => {
+  it('should show blocking message when no comparison data is available', () => {
     render(<DiffExplorer result={mockResult} />);
 
-    expect(screen.getByText(/The structured diff format is not available from the backend/i)).toBeInTheDocument();
-    expect(screen.getByText(/Please use the Classic view to see the comparison/i)).toBeInTheDocument();
+    expect(screen.getByText(/No comparison data available/i)).toBeInTheDocument();
+    expect(screen.getByText(/Please run a comparison first/i)).toBeInTheDocument();
   });
 
   it('should render explorer when structured diff is provided via result', () => {
@@ -124,5 +124,21 @@ describe('DiffExplorer', () => {
 
     expect(screen.getByText(/Diff Explorer \(v2\)/i)).toBeInTheDocument();
     expect(screen.getByText(/No resource changes detected/i)).toBeInTheDocument();
+  });
+
+  it('should convert plain text diff when structured diff not available', () => {
+    const resultWithPlainDiff: CompareResponse = {
+      success: true,
+      diff: `metadata.labels.helm.sh/chart  (v1/ServiceAccount/default/test-sa)
+        + added-label: value`,
+      version1: 'v1.0.0',
+      version2: 'v2.0.0',
+    };
+
+    render(<DiffExplorer result={resultWithPlainDiff} />);
+
+    expect(screen.getByText(/Diff Explorer \(v2\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/ADAPTED FROM PLAIN DIFF/i)).toBeInTheDocument();
+    expect(screen.getByTestId('resource-list')).toBeInTheDocument();
   });
 });

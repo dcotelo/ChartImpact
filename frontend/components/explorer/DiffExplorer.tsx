@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { CompareResponse, DiffResultV2 } from '@/lib/types';
 import { ResourceList } from './ResourceList';
 import { ViewPanel } from './ViewPanel';
 import { DetailsPanel } from './DetailsPanel';
 import { SearchBar } from './SearchBar';
+import { convertPlainDiffToV2 } from './diffConverter';
 
 interface DiffExplorerProps {
   result: CompareResponse;
@@ -23,11 +24,32 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
     importance: [] as string[],
   });
 
-  // Use structured diff from result if diffData prop is not provided
-  const effectiveDiffData = diffData || result.structuredDiff;
-  const isDemoMode = diffData !== undefined && diffData !== result.structuredDiff;
+  // Try multiple sources for diff data:
+  // 1. Explicit diffData prop (demo mode)
+  // 2. Structured diff from backend
+  // 3. Convert plain text diff to structured format
+  const effectiveDiffData = useMemo(() => {
+    if (diffData) {
+      return diffData;
+    }
+    
+    if (result.structuredDiff) {
+      return result.structuredDiff;
+    }
+    
+    // Fallback: try to convert plain text diff
+    if (result.diff) {
+      const converted = convertPlainDiffToV2(result.diff, result.version1, result.version2);
+      return converted;
+    }
+    
+    return null;
+  }, [diffData, result.structuredDiff, result.diff, result.version1, result.version2]);
 
-  // Check if we have v2 data structure available
+  const isDemoMode = diffData !== undefined && diffData !== result.structuredDiff;
+  const isConvertedMode = !diffData && !result.structuredDiff && result.diff && effectiveDiffData;
+
+  // Only block if we have NO data at all
   if (!effectiveDiffData) {
     return (
       <div style={{
@@ -38,17 +60,10 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
       }}>
         <h3 style={{ marginBottom: '1rem' }}>Diff Explorer (v2)</h3>
         <p style={{ color: '#666', marginBottom: '1rem' }}>
-          The structured diff format is not available from the backend.
+          No comparison data available.
           <br />
-          Please use the Classic view to see the comparison.
+          Please run a comparison first.
         </p>
-        {result.diff && (
-          <p style={{ color: '#999', fontSize: '0.875rem' }}>
-            The backend returned a plain text diff. Explorer v2 requires structured diff data.
-            <br />
-            Enable INTERNAL_DIFF_ENABLED=true in the backend configuration.
-          </p>
-        )}
       </div>
     );
   }
@@ -105,6 +120,18 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
                 fontWeight: '600'
               }}>
                 DEMO MODE
+              </span>
+            )}
+            {isConvertedMode && (
+              <span style={{
+                background: 'rgba(255, 200, 100, 0.3)',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                color: '#fff'
+              }}>
+                ADAPTED FROM PLAIN DIFF
               </span>
             )}
           </div>
