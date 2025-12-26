@@ -140,9 +140,11 @@ function TreeView({ resources }: { resources: ResourceDiff[] }) {
 
   return (
     <div>
-      {resources.map((resource, idx) => (
-        <div
-          key={idx}
+      {resources.map((resource) => {
+        const resourceId = `${resource.identity.kind}/${resource.identity.name}/${resource.identity.namespace || 'cluster'}`;
+        return (
+          <div
+            key={resourceId}
           style={{
             marginBottom: '1.5rem',
             border: '1px solid #ddd',
@@ -189,9 +191,9 @@ function TreeView({ resources }: { resources: ResourceDiff[] }) {
           {/* Changes */}
           {resource.changes && resource.changes.length > 0 && (
             <div style={{ padding: '1rem' }}>
-              {resource.changes.map((change, changeIdx) => (
+              {resource.changes.map((change) => (
                 <div
-                  key={changeIdx}
+                  key={`${change.path}-${change.type}`}
                   style={{
                     marginBottom: '0.75rem',
                     padding: '0.75rem',
@@ -259,7 +261,8 @@ function TreeView({ resources }: { resources: ResourceDiff[] }) {
             </div>
           )}
         </div>
-      ))}
+      );
+    })}
 
       {resources.length === 0 && (
         <div style={{
@@ -303,12 +306,14 @@ function TableView({ resources }: { resources: ResourceDiff[] }) {
           </tr>
         </thead>
         <tbody>
-          {resources.map((resource, idx) => (
-            <tr
-              key={idx}
+          {resources.map((resource) => {
+            const resourceId = `${resource.identity.kind}/${resource.identity.name}/${resource.identity.namespace || 'cluster'}`;
+            return (
+              <tr
+                key={resourceId}
               style={{
                 borderBottom: '1px solid #e0e0e0',
-                background: idx % 2 === 0 ? 'white' : '#fafafa'
+                background: resourceId.split('/')[2] === 'cluster' ? 'white' : '#fafafa'
               }}
             >
               <td style={{ padding: '0.75rem' }}>{resource.identity.kind}</td>
@@ -336,7 +341,8 @@ function TableView({ resources }: { resources: ResourceDiff[] }) {
                 {resource.changes ? resource.changes.length : 0}
               </td>
             </tr>
-          ))}
+          );
+        })}
         </tbody>
       </table>
 
@@ -357,9 +363,11 @@ function TableView({ resources }: { resources: ResourceDiff[] }) {
 function SideBySideView({ resources }: { resources: ResourceDiff[] }) {
   return (
     <div>
-      {resources.map((resource, idx) => (
-        <div
-          key={idx}
+      {resources.map((resource) => {
+        const resourceId = `${resource.identity.kind}/${resource.identity.name}/${resource.identity.namespace || 'cluster'}`;
+        return (
+          <div
+            key={resourceId}
           style={{
             marginBottom: '1.5rem',
             border: '1px solid #ddd',
@@ -435,7 +443,8 @@ function SideBySideView({ resources }: { resources: ResourceDiff[] }) {
             </div>
           </div>
         </div>
-      ))}
+      );
+    })}
 
       {resources.length === 0 && (
         <div style={{

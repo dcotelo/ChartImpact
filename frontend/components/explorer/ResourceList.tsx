@@ -38,7 +38,7 @@ export function ResourceList({
 
       // Apply namespace filter
       if (filters.namespace.length > 0) {
-        const ns = resource.identity.namespace || 'default';
+        const ns = resource.identity.namespace || '__cluster__';
         if (!filters.namespace.includes(ns)) {
           return false;
         }

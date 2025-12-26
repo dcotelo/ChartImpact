@@ -9,7 +9,12 @@ interface SearchBarProps {
     namespace: string[];
     importance: string[];
   };
-  onFiltersChange: (filters: any) => void;
+  onFiltersChange: (filters: {
+    changeType: string[];
+    kind: string[];
+    namespace: string[];
+    importance: string[];
+  }) => void;
 }
 
 export function SearchBar({ value, onChange, filters, onFiltersChange }: SearchBarProps) {

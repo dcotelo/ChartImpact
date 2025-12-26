@@ -239,9 +239,9 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
             maxHeight: '400px',
             overflow: 'auto'
           }}>
-            {resource.changes.map((change, idx) => (
+            {resource.changes.map((change) => (
               <div
-                key={idx}
+                key={`${change.path}-${change.type}`}
                 style={{
                   marginBottom: '0.75rem',
                   padding: '0.75rem',
@@ -287,9 +287,9 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
 
                 {change.flags && change.flags.length > 0 && (
                   <div style={{ marginBottom: '0.5rem' }}>
-                    {change.flags.map((flag, flagIdx) => (
+                    {change.flags.map((flag) => (
                       <span
-                        key={flagIdx}
+                        key={flag}
                         style={{
                           display: 'inline-block',
                           padding: '0.2rem 0.4rem',
