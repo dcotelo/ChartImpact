@@ -87,3 +87,76 @@ export interface BreakingChange {
   severity: 'high' | 'medium' | 'low';
 }
 
+// New v2 types for structured diff format
+export interface DiffResultV2 {
+  metadata: DiffMetadata;
+  resources: ResourceDiff[];
+  stats?: DiffStats;
+}
+
+export interface DiffMetadata {
+  engineVersion: string;
+  compareId: string;
+  generatedAt: string;
+  inputs: {
+    left: any;
+    right: any;
+  };
+  normalizationRules?: string[];
+}
+
+export interface ResourceDiff {
+  identity: ResourceIdentity;
+  changeType: 'added' | 'removed' | 'modified' | 'unchanged';
+  beforeHash?: string;
+  afterHash?: string;
+  changes: Change[];
+  summary?: ChangeSummaryDetail;
+}
+
+export interface ResourceIdentity {
+  apiVersion: string;
+  kind: string;
+  name: string;
+  namespace?: string | null;
+  uid?: string | null;
+}
+
+export interface Change {
+  path: string;
+  semanticType?: 'spec' | 'metadata' | 'status' | 'data' | 'other';
+  importance?: 'critical' | 'high' | 'medium' | 'low';
+  flags?: string[];
+  type: 'value-change' | 'added' | 'removed' | 'type-change' | 'array-diff';
+  before?: any;
+  after?: any;
+  arrayDiff?: ArrayDiff;
+}
+
+export interface ArrayDiff {
+  added?: any[];
+  removed?: any[];
+  modified?: ArrayItemDiff[];
+}
+
+export interface ArrayItemDiff {
+  index: number;
+  before: any;
+  after: any;
+}
+
+export interface ChangeSummaryDetail {
+  totalChanges: number;
+  byImportance?: Record<string, number>;
+  bySemanticType?: Record<string, number>;
+  flags?: string[];
+}
+
+export interface DiffStats {
+  totalResources: number;
+  byChangeType: Record<string, number>;
+  byKind: Record<string, number>;
+  byNamespace: Record<string, number>;
+  flagSummary?: Record<string, number>;
+}
+
