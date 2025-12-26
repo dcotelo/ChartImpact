@@ -7,6 +7,7 @@ import { ViewPanel } from './ViewPanel';
 import { DetailsPanel } from './DetailsPanel';
 import { SearchBar } from './SearchBar';
 import { convertPlainDiffToV2 } from './diffConverter';
+import { COLORS } from './utils';
 
 interface DiffExplorerProps {
   result: CompareResponse;
@@ -50,16 +51,16 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
   const isConvertedMode = !diffData && !result.structuredDiff && result.diff && effectiveDiffData;
 
   // Only block if we have NO data at all
-  if (!effectiveDiffData) {
+  if (!effectiveDiffData || !effectiveDiffData.resources) {
     return (
       <div style={{
         padding: '2rem',
-        background: '#f5f5f5',
+        background: COLORS.bgLight,
         borderRadius: '8px',
         textAlign: 'center'
       }}>
-        <h3 style={{ marginBottom: '1rem' }}>Diff Explorer (v2)</h3>
-        <p style={{ color: '#666', marginBottom: '1rem' }}>
+        <h3 style={{ marginBottom: '1rem', color: COLORS.text }}>Diff Explorer</h3>
+        <p style={{ color: COLORS.textLight, marginBottom: '1rem' }}>
           No comparison data available.
           <br />
           Please run a comparison first.
@@ -73,12 +74,12 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
     return (
       <div style={{
         padding: '2rem',
-        background: '#f5f5f5',
+        background: COLORS.bgLight,
         borderRadius: '8px',
         textAlign: 'center'
       }}>
-        <h3 style={{ marginBottom: '1rem' }}>Diff Explorer (v2)</h3>
-        <p style={{ color: '#666' }}>
+        <h3 style={{ marginBottom: '1rem', color: COLORS.text }}>Diff Explorer</h3>
+        <p style={{ color: COLORS.textLight }}>
           No resource changes detected between the two versions.
           <br />
           The versions appear to be identical.
@@ -92,14 +93,14 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
       display: 'flex',
       flexDirection: 'column',
       height: '100vh',
-      background: '#fff'
+      background: COLORS.bgLightest
     }}>
       {/* Top Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white',
+        background: COLORS.bgLight,
+        color: COLORS.text,
         padding: '1rem 2rem',
-        borderBottom: '2px solid #555'
+        borderBottom: `2px solid ${COLORS.border}`
       }}>
         <div style={{
           display: 'flex',
@@ -109,7 +110,7 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <h2 style={{ fontSize: '1.5rem', margin: 0 }}>
-              🔍 Diff Explorer (v2)
+              🔍 Diff Explorer
             </h2>
             {isDemoMode && (
               <span style={{
@@ -129,7 +130,7 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
                 borderRadius: '12px',
                 fontSize: '0.75rem',
                 fontWeight: '600',
-                color: '#fff'
+                color: COLORS.text
               }}>
                 ADAPTED FROM PLAIN DIFF
               </span>
@@ -160,10 +161,10 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
       }}>
         {/* Left Rail - Resource List */}
         <div style={{
-          width: '300px',
-          borderRight: '1px solid #ddd',
+          width: '250px',
+          borderRight: `1px solid ${COLORS.border}`,
           overflow: 'auto',
-          background: '#f9f9f9'
+          background: COLORS.bgLighter
         }}>
           <ResourceList
             resources={effectiveDiffData.resources}
@@ -178,7 +179,7 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
         <div style={{
           flex: 1,
           overflow: 'auto',
-          background: '#fff'
+          background: COLORS.bgLight
         }}>
           <ViewPanel
             resources={effectiveDiffData.resources}
@@ -194,9 +195,9 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
         {selectedResource && effectiveDiffData && effectiveDiffData.resources && (
           <div style={{
             width: '350px',
-            borderLeft: '1px solid #ddd',
+            borderLeft: `1px solid ${COLORS.border}`,
             overflow: 'auto',
-            background: '#f9f9f9'
+            background: COLORS.bgLighter
           }}>
             <DetailsPanel
               resource={effectiveDiffData.resources.find(

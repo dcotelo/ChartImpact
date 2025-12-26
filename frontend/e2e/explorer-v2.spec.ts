@@ -1,7 +1,7 @@
 /**
- * E2E Tests for Explorer v2 - Regression Prevention
+ * E2E Tests for Explorer - Regression Prevention
  * 
- * These tests ensure that Explorer v2 is NEVER blocked when comparison data exists.
+ * These tests ensure that Explorer is NEVER blocked when comparison data exists.
  * They run against a real browser and test the full integration flow.
  */
 
@@ -142,20 +142,20 @@ async function submitComparison(page: Page) {
   await page.waitForTimeout(1000);
 }
 
-test.describe('Explorer v2 - End-to-End Tests', () => {
+test.describe('Explorer - End-to-End Tests', () => {
   
   test.describe('With Structured Diff from Backend', () => {
-    test('should render Explorer v2 without blocking when backend provides structuredDiff', async ({ page }) => {
+    test('should render Explorer without blocking when backend provides structuredDiff', async ({ page }) => {
       await mockBackendWithStructuredDiff(page);
       
       await page.goto('/');
       await submitComparison(page);
       
-      // Switch to Explorer v2 tab
-      await page.click('button:has-text("Explorer (v2)")');
+      // Switch to Explorer tab
+      await page.click('button:has-text("Explorer")');
       
-      // CRITICAL: Explorer v2 must render
-      await expect(page.locator('text=/Diff Explorer.*v2/i')).toBeVisible();
+      // CRITICAL: Explorer must render
+      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
       
       // CRITICAL: Blocking message must NOT appear
       await expect(page.locator('text=/No comparison data available/i')).not.toBeVisible();
@@ -181,7 +181,7 @@ test.describe('Explorer v2 - End-to-End Tests', () => {
       
       await page.goto('/');
       await submitComparison(page);
-      await page.click('button:has-text("Explorer (v2)")');
+      await page.click('button:has-text("Explorer")');
       
       // Resource list should show both resources
       await expect(page.locator('text=/2 resource/i')).toBeVisible();
@@ -194,7 +194,7 @@ test.describe('Explorer v2 - End-to-End Tests', () => {
       await expect(page.locator('text=/high/i')).toBeVisible();
     });
     
-    test('should allow switching between Classic and Explorer v2 views', async ({ page }) => {
+    test('should allow switching between Classic and Explorer views', async ({ page }) => {
       await mockBackendWithStructuredDiff(page);
       
       await page.goto('/');
@@ -203,18 +203,18 @@ test.describe('Explorer v2 - End-to-End Tests', () => {
       // Initially on Classic view
       await expect(page.locator('text=/Classic View/i')).toBeVisible();
       
-      // Switch to Explorer v2
-      await page.click('button:has-text("Explorer (v2)")');
-      await expect(page.locator('text=/Diff Explorer.*v2/i')).toBeVisible();
+      // Switch to Explorer
+      await page.click('button:has-text("Explorer")');
+      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
       await expect(page.locator('text=/Deployment/i').first()).toBeVisible();
       
       // Switch back to Classic
       await page.click('button:has-text("Classic View")');
       await expect(page.locator('text=/Classic View/i')).toBeVisible();
       
-      // Switch to Explorer v2 again - should still work
-      await page.click('button:has-text("Explorer (v2)")');
-      await expect(page.locator('text=/Diff Explorer.*v2/i')).toBeVisible();
+      // Switch to Explorer again - should still work
+      await page.click('button:has-text("Explorer")');
+      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
       await expect(page.locator('text=/No comparison data available/i')).not.toBeVisible();
     });
   });
@@ -226,11 +226,11 @@ test.describe('Explorer v2 - End-to-End Tests', () => {
       await page.goto('/');
       await submitComparison(page);
       
-      // Switch to Explorer v2
-      await page.click('button:has-text("Explorer (v2)")');
+      // Switch to Explorer
+      await page.click('button:has-text("Explorer")');
       
-      // CRITICAL: Explorer v2 must still render (fallback to plain diff converter)
-      await expect(page.locator('text=/Diff Explorer.*v2/i')).toBeVisible();
+      // CRITICAL: Explorer must still render (fallback to plain diff converter)
+      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
       
       // CRITICAL: Blocking message must NOT appear
       await expect(page.locator('text=/No comparison data available/i')).not.toBeVisible();
@@ -262,7 +262,7 @@ test.describe('Explorer v2 - End-to-End Tests', () => {
       
       await page.goto('/');
       await submitComparison(page);
-      await page.click('button:has-text("Explorer (v2)")');
+      await page.click('button:has-text("Explorer")');
       
       // This is the ONLY acceptable case for blocking
       await expect(page.locator('text=/No comparison data available/i')).toBeVisible();
@@ -290,12 +290,12 @@ test.describe('Explorer v2 - End-to-End Tests', () => {
   });
   
   test.describe('Regression Prevention', () => {
-    test('CRITICAL: Explorer v2 must NEVER block when structuredDiff exists', async ({ page }) => {
+    test('CRITICAL: Explorer must NEVER block when structuredDiff exists', async ({ page }) => {
       await mockBackendWithStructuredDiff(page);
       
       await page.goto('/');
       await submitComparison(page);
-      await page.click('button:has-text("Explorer (v2)")');
+      await page.click('button:has-text("Explorer")');
       
       // These assertions must NEVER fail
       const blockingMessages = [
@@ -303,7 +303,7 @@ test.describe('Explorer v2 - End-to-End Tests', () => {
         'Please run a comparison first',
         'structured diff not available',
         'Structured diff is required',
-        'Explorer v2 is not available'
+        'Explorer is not available'
       ];
       
       for (const message of blockingMessages) {
@@ -311,22 +311,22 @@ test.describe('Explorer v2 - End-to-End Tests', () => {
       }
       
       // Must render successfully
-      await expect(page.locator('text=/Diff Explorer.*v2/i')).toBeVisible();
+      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
     });
     
-    test('CRITICAL: Explorer v2 must NEVER block when plain diff exists', async ({ page }) => {
+    test('CRITICAL: Explorer must NEVER block when plain diff exists', async ({ page }) => {
       await mockBackendWithPlainDiffOnly(page);
       
       await page.goto('/');
       await submitComparison(page);
-      await page.click('button:has-text("Explorer (v2)")');
+      await page.click('button:has-text("Explorer")');
       
       // Must not block with plain diff
       await expect(page.locator('text=/No comparison data available/i')).not.toBeVisible();
-      await expect(page.locator('text=/Diff Explorer.*v2/i')).toBeVisible();
+      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
     });
     
-    test('CRITICAL: Both Classic and Explorer v2 must use the same comparison data', async ({ page }) => {
+    test('CRITICAL: Both Classic and Explorer must use the same comparison data', async ({ page }) => {
       await mockBackendWithStructuredDiff(page);
       
       await page.goto('/');
@@ -336,13 +336,13 @@ test.describe('Explorer v2 - End-to-End Tests', () => {
       await expect(page.locator('text=/1.0.0/')).toBeVisible();
       await expect(page.locator('text=/1.1.0/')).toBeVisible();
       
-      // Switch to Explorer v2
-      await page.click('button:has-text("Explorer (v2)")');
+      // Switch to Explorer
+      await page.click('button:has-text("Explorer")');
       
-      // Explorer v2 must show the same versions (same data source)
+      // Explorer must show the same versions (same data source)
       await expect(page.locator('text=/1.0.0/')).toBeVisible();
       await expect(page.locator('text=/1.1.0/')).toBeVisible();
-      await expect(page.locator('text=/Diff Explorer.*v2/i')).toBeVisible();
+      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
     });
   });
   
@@ -352,7 +352,7 @@ test.describe('Explorer v2 - End-to-End Tests', () => {
       
       await page.goto('/');
       await submitComparison(page);
-      await page.click('button:has-text("Explorer (v2)")');
+      await page.click('button:has-text("Explorer")');
       
       // Real backend data - no demo badge
       await expect(page.locator('text=/DEMO MODE/i')).not.toBeVisible();
@@ -363,7 +363,7 @@ test.describe('Explorer v2 - End-to-End Tests', () => {
       
       // Demo route should show DEMO MODE badge
       await expect(page.locator('text=/DEMO MODE/i')).toBeVisible();
-      await expect(page.locator('text=/Diff Explorer.*v2/i')).toBeVisible();
+      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
     });
   });
 });

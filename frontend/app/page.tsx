@@ -237,7 +237,7 @@ export default function Home() {
                   background: activeTab === 'explorer' ? '#667eea' : 'transparent',
                   color: activeTab === 'explorer' ? 'white' : '#333',
                   border: 'none',
-                  borderBottom: activeTab === 'explorer' ? '3px solid #667eea' : '3px solid transparent',
+                  borderBottom: activeTab === 'explorer' ? '3px solid #4caf50' : '3px solid transparent',
                   cursor: 'pointer',
                   fontSize: '0.95rem',
                   fontWeight: '600',
@@ -245,7 +245,7 @@ export default function Home() {
                   borderRadius: '4px 4px 0 0'
                 }}
               >
-                🔍 Explorer (v2)
+                🔍 Explorer
               </button>
             </div>
 

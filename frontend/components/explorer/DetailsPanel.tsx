@@ -181,8 +181,8 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                   style={{
                     marginBottom: '0.75rem',
                     padding: '0.75rem',
-                    background: '#f9f9f9',
-                    border: '1px solid #e0e0e0',
+                    background: COLORS.bgLighter,
+                    border: `1px solid ${COLORS.border}`,
                     borderRadius: '4px',
                     fontSize: '0.8rem'
                   }}
@@ -190,7 +190,7 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                   <div style={{
                     fontFamily: 'monospace',
                     fontWeight: '500',
-                    color: '#333',
+                    color: COLORS.text,
                     marginBottom: '0.5rem',
                     wordBreak: 'break-all'
                   }}>
@@ -216,7 +216,7 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                 )}
 
                 {change.semanticType && (
-                  <div style={{ marginBottom: '0.5rem', color: '#666' }}>
+                  <div style={{ marginBottom: '0.5rem', color: COLORS.textLight }}>
                     Type: <strong>{change.semanticType}</strong>
                   </div>
                 )}
@@ -229,11 +229,12 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                         style={{
                           display: 'inline-block',
                           padding: '0.2rem 0.4rem',
-                          background: '#e0e0e0',
+                          background: COLORS.bgLight,
                           borderRadius: '3px',
                           fontSize: '0.7rem',
                           marginRight: '0.25rem',
-                          marginBottom: '0.25rem'
+                          marginBottom: '0.25rem',
+                          color: COLORS.text
                         }}
                       >
                         {flag}
@@ -243,7 +244,7 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                 )}
 
                 {change.op && (
-                  <div style={{ color: '#666', marginBottom: '0.5rem' }}>
+                  <div style={{ color: COLORS.textLight, marginBottom: '0.5rem' }}>
                     Operation: <strong>{change.op}</strong>
                   </div>
                 )}
@@ -252,16 +253,17 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                   <div style={{ marginTop: '0.5rem' }}>
                     {change.before !== undefined && (
                       <div style={{ marginBottom: '0.25rem' }}>
-                        <div style={{ fontSize: '0.7rem', color: '#999' }}>Before:</div>
+                        <div style={{ fontSize: '0.7rem', color: COLORS.textLight }}>Before:</div>
                         <pre style={{
                           margin: '0.25rem 0 0 0',
                           padding: '0.5rem',
-                          background: '#fff',
-                          border: '1px solid #e0e0e0',
+                          background: COLORS.bgLight,
+                          border: `1px solid ${COLORS.border}`,
                           borderRadius: '3px',
                           fontSize: '0.75rem',
                           overflow: 'auto',
-                          maxHeight: '100px'
+                          maxHeight: '100px',
+                          color: COLORS.text
                         }}>
                           {JSON.stringify(change.before, null, 2)}
                         </pre>
@@ -269,16 +271,17 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                     )}
                     {change.after !== undefined && (
                       <div>
-                        <div style={{ fontSize: '0.7rem', color: '#999' }}>After:</div>
+                        <div style={{ fontSize: '0.7rem', color: COLORS.textLight }}>After:</div>
                         <pre style={{
                           margin: '0.25rem 0 0 0',
                           padding: '0.5rem',
-                          background: '#fff',
-                          border: '1px solid #e0e0e0',
+                          background: COLORS.bgLight,
+                          border: `1px solid ${COLORS.border}`,
                           borderRadius: '3px',
                           fontSize: '0.75rem',
                           overflow: 'auto',
-                          maxHeight: '100px'
+                          maxHeight: '100px',
+                          color: COLORS.text
                         }}>
                           {JSON.stringify(change.after, null, 2)}
                         </pre>
