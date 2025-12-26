@@ -121,7 +121,7 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
         </div>
 
         {/* Right Panel - Details */}
-        {selectedResource && (
+        {selectedResource && diffData && diffData.resources && (
           <div style={{
             width: '350px',
             borderLeft: '1px solid #ddd',
@@ -130,7 +130,7 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
           }}>
             <DetailsPanel
               resource={diffData.resources.find(
-                r => `${r.identity.kind}/${r.identity.name}` === selectedResource
+                r => r?.identity && `${r.identity.kind}/${r.identity.name}` === selectedResource
               )}
             />
           </div>

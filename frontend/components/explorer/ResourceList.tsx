@@ -26,13 +26,17 @@ export function ResourceList({
 }: ResourceListProps) {
   // Filter and search resources
   const filteredResources = useMemo(() => {
+    if (!resources || !Array.isArray(resources)) return [];
     return filterResources(resources, filters, searchQuery);
   }, [resources, searchQuery, filters]);
 
   // Group by kind
   const resourcesByKind = useMemo(() => {
     const groups: Record<string, ResourceDiff[]> = {};
+    if (!filteredResources || !Array.isArray(filteredResources)) return groups;
+    
     filteredResources.forEach(resource => {
+      if (!resource?.identity?.kind) return;
       const kind = resource.identity.kind;
       if (!groups[kind]) {
         groups[kind] = [];
@@ -75,6 +79,8 @@ export function ResourceList({
 
             {/* Resources */}
             {kindResources.map(resource => {
+              if (!resource?.identity) return null;
+              
               const resourceId = `${resource.identity.kind}/${resource.identity.name}`;
               const isSelected = selectedResource === resourceId;
 
@@ -94,12 +100,12 @@ export function ResourceList({
                     fontSize: '0.85rem',
                     transition: 'all 0.2s'
                   }}
-                  onMouseOver={(e) => {
+                  onMouseEnter={(e) => {
                     if (!isSelected) {
                       e.currentTarget.style.background = '#f5f5f5';
                     }
                   }}
-                  onMouseOut={(e) => {
+                  onMouseLeave={(e) => {
                     if (!isSelected) {
                       e.currentTarget.style.background = 'white';
                     }

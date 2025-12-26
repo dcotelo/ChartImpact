@@ -142,7 +142,7 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                         }}
                       />
                       <span style={{ textTransform: 'capitalize' }}>{level}:</span>
-                      <span>{count}</span>
+                      <span>{typeof count === 'number' ? count : 0}</span>
                     </div>
                   ))}
                 </div>
@@ -154,7 +154,7 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                 <div style={{ marginTop: '0.25rem', paddingLeft: '0.5rem' }}>
                   {Object.entries(resource.summary.bySemanticType).map(([type, count]) => (
                     <div key={type}>
-                      {type}: {count}
+                      {type}: {typeof count === 'number' ? count : 0}
                     </div>
                   ))}
                 </div>
@@ -165,33 +165,37 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
       )}
 
       {/* Changes */}
-      {resource.changes && resource.changes.length > 0 && (
+      {resource.changes && Array.isArray(resource.changes) && resource.changes.length > 0 && (
         <Section title={`Changes (${resource.changes.length})`}>
           <div style={{
             maxHeight: '400px',
             overflow: 'auto'
           }}>
-            {resource.changes.map((change) => (
-              <div
-                key={`${change.path}-${change.type}`}
-                style={{
-                  marginBottom: '0.75rem',
-                  padding: '0.75rem',
-                  background: '#f9f9f9',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '4px',
-                  fontSize: '0.8rem'
-                }}
-              >
-                <div style={{
-                  fontFamily: 'monospace',
-                  fontWeight: '500',
-                  color: '#333',
-                  marginBottom: '0.5rem',
-                  wordBreak: 'break-all'
-                }}>
-                  {change.path}
-                </div>
+            {resource.changes.map((change, index) => {
+              if (!change) return null;
+              const changeKey = change.path ? `${change.path}-${change.type || index}` : `change-${index}`;
+              
+              return (
+                <div
+                  key={changeKey}
+                  style={{
+                    marginBottom: '0.75rem',
+                    padding: '0.75rem',
+                    background: '#f9f9f9',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '4px',
+                    fontSize: '0.8rem'
+                  }}
+                >
+                  <div style={{
+                    fontFamily: 'monospace',
+                    fontWeight: '500',
+                    color: '#333',
+                    marginBottom: '0.5rem',
+                    wordBreak: 'break-all'
+                  }}>
+                    {change.path || 'Unknown path'}
+                  </div>
 
                 {change.importance && (
                   <div style={{ marginBottom: '0.5rem' }}>
@@ -217,11 +221,11 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                   </div>
                 )}
 
-                {change.flags && change.flags.length > 0 && (
+                {change.flags && Array.isArray(change.flags) && change.flags.length > 0 && (
                   <div style={{ marginBottom: '0.5rem' }}>
-                    {change.flags.map((flag) => (
+                    {change.flags.map((flag, flagIndex) => (
                       <span
-                        key={flag}
+                        key={`${flag}-${flagIndex}`}
                         style={{
                           display: 'inline-block',
                           padding: '0.2rem 0.4rem',
@@ -283,7 +287,8 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </Section>
       )}
