@@ -161,7 +161,8 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
       <div style={{
         display: 'flex',
         flex: 1,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        minHeight: 0
       }}>
         {/* Left Rail - Resource List */}
         <div style={{

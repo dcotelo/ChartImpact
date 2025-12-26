@@ -151,7 +151,7 @@ export function StatisticsDashboard({ diffData }: StatisticsDashboardProps) {
   
   return (
     <div style={{
-      padding: '1.5rem 2rem',
+      padding: '1rem 2rem',
       background: COLORS.bgLighter,
       borderBottom: `1px solid ${COLORS.border}`,
     }}>
@@ -160,10 +160,10 @@ export function StatisticsDashboard({ diffData }: StatisticsDashboardProps) {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '1.5rem',
+        marginBottom: '1rem',
       }}>
         <h3 style={{
-          fontSize: '1.25rem',
+          fontSize: '1.1rem',
           margin: 0,
           color: COLORS.text,
           fontWeight: '600',
@@ -171,7 +171,7 @@ export function StatisticsDashboard({ diffData }: StatisticsDashboardProps) {
           📊 Statistics Dashboard
         </h3>
         <div style={{
-          fontSize: '0.85rem',
+          fontSize: '0.8rem',
           color: COLORS.textLight,
         }}>
           Overview of changes detected
@@ -182,8 +182,8 @@ export function StatisticsDashboard({ diffData }: StatisticsDashboardProps) {
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-        gap: '1rem',
-        marginBottom: '1.5rem',
+        gap: '0.75rem',
+        marginBottom: '1rem',
       }}>
         {statCards.map(card => (
           <div
@@ -219,22 +219,22 @@ export function StatisticsDashboard({ diffData }: StatisticsDashboardProps) {
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '1rem',
-        marginBottom: '1.5rem',
+        gap: '0.75rem',
+        marginBottom: '1rem',
       }}>
         {/* Change Breakdown */}
         <div style={{
-          padding: '1rem',
+          padding: '0.75rem',
           background: COLORS.bgLight,
           borderRadius: '8px',
           border: `1px solid ${COLORS.border}`,
         }}>
           <div style={{
-            fontSize: '0.75rem',
+            fontSize: '0.7rem',
             textTransform: 'uppercase',
             color: COLORS.textLighter,
             fontWeight: '600',
-            marginBottom: '0.75rem',
+            marginBottom: '0.5rem',
           }}>
             Change Breakdown
           </div>
@@ -270,17 +270,17 @@ export function StatisticsDashboard({ diffData }: StatisticsDashboardProps) {
         
         {/* High-level Indicators */}
         <div style={{
-          padding: '1rem',
+          padding: '0.75rem',
           background: COLORS.bgLight,
           borderRadius: '8px',
           border: `1px solid ${COLORS.border}`,
         }}>
           <div style={{
-            fontSize: '0.75rem',
+            fontSize: '0.7rem',
             textTransform: 'uppercase',
             color: COLORS.textLighter,
             fontWeight: '600',
-            marginBottom: '0.75rem',
+            marginBottom: '0.5rem',
           }}>
             Impact Indicators
           </div>
@@ -318,24 +318,24 @@ export function StatisticsDashboard({ diffData }: StatisticsDashboardProps) {
       {/* Top Changed Resource Kinds */}
       {stats.topKinds.length > 0 && (
         <div style={{
-          padding: '1rem',
+          padding: '0.75rem',
           background: COLORS.bgLight,
           borderRadius: '8px',
           border: `1px solid ${COLORS.border}`,
         }}>
           <div style={{
-            fontSize: '0.75rem',
+            fontSize: '0.7rem',
             textTransform: 'uppercase',
             color: COLORS.textLighter,
             fontWeight: '600',
-            marginBottom: '0.75rem',
+            marginBottom: '0.5rem',
           }}>
             Top Changed Resource Kinds
           </div>
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '0.75rem',
+            gap: '0.5rem',
           }}>
             {stats.topKinds.map(kind => (
               <div
@@ -384,12 +384,12 @@ export function StatisticsDashboard({ diffData }: StatisticsDashboardProps) {
       
       {/* Quick Assessment */}
       <div style={{
-        marginTop: '1rem',
-        padding: '0.75rem 1rem',
+        marginTop: '0.75rem',
+        padding: '0.5rem 0.75rem',
         background: stats.impactfulChanges > 0 ? 'rgba(255, 152, 0, 0.15)' : 'rgba(76, 175, 80, 0.15)',
         border: `1px solid ${stats.impactfulChanges > 0 ? COLORS.high : COLORS.low}`,
         borderRadius: '6px',
-        fontSize: '0.85rem',
+        fontSize: '0.8rem',
         color: COLORS.text,
       }}>
         <strong>Quick Assessment:</strong>{' '}
