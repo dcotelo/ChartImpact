@@ -11,6 +11,10 @@ When setting up the project in Cloudflare Pages:
 - **Root directory**: `frontend`
 - **Node version**: 20 (automatically detected from .node-version)
 
+### ⚠️ Important: Deploy Command
+**DO NOT** specify a custom deploy command. Leave it empty or use the default.
+Cloudflare Pages automatically handles Next.js deployment after the build completes.
+
 ### Environment Variables
 
 Add these in Cloudflare Pages dashboard (Settings > Environment variables):
@@ -23,11 +27,18 @@ Replace `https://your-backend-api.com` with your deployed backend URL.
 
 ## Important Notes
 
-1. **API Routes**: 
-   - `/api/compare` uses Edge Runtime (fast, optimized for Cloudflare)
+1. **Dual Deployment Support**: 
+   - The codebase supports both Docker Compose (local/self-hosted) and Cloudflare Pages
+   - `next.config.js` automatically detects the environment:
+     - Docker: Uses `output: 'standalone'` (set via `DOCKER_BUILD=true`)
+     - Cloudflare: Uses default Next.js output
+   - API routes use `edge` runtime on Cloudflare, `nodejs` runtime in Docker
+
+2. **API Routes**: 
+   - `/api/compare` automatically adapts runtime based on platform
    - `/api/versions` uses Node.js runtime (requires child_process for git operations)
    
-2. **Backend Deployment**: 
+3. **Backend Deployment**: 
    The Go backend must be deployed separately. Recommended platforms:
    - Fly.io (recommended for containerized apps)
    - Railway
