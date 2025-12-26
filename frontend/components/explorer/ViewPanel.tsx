@@ -2,6 +2,14 @@
 
 import { ResourceDiff, Change } from '@/lib/types';
 import { useMemo } from 'react';
+import {
+  getChangeTypeColor,
+  getChangeTypeBackground,
+  getChangeTypeTextColor,
+  getResourceId,
+  filterResources,
+  EmptyState
+} from './utils';
 
 interface ViewPanelProps {
   resources: ResourceDiff[];
@@ -27,21 +35,7 @@ export function ViewPanel({
 }: ViewPanelProps) {
   // Filter resources
   const filteredResources = useMemo(() => {
-    return resources.filter(resource => {
-      if (filters.changeType.length > 0 && !filters.changeType.includes(resource.changeType)) {
-        return false;
-      }
-      if (filters.kind.length > 0 && !filters.kind.includes(resource.identity.kind)) {
-        return false;
-      }
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesName = resource.identity.name.toLowerCase().includes(query);
-        const matchesKind = resource.identity.kind.toLowerCase().includes(query);
-        return matchesName || matchesKind;
-      }
-      return true;
-    });
+    return filterResources(resources, filters, searchQuery);
   }, [resources, searchQuery, filters]);
 
   // If a resource is selected, show only that one
@@ -129,19 +123,10 @@ export function ViewPanel({
 
 // Tree View Component
 function TreeView({ resources }: { resources: ResourceDiff[] }) {
-  const getChangeTypeColor = (changeType: string) => {
-    switch (changeType) {
-      case 'added': return '#4caf50';
-      case 'removed': return '#f44336';
-      case 'modified': return '#ff9800';
-      default: return '#666';
-    }
-  };
-
   return (
     <div>
       {resources.map((resource) => {
-        const resourceId = `${resource.identity.kind}/${resource.identity.name}/${resource.identity.namespace || 'cluster'}`;
+        const resourceId = getResourceId(resource);
         return (
           <div
             key={resourceId}
@@ -264,15 +249,7 @@ function TreeView({ resources }: { resources: ResourceDiff[] }) {
       );
     })}
 
-      {resources.length === 0 && (
-        <div style={{
-          padding: '3rem',
-          textAlign: 'center',
-          color: '#999'
-        }}>
-          No resources to display
-        </div>
-      )}
+      {resources.length === 0 && <EmptyState />}
     </div>
   );
 }
@@ -307,7 +284,7 @@ function TableView({ resources }: { resources: ResourceDiff[] }) {
         </thead>
         <tbody>
           {resources.map((resource) => {
-            const resourceId = `${resource.identity.kind}/${resource.identity.name}/${resource.identity.namespace || 'cluster'}`;
+            const resourceId = getResourceId(resource);
             return (
               <tr
                 key={resourceId}
@@ -323,12 +300,8 @@ function TableView({ resources }: { resources: ResourceDiff[] }) {
                 <span
                   style={{
                     padding: '0.25rem 0.5rem',
-                    background: resource.changeType === 'added' ? '#e8f5e9' :
-                                resource.changeType === 'removed' ? '#ffebee' :
-                                resource.changeType === 'modified' ? '#fff3e0' : '#f5f5f5',
-                    color: resource.changeType === 'added' ? '#2e7d32' :
-                           resource.changeType === 'removed' ? '#c62828' :
-                           resource.changeType === 'modified' ? '#e65100' : '#666',
+                    background: getChangeTypeBackground(resource.changeType),
+                    color: getChangeTypeTextColor(resource.changeType),
                     borderRadius: '4px',
                     fontSize: '0.75rem',
                     fontWeight: '600'
@@ -346,15 +319,7 @@ function TableView({ resources }: { resources: ResourceDiff[] }) {
         </tbody>
       </table>
 
-      {resources.length === 0 && (
-        <div style={{
-          padding: '3rem',
-          textAlign: 'center',
-          color: '#999'
-        }}>
-          No resources to display
-        </div>
-      )}
+      {resources.length === 0 && <EmptyState />}
     </div>
   );
 }
@@ -364,7 +329,7 @@ function SideBySideView({ resources }: { resources: ResourceDiff[] }) {
   return (
     <div>
       {resources.map((resource) => {
-        const resourceId = `${resource.identity.kind}/${resource.identity.name}/${resource.identity.namespace || 'cluster'}`;
+        const resourceId = getResourceId(resource);
         return (
           <div
             key={resourceId}
@@ -446,15 +411,7 @@ function SideBySideView({ resources }: { resources: ResourceDiff[] }) {
       );
     })}
 
-      {resources.length === 0 && (
-        <div style={{
-          padding: '3rem',
-          textAlign: 'center',
-          color: '#999'
-        }}>
-          No resources to display
-        </div>
-      )}
+      {resources.length === 0 && <EmptyState />}
     </div>
   );
 }

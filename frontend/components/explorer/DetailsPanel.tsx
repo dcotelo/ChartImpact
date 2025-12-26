@@ -1,6 +1,7 @@
 'use client';
 
 import { ResourceDiff, Change } from '@/lib/types';
+import { getChangeTypeColor, getImportanceColor } from './utils';
 
 interface DetailsPanelProps {
   resource?: ResourceDiff;
@@ -18,25 +19,6 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
       </div>
     );
   }
-
-  const getChangeTypeColor = (changeType: string) => {
-    switch (changeType) {
-      case 'added': return '#4caf50';
-      case 'removed': return '#f44336';
-      case 'modified': return '#ff9800';
-      default: return '#666';
-    }
-  };
-
-  const getImportanceColor = (importance?: string) => {
-    switch (importance) {
-      case 'critical': return '#d32f2f';
-      case 'high': return '#f57c00';
-      case 'medium': return '#fbc02d';
-      case 'low': return '#388e3c';
-      default: return '#757575';
-    }
-  };
 
   return (
     <div style={{ padding: '1rem' }}>

@@ -2,6 +2,7 @@
 
 import { ResourceDiff } from '@/lib/types';
 import { useMemo } from 'react';
+import { getChangeTypeColor, getChangeTypeIcon, filterResources, getResourceId } from './utils';
 
 interface ResourceListProps {
   resources: ResourceDiff[];
@@ -25,36 +26,7 @@ export function ResourceList({
 }: ResourceListProps) {
   // Filter and search resources
   const filteredResources = useMemo(() => {
-    return resources.filter(resource => {
-      // Apply change type filter
-      if (filters.changeType.length > 0 && !filters.changeType.includes(resource.changeType)) {
-        return false;
-      }
-
-      // Apply kind filter
-      if (filters.kind.length > 0 && !filters.kind.includes(resource.identity.kind)) {
-        return false;
-      }
-
-      // Apply namespace filter
-      if (filters.namespace.length > 0) {
-        const ns = resource.identity.namespace || '__cluster__';
-        if (!filters.namespace.includes(ns)) {
-          return false;
-        }
-      }
-
-      // Apply search query
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesName = resource.identity.name.toLowerCase().includes(query);
-        const matchesKind = resource.identity.kind.toLowerCase().includes(query);
-        const matchesNamespace = (resource.identity.namespace || '').toLowerCase().includes(query);
-        return matchesName || matchesKind || matchesNamespace;
-      }
-
-      return true;
-    });
+    return filterResources(resources, filters, searchQuery);
   }, [resources, searchQuery, filters]);
 
   // Group by kind
@@ -71,28 +43,6 @@ export function ResourceList({
   }, [filteredResources]);
 
   const kinds = Object.keys(resourcesByKind).sort();
-
-  // Get change type color
-  const getChangeTypeColor = (changeType: string) => {
-    switch (changeType) {
-      case 'added': return '#4caf50';
-      case 'removed': return '#f44336';
-      case 'modified': return '#ff9800';
-      case 'unchanged': return '#9e9e9e';
-      default: return '#666';
-    }
-  };
-
-  // Get change type icon
-  const getChangeTypeIcon = (changeType: string) => {
-    switch (changeType) {
-      case 'added': return '+';
-      case 'removed': return '-';
-      case 'modified': return '~';
-      case 'unchanged': return '=';
-      default: return '•';
-    }
-  };
 
   return (
     <div style={{ padding: '1rem' }}>
