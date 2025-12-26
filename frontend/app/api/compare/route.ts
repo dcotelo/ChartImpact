@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CompareRequest, CompareResponse } from '@/lib/types';
 
-// Use edge runtime for Cloudflare Pages, nodejs for Docker/local
-// Cloudflare Pages: edge runtime provides better performance
-// Docker/Local: nodejs runtime is more compatible
-export const runtime = process.env.CLOUDFLARE_PAGES ? 'edge' : 'nodejs';
+// Cloudflare Pages requires edge runtime for all API routes
+export const runtime = 'edge';
 export const maxDuration = 120; // 2 minutes max
 
 export async function POST(request: NextRequest) {
