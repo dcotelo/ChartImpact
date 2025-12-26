@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dcotelo/chartimpact/backend/internal/models"
+	"github.com/dcotelo/chartimpact/backend/internal/util"
 )
 
 // HealthHandler handles GET /api/health requests
@@ -25,16 +26,22 @@ func HealthHandler() http.HandlerFunc {
 			gitOK = true
 		}
 
-		// Check if dyff is available (optional)
+		// Check if dyff is available (optional - internal diff engine can be used instead)
 		dyffOK := false
 		if _, err := exec.LookPath("dyff"); err == nil {
 			dyffOK = true
 		}
 
+		// Status is ok if required tools are available
+		// dyff is optional when internal diff engine is enabled (default: true)
 		status := "ok"
 		if !helmOK || !gitOK {
 			status = "degraded"
 			log.Warn("Health check: Missing required tools")
+		} else if !util.GetBoolEnv("INTERNAL_DIFF_ENABLED", true) && !dyffOK {
+			// dyff is only required when internal diff is not enabled
+			status = "degraded"
+			log.Warn("Health check: dyff not available and internal diff not enabled")
 		}
 
 		respondJSON(w, http.StatusOK, models.HealthResponse{
