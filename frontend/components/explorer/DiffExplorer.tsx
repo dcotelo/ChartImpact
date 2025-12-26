@@ -6,6 +6,7 @@ import { ResourceList } from './ResourceList';
 import { ViewPanel } from './ViewPanel';
 import { DetailsPanel } from './DetailsPanel';
 import { SearchBar } from './SearchBar';
+import { StatisticsDashboard } from './StatisticsDashboard';
 import { convertPlainDiffToV2 } from './diffConverter';
 import { COLORS } from './utils';
 
@@ -152,6 +153,9 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
           onFiltersChange={setFilters}
         />
       </div>
+
+      {/* Statistics Dashboard */}
+      <StatisticsDashboard diffData={effectiveDiffData} />
 
       {/* Main Content Area */}
       <div style={{
