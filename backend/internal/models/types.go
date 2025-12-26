@@ -17,13 +17,14 @@ type CompareRequest struct {
 
 // CompareResponse represents the response from a chart comparison
 type CompareResponse struct {
-	Success        bool                  `json:"success"`                  // Whether the comparison succeeded
-	Diff           string                `json:"diff,omitempty"`           // The diff output (legacy, for backwards compatibility)
-	Error          string                `json:"error,omitempty"`          // Error message if failed
-	Version1       string                `json:"version1,omitempty"`       // Resolved version 1
-	Version2       string                `json:"version2,omitempty"`       // Resolved version 2
-	Statistics     *ChangeStatistics     `json:"statistics,omitempty"`     // Optional: statistics about changes (legacy)
-	StructuredDiff *StructuredDiffResult `json:"structuredDiff,omitempty"` // v1 structured diff result
+	Success                 bool                  `json:"success"`                           // Whether the comparison succeeded
+	Diff                    string                `json:"diff,omitempty"`                    // The diff output (legacy, for backwards compatibility)
+	Error                   string                `json:"error,omitempty"`                   // Error message if failed
+	Version1                string                `json:"version1,omitempty"`                // Resolved version 1
+	Version2                string                `json:"version2,omitempty"`                // Resolved version 2
+	Statistics              *ChangeStatistics     `json:"statistics,omitempty"`              // Optional: statistics about changes (legacy)
+	StructuredDiff          *StructuredDiffResult `json:"structuredDiff,omitempty"`          // v1 structured diff result
+	StructuredDiffAvailable bool                  `json:"structuredDiffAvailable,omitempty"` // Indicates if structured diff is available
 }
 
 // ChangeStatistics provides detailed statistics about the changes between versions

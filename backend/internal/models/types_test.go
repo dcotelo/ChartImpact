@@ -105,6 +105,65 @@ func TestCompareResponse(t *testing.T) {
 		assert.False(t, decoded.Success)
 		assert.NotEmpty(t, decoded.Error)
 	})
+
+	t.Run("marshals response with structured diff available", func(t *testing.T) {
+		resp := CompareResponse{
+			Success:  true,
+			Diff:     "--- version1\n+++ version2\n",
+			Version1: "v1.0.0",
+			Version2: "v2.0.0",
+			StructuredDiff: &StructuredDiffResult{
+				Metadata: DiffMetadata{
+					EngineVersion: "1.0.0",
+					CompareID:     "test-123",
+					GeneratedAt:   "2024-01-01T00:00:00Z",
+					Inputs: InputMetadata{
+						Left:  SourceMetadata{Source: "helm", Chart: "test", Version: "v1.0.0"},
+						Right: SourceMetadata{Source: "helm", Chart: "test", Version: "v2.0.0"},
+					},
+				},
+				Resources: []ResourceDiff{},
+				Stats: &DiffStats{
+					Resources: DiffStatsResources{Added: 0, Removed: 0, Modified: 0},
+					Changes:   DiffStatsChanges{Total: 0},
+				},
+			},
+			StructuredDiffAvailable: true,
+		}
+
+		data, err := json.Marshal(resp)
+		require.NoError(t, err)
+
+		var decoded CompareResponse
+		err = json.Unmarshal(data, &decoded)
+		require.NoError(t, err)
+
+		assert.True(t, decoded.Success)
+		assert.True(t, decoded.StructuredDiffAvailable)
+		assert.NotNil(t, decoded.StructuredDiff)
+		assert.Equal(t, "1.0.0", decoded.StructuredDiff.Metadata.EngineVersion)
+	})
+
+	t.Run("marshals response without structured diff", func(t *testing.T) {
+		resp := CompareResponse{
+			Success:                 true,
+			Diff:                    "--- version1\n+++ version2\n",
+			Version1:                "v1.0.0",
+			Version2:                "v2.0.0",
+			StructuredDiffAvailable: false,
+		}
+
+		data, err := json.Marshal(resp)
+		require.NoError(t, err)
+
+		var decoded CompareResponse
+		err = json.Unmarshal(data, &decoded)
+		require.NoError(t, err)
+
+		assert.True(t, decoded.Success)
+		assert.False(t, decoded.StructuredDiffAvailable)
+		assert.Nil(t, decoded.StructuredDiff)
+	})
 }
 
 func TestVersionsRequest(t *testing.T) {

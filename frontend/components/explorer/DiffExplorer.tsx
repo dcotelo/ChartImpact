@@ -23,8 +23,12 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
     importance: [] as string[],
   });
 
-  // For now, if we don't have v2 data structure, show a message
-  if (!diffData || !diffData.resources) {
+  // Use structured diff from result if diffData prop is not provided
+  const effectiveDiffData = diffData || result.structuredDiff;
+  const isDemoMode = diffData !== undefined && diffData !== result.structuredDiff;
+
+  // Check if we have v2 data structure available
+  if (!effectiveDiffData || !effectiveDiffData.resources) {
     return (
       <div style={{
         padding: '2rem',
@@ -62,9 +66,22 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
           alignItems: 'center',
           marginBottom: '0.5rem'
         }}>
-          <h2 style={{ fontSize: '1.5rem', margin: 0 }}>
-            🔍 Diff Explorer (v2)
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <h2 style={{ fontSize: '1.5rem', margin: 0 }}>
+              🔍 Diff Explorer (v2)
+            </h2>
+            {isDemoMode && (
+              <span style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: '600'
+              }}>
+                DEMO MODE
+              </span>
+            )}
+          </div>
           <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>
             <span style={{ marginRight: '1rem' }}>
               <strong>v1:</strong> {result.version1}
@@ -96,7 +113,7 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
           background: '#f9f9f9'
         }}>
           <ResourceList
-            resources={diffData.resources}
+            resources={effectiveDiffData.resources}
             searchQuery={searchQuery}
             filters={filters}
             selectedResource={selectedResource}
@@ -111,7 +128,7 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
           background: '#fff'
         }}>
           <ViewPanel
-            resources={diffData.resources}
+            resources={effectiveDiffData.resources}
             searchQuery={searchQuery}
             filters={filters}
             viewMode={viewMode}
@@ -121,7 +138,7 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
         </div>
 
         {/* Right Panel - Details */}
-        {selectedResource && diffData && diffData.resources && (
+        {selectedResource && effectiveDiffData && effectiveDiffData.resources && (
           <div style={{
             width: '350px',
             borderLeft: '1px solid #ddd',
@@ -129,7 +146,7 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
             background: '#f9f9f9'
           }}>
             <DetailsPanel
-              resource={diffData.resources.find(
+              resource={effectiveDiffData.resources.find(
                 r => r?.identity && `${r.identity.kind}/${r.identity.name}` === selectedResource
               )}
             />

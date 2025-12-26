@@ -20,6 +20,7 @@ export interface CompareResponse {
   version2?: string;
   statistics?: ChangeStatistics;
   structuredDiff?: DiffResultV2;
+  structuredDiffAvailable?: boolean;
 }
 
 export interface DiffResult {

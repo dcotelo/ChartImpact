@@ -179,3 +179,108 @@ metadata:
 	// Modified resource should have changes
 	assert.Greater(t, len(modified.Changes), 0)
 }
+
+// TestStructuredDiffAvailableFlag tests that the structuredDiffAvailable flag is set correctly
+func TestStructuredDiffAvailableFlag(t *testing.T) {
+	t.Run("flag is true when internal diff engine is enabled", func(t *testing.T) {
+		// Ensure internal diff is enabled
+		originalValue := os.Getenv("INTERNAL_DIFF_ENABLED")
+		os.Setenv("INTERNAL_DIFF_ENABLED", "true")
+		defer os.Setenv("INTERNAL_DIFF_ENABLED", originalValue)
+
+		service := NewHelmService()
+		ctx := context.Background()
+
+		manifest1 := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  key: value1
+`
+
+		manifest2 := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  key: value2
+`
+
+		diffResult, diffRaw, err := service.compareRendered(ctx, manifest1, manifest2, false)
+		require.NoError(t, err)
+		require.NotNil(t, diffResult)
+		require.NotEmpty(t, diffRaw)
+
+		// Simulate what CompareVersions does
+		response := &models.CompareResponse{
+			Success:  true,
+			Diff:     diffRaw,
+			Version1: "v1",
+			Version2: "v2",
+		}
+
+		if diffResult != nil {
+			response.StructuredDiff = service.convertToStructuredDiff(diffResult)
+			response.StructuredDiffAvailable = true
+		} else {
+			response.StructuredDiffAvailable = false
+		}
+
+		assert.True(t, response.StructuredDiffAvailable, "structuredDiffAvailable should be true when internal diff engine is enabled")
+		assert.NotNil(t, response.StructuredDiff, "structuredDiff should not be nil")
+	})
+
+	t.Run("flag is false when internal diff engine is disabled", func(t *testing.T) {
+		// Disable internal diff engine
+		originalValue := os.Getenv("INTERNAL_DIFF_ENABLED")
+		os.Setenv("INTERNAL_DIFF_ENABLED", "false")
+		defer os.Setenv("INTERNAL_DIFF_ENABLED", originalValue)
+
+		service := NewHelmService()
+		ctx := context.Background()
+
+		manifest1 := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  key: value1
+`
+
+		manifest2 := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  key: value2
+`
+
+		diffResult, diffRaw, err := service.compareRendered(ctx, manifest1, manifest2, false)
+		require.NoError(t, err)
+		require.NotEmpty(t, diffRaw)
+
+		// Simulate what CompareVersions does
+		response := &models.CompareResponse{
+			Success:  true,
+			Diff:     diffRaw,
+			Version1: "v1",
+			Version2: "v2",
+		}
+
+		if diffResult != nil {
+			response.StructuredDiff = service.convertToStructuredDiff(diffResult)
+			response.StructuredDiffAvailable = true
+		} else {
+			response.StructuredDiffAvailable = false
+		}
+
+		assert.False(t, response.StructuredDiffAvailable, "structuredDiffAvailable should be false when internal diff engine is disabled")
+		assert.Nil(t, response.StructuredDiff, "structuredDiff should be nil")
+	})
+}
+

@@ -153,6 +153,9 @@ func (h *HelmService) CompareVersions(ctx context.Context, req *models.CompareRe
 	// Add structured diff if available
 	if diffResult != nil {
 		response.StructuredDiff = h.convertToStructuredDiff(diffResult)
+		response.StructuredDiffAvailable = true
+	} else {
+		response.StructuredDiffAvailable = false
 	}
 
 	return response, nil
