@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CompareRequest, CompareResponse } from '@/lib/types';
 
-// Cloudflare Pages requires edge runtime for all API routes
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 export const maxDuration = 120; // 2 minutes max
 
 export async function POST(request: NextRequest) {
