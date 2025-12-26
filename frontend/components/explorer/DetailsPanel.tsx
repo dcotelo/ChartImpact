@@ -148,13 +148,13 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                 </div>
               </div>
             )}
-            {resource.summary.bySemanticType && Object.keys(resource.summary.bySemanticType).length > 0 && (
+            {resource.summary.categories && resource.summary.categories.length > 0 && (
               <div style={{ marginTop: '0.5rem' }}>
-                <strong>By Type:</strong>
+                <strong>Categories:</strong>
                 <div style={{ marginTop: '0.25rem', paddingLeft: '0.5rem' }}>
-                  {Object.entries(resource.summary.bySemanticType).map(([type, count]) => (
-                    <div key={type}>
-                      {type}: {typeof count === 'number' ? count : 0}
+                  {resource.summary.categories.map((category, index) => (
+                    <div key={`${category}-${index}`}>
+                      • {category}
                     </div>
                   ))}
                 </div>
@@ -173,7 +173,7 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
           }}>
             {resource.changes.map((change, index) => {
               if (!change) return null;
-              const changeKey = change.path ? `${change.path}-${change.type || index}` : `change-${index}`;
+              const changeKey = change.path ? `${change.path}-${change.op || index}` : `change-${index}`;
               
               return (
                 <div
@@ -242,9 +242,9 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                   </div>
                 )}
 
-                {change.type && (
+                {change.op && (
                   <div style={{ color: '#666', marginBottom: '0.5rem' }}>
-                    Change: <strong>{change.type}</strong>
+                    Operation: <strong>{change.op}</strong>
                   </div>
                 )}
 

@@ -134,9 +134,9 @@ function TreeView({ resources }: { resources: ResourceDiff[] }) {
           {/* Changes */}
           {resource.changes && resource.changes.length > 0 && (
             <div style={{ padding: '1rem' }}>
-              {resource.changes.map((change) => (
+              {resource.changes.map((change, index) => (
                 <div
-                  key={`${change.path}-${change.type}`}
+                  key={`${change.path}-${change.op || index}`}
                   style={{
                     marginBottom: '0.75rem',
                     padding: '0.75rem',

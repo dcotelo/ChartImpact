@@ -1,4 +1,4 @@
-import { DiffResultV2, ResourceDiff } from './types';
+import { DiffResultV2 } from './types';
 
 export const mockDiffResultV2: DiffResultV2 = {
   metadata: {
@@ -7,13 +7,13 @@ export const mockDiffResultV2: DiffResultV2 = {
     generatedAt: new Date().toISOString(),
     inputs: {
       left: {
-        repository: 'https://github.com/argoproj/argo-helm.git',
-        chartPath: 'charts/argo-cd',
+        source: 'helm',
+        chart: 'argo-cd',
         version: 'argo-cd-9.1.5'
       },
       right: {
-        repository: 'https://github.com/argoproj/argo-helm.git',
-        chartPath: 'charts/argo-cd',
+        source: 'helm',
+        chart: 'argo-cd',
         version: 'argo-cd-9.1.6'
       }
     },
@@ -32,29 +32,38 @@ export const mockDiffResultV2: DiffResultV2 = {
       afterHash: 'def456abc789',
       changes: [
         {
+          op: 'replace',
           path: 'spec.template.spec.containers[0].image',
-          semanticType: 'spec',
-          importance: 'critical',
-          flags: ['breaking-change'],
-          type: 'value-change',
+          pathTokens: ['spec', 'template', 'spec', 'containers', 0, 'image'],
           before: 'quay.io/argoproj/argocd:v2.8.0',
-          after: 'quay.io/argoproj/argocd:v2.8.1'
+          after: 'quay.io/argoproj/argocd:v2.8.1',
+          valueType: 'string',
+          semanticType: 'container.image',
+          changeCategory: 'workload',
+          importance: 'critical',
+          flags: ['breaking-change', 'rollout-trigger']
         },
         {
+          op: 'replace',
           path: 'spec.replicas',
-          semanticType: 'spec',
-          importance: 'high',
-          type: 'value-change',
+          pathTokens: ['spec', 'replicas'],
           before: 2,
-          after: 3
+          after: 3,
+          valueType: 'int',
+          semanticType: 'workload.replicas',
+          changeCategory: 'workload',
+          importance: 'high'
         },
         {
+          op: 'replace',
           path: 'spec.template.spec.containers[0].resources.requests.memory',
-          semanticType: 'spec',
-          importance: 'medium',
-          type: 'value-change',
+          pathTokens: ['spec', 'template', 'spec', 'containers', 0, 'resources', 'requests', 'memory'],
           before: '256Mi',
-          after: '512Mi'
+          after: '512Mi',
+          valueType: 'string',
+          semanticType: 'resources.memory',
+          changeCategory: 'resources',
+          importance: 'medium'
         }
       ],
       summary: {
@@ -64,9 +73,7 @@ export const mockDiffResultV2: DiffResultV2 = {
           high: 1,
           medium: 1
         },
-        bySemanticType: {
-          spec: 3
-        }
+        categories: ['workload', 'resources']
       }
     },
     {
@@ -81,20 +88,26 @@ export const mockDiffResultV2: DiffResultV2 = {
       afterHash: 'abc123xyz789',
       changes: [
         {
+          op: 'replace',
           path: 'spec.ports[0].port',
-          semanticType: 'spec',
-          importance: 'high',
-          type: 'value-change',
+          pathTokens: ['spec', 'ports', 0, 'port'],
           before: 80,
-          after: 8080
+          after: 8080,
+          valueType: 'int',
+          semanticType: 'service.port',
+          changeCategory: 'networking',
+          importance: 'high'
         },
         {
+          op: 'replace',
           path: 'metadata.labels.version',
-          semanticType: 'metadata',
-          importance: 'low',
-          type: 'value-change',
+          pathTokens: ['metadata', 'labels', 'version'],
           before: 'v2.8.0',
-          after: 'v2.8.1'
+          after: 'v2.8.1',
+          valueType: 'string',
+          semanticType: 'metadata.label',
+          changeCategory: 'metadata',
+          importance: 'low'
         }
       ],
       summary: {
@@ -103,10 +116,7 @@ export const mockDiffResultV2: DiffResultV2 = {
           high: 1,
           low: 1
         },
-        bySemanticType: {
-          spec: 1,
-          metadata: 1
-        }
+        categories: ['networking', 'metadata']
       }
     },
     {
@@ -119,12 +129,15 @@ export const mockDiffResultV2: DiffResultV2 = {
       changeType: 'modified',
       changes: [
         {
+          op: 'replace',
           path: 'data.timeout',
-          semanticType: 'data',
-          importance: 'medium',
-          type: 'value-change',
+          pathTokens: ['data', 'timeout'],
           before: '30s',
-          after: '60s'
+          after: '60s',
+          valueType: 'string',
+          semanticType: 'config.timeout',
+          changeCategory: 'configuration',
+          importance: 'medium'
         }
       ],
       summary: {
@@ -132,9 +145,7 @@ export const mockDiffResultV2: DiffResultV2 = {
         byImportance: {
           medium: 1
         },
-        bySemanticType: {
-          data: 1
-        }
+        categories: ['configuration']
       }
     },
     {
@@ -142,24 +153,28 @@ export const mockDiffResultV2: DiffResultV2 = {
         apiVersion: 'rbac.authorization.k8s.io/v1',
         kind: 'ClusterRole',
         name: 'argocd-application-controller',
-        namespace: null
+        namespace: ''
       },
       changeType: 'modified',
       changes: [
         {
+          op: 'add',
           path: 'rules[0].verbs',
-          semanticType: 'spec',
+          pathTokens: ['rules', 0, 'verbs'],
+          after: ['delete'],
+          valueType: 'array',
+          semanticType: 'rbac.permissions',
+          changeCategory: 'security',
           importance: 'critical',
-          flags: ['security-related'],
-          type: 'added',
-          after: ['delete']
+          flags: ['security-related']
         }
       ],
       summary: {
         totalChanges: 1,
         byImportance: {
           critical: 1
-        }
+        },
+        categories: ['security']
       }
     },
     {
@@ -173,7 +188,8 @@ export const mockDiffResultV2: DiffResultV2 = {
       beforeHash: 'removed123',
       changes: [],
       summary: {
-        totalChanges: 0
+        totalChanges: 0,
+        categories: []
       }
     },
     {
@@ -187,29 +203,19 @@ export const mockDiffResultV2: DiffResultV2 = {
       afterHash: 'added456',
       changes: [],
       summary: {
-        totalChanges: 0
+        totalChanges: 0,
+        categories: []
       }
     }
   ],
   stats: {
-    totalResources: 6,
-    byChangeType: {
+    resources: {
       added: 1,
       removed: 1,
-      modified: 4,
-      unchanged: 0
+      modified: 4
     },
-    byKind: {
-      Deployment: 1,
-      Service: 1,
-      ConfigMap: 1,
-      ClusterRole: 1,
-      ServiceAccount: 1,
-      Ingress: 1
-    },
-    byNamespace: {
-      argocd: 5,
-      '': 1 // cluster-scoped
+    changes: {
+      total: 7
     }
   }
 };

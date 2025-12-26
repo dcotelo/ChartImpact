@@ -19,6 +19,7 @@ export interface CompareResponse {
   version1?: string;
   version2?: string;
   statistics?: ChangeStatistics;
+  structuredDiff?: DiffResultV2;
 }
 
 export interface DiffResult {
@@ -87,76 +88,114 @@ export interface BreakingChange {
   severity: 'high' | 'medium' | 'low';
 }
 
-// New v2 types for structured diff format
+// DiffResultV2 - Structured diff format for Explorer v2
+// This format enables path-level filtering, semantic grouping,
+// importance-based highlighting, and advanced analytics
 export interface DiffResultV2 {
   metadata: DiffMetadata;
-  resources: ResourceDiff[];
-  stats?: DiffStats;
+  resources: ResourceDiffV2[];
+  stats?: DiffStatsV2;
 }
 
+// DiffMetadata provides traceability and context for the diff
 export interface DiffMetadata {
   engineVersion: string;
   compareId: string;
   generatedAt: string;
-  inputs: {
-    left: any;
-    right: any;
-  };
+  inputs: InputMetadata;
   normalizationRules?: string[];
 }
 
-export interface ResourceDiff {
-  identity: ResourceIdentity;
+// InputMetadata describes the sources being compared
+export interface InputMetadata {
+  left: SourceMetadata;
+  right: SourceMetadata;
+}
+
+// SourceMetadata describes a single input source
+export interface SourceMetadata {
+  source: string;
+  chart?: string;
+  version?: string;
+  valuesHash?: string;
+}
+
+// DiffStatsV2 provides aggregate statistics
+export interface DiffStatsV2 {
+  resources: DiffStatsResourcesV2;
+  changes: DiffStatsChangesV2;
+}
+
+// DiffStatsResourcesV2 provides resource-level statistics
+export interface DiffStatsResourcesV2 {
+  added: number;
+  removed: number;
+  modified: number;
+}
+
+// DiffStatsChangesV2 provides change-level statistics
+export interface DiffStatsChangesV2 {
+  total: number;
+}
+
+// ResourceDiffV2 represents a diff for a single resource
+export interface ResourceDiffV2 {
+  identity: ResourceIdentityV2;
   changeType: 'added' | 'removed' | 'modified' | 'unchanged';
   beforeHash?: string;
   afterHash?: string;
-  changes: Change[];
-  summary?: ChangeSummaryDetail;
+  changes?: ChangeV2[];
+  summary?: ResourceSummaryV2;
 }
 
-export interface ResourceIdentity {
+// ResourceIdentityV2 uniquely identifies a resource
+export interface ResourceIdentityV2 {
   apiVersion: string;
   kind: string;
   name: string;
-  namespace?: string | null;
+  namespace: string;
   uid?: string | null;
 }
 
-export interface Change {
-  path: string;
-  semanticType?: 'spec' | 'metadata' | 'status' | 'data' | 'other';
-  importance?: 'critical' | 'high' | 'medium' | 'low';
-  flags?: string[];
-  type: 'value-change' | 'added' | 'removed' | 'type-change' | 'array-diff';
-  before?: any;
-  after?: any;
-  arrayDiff?: ArrayDiff;
-}
-
-export interface ArrayDiff {
-  added?: any[];
-  removed?: any[];
-  modified?: ArrayItemDiff[];
-}
-
-export interface ArrayItemDiff {
-  index: number;
-  before: any;
-  after: any;
-}
-
-export interface ChangeSummaryDetail {
+// ResourceSummaryV2 provides a derived summary of changes
+export interface ResourceSummaryV2 {
   totalChanges: number;
   byImportance?: Record<string, number>;
-  bySemanticType?: Record<string, number>;
+  categories?: string[];
+}
+
+// ChangeV2 represents a field-level change with semantic information
+export interface ChangeV2 {
+  op: 'add' | 'remove' | 'replace';
+  path: string;
+  pathTokens: (string | number)[];
+  before?: any;
+  after?: any;
+  valueType: string;
+  semanticType?: string;
+  changeCategory?: string;
+  importance?: 'low' | 'medium' | 'high' | 'critical';
   flags?: string[];
 }
 
-export interface DiffStats {
-  totalResources: number;
-  byChangeType: Record<string, number>;
-  byKind: Record<string, number>;
-  byNamespace: Record<string, number>;
+// ============================================================================
+// Compatibility aliases for Explorer v2 components
+// These allow the Explorer to work with the main v2 types seamlessly
+// ============================================================================
+
+export type ResourceDiff = ResourceDiffV2;
+export type ResourceIdentity = ResourceIdentityV2;
+export type Change = ChangeV2 & {
+  type?: 'value-change' | 'added' | 'removed' | 'type-change' | 'array-diff';
+};
+export type ChangeSummaryDetail = ResourceSummaryV2 & {
+  bySemanticType?: Record<string, number>;
+};
+export type DiffStats = DiffStatsV2 & {
+  totalResources?: number;
+  byChangeType?: Record<string, number>;
+  byKind?: Record<string, number>;
+  byNamespace?: Record<string, number>;
   flagSummary?: Record<string, number>;
-}
+};
 
