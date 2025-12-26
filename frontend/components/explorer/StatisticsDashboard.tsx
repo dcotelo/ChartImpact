@@ -47,22 +47,36 @@ function computeStatistics(diffData: DiffResultV2) {
       let hasImportantChange = false;
       
       resource.changes.forEach(change => {
-        // Check if change is in spec
-        if (change.path.includes('/spec') || change.path.startsWith('spec')) {
+        const path = change.path;
+        
+        // Check if change is in spec (must start with /spec/ or be exactly spec)
+        if (path === 'spec' || path === '/spec' || path.startsWith('spec.') || path.startsWith('spec/') || path.startsWith('/spec.') || path.startsWith('/spec/')) {
           hasSpecChange = true;
         }
-        // Check if change is metadata-only (labels, annotations in metadata section)
-        if ((change.path.includes('/metadata') || change.path.startsWith('metadata')) && !hasSpecChange) {
-          hasMetadataOnlyChange = true;
-        }
+        
         // Check importance
         if (change.importance === 'high' || change.importance === 'critical') {
           hasImportantChange = true;
         }
       });
       
+      // After checking all changes in this resource, determine if it's metadata-only
+      // A resource is metadata-only if it has changes but no spec changes
+      if (!hasSpecChange && resource.changes.length > 0) {
+        // Check if any change is in metadata path
+        const hasMetadata = resource.changes.some(change => {
+          const path = change.path;
+          return path === 'metadata' || path === '/metadata' || 
+                 path.startsWith('metadata.') || path.startsWith('metadata/') || 
+                 path.startsWith('/metadata.') || path.startsWith('/metadata/');
+        });
+        if (hasMetadata) {
+          hasMetadataOnlyChange = true;
+        }
+      }
+      
       if (hasSpecChange) specChanges++;
-      if (hasMetadataOnlyChange && !hasSpecChange) metadataOnlyChanges++;
+      if (hasMetadataOnlyChange) metadataOnlyChanges++;
       if (hasImportantChange) {
         impactfulChanges++;
       } else {
