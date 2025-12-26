@@ -22,6 +22,10 @@ interface ResourceDiff {
   lines: string[];
 }
 
+// Constants for regex patterns to avoid duplication
+const RESOURCE_IDENTIFIER_PATTERN = /\([^)]+\/[^)]+\/[^)]+\)/;
+const RESOURCE_EXTRACTOR_PATTERN = /\(([^)]+)\)/;
+
 // Comprehensive mapping of Kubernetes resource kinds to categories
 const RESOURCE_KIND_CATEGORIES: Record<string, string> = {
   // Workloads
@@ -150,19 +154,37 @@ function categorizeChange(path: string, kind: string): string {
   return kind || 'Other';
 }
 
+// Helper function to check if a line contains a resource identifier
+function hasResourceIdentifier(line: string): boolean {
+  return RESOURCE_IDENTIFIER_PATTERN.test(line);
+}
+
+// Helper function to extract resource kind from resource identifier
+function extractResourceKind(resourceIdentifier: string): string {
+  const match = resourceIdentifier.match(RESOURCE_EXTRACTOR_PATTERN);
+  if (!match) return '';
+  
+  const resourceParts = match[1].split('/');
+  return resourceParts.length >= 2 
+    ? resourceParts[resourceParts.length - 3] || resourceParts[0] 
+    : resourceParts[0];
+}
+
+// Helper to apply a line-by-line filter to diff text
+function filterDiffLines(diff: string, filterFn: (line: string, index: number, lines: string[]) => boolean): string {
+  if (!diff) return '';
+  const lines = diff.split('\n');
+  return lines.filter(filterFn).join('\n');
+}
+
 // Helper function to filter out metadata changes from diff output
 function filterMetadataFromDiff(diff: string): string {
   if (!diff) return '';
   
   // Remove all lines that are part of metadata blocks
-  // A metadata block consists of:
-  // 1. A line containing "metadata." with a resource identifier
-  // 2. Following value change lines (starting with ±, +, or -)
-  // 3. Blank lines until the next resource
-  
   const lines = diff.split('\n');
   const filteredLines: string[] = [];
-  let skipMode = false; // Are we currently skipping a metadata block?
+  let skipMode = false;
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -170,15 +192,14 @@ function filterMetadataFromDiff(diff: string): string {
     const lowerLine = line.toLowerCase();
     
     // Check if this line starts a metadata block
-    if (lowerLine.includes('metadata.') && line.match(/\([^)]+\/[^)]+\/[^)]+\)/)) {
+    if (lowerLine.includes('metadata.') && hasResourceIdentifier(line)) {
       skipMode = true;
       continue;
     }
     
-    // If we're in skip mode, check if we should stop skipping
     if (skipMode) {
       // Stop skipping if we hit a new non-metadata resource
-      if (trimmed.match(/\([^)]+\/[^)]+\/[^)]+\)/)) {
+      if (hasResourceIdentifier(trimmed)) {
         if (!lowerLine.includes('metadata.')) {
           skipMode = false;
           filteredLines.push(line);
@@ -198,7 +219,7 @@ function filterMetadataFromDiff(diff: string): string {
           const aheadLine = lines[k].trim();
           if (aheadLine === '') continue;
           
-          if (aheadLine.match(/\([^)]+\/[^)]+\/[^)]+\)/)) {
+          if (hasResourceIdentifier(aheadLine)) {
             if (!lines[k].toLowerCase().includes('metadata.')) {
               foundNonMetadata = true;
             }
@@ -219,7 +240,6 @@ function filterMetadataFromDiff(diff: string): string {
       continue;
     }
     
-    // Include the line if we're not skipping
     filteredLines.push(line);
   }
   
@@ -846,32 +866,24 @@ export function DiffDisplay({
     
     // Step 2: Apply suppression filters by resource kinds
     if (suppressKinds && suppressKinds.length > 0 && diff) {
-      const lines = diff.split('\n');
-      const filtered: string[] = [];
       let skipResource = false;
+      let currentKind = '';
       
-      for (const line of lines) {
-        const resourceMatch = line.match(/\(([^)]+)\)/);
-        if (resourceMatch) {
-          const resourceParts = resourceMatch[1].split('/');
-          const kind = resourceParts.length >= 2 ? resourceParts[resourceParts.length - 3] || resourceParts[0] : resourceParts[0];
-          skipResource = suppressKinds.some(sk => kind.toLowerCase() === sk.toLowerCase());
+      diff = filterDiffLines(diff, (line) => {
+        // Check if this line starts a new resource
+        if (hasResourceIdentifier(line)) {
+          currentKind = extractResourceKind(line);
+          skipResource = suppressKinds.some(sk => currentKind.toLowerCase() === sk.toLowerCase());
         }
-        
-        if (!skipResource) {
-          filtered.push(line);
-        }
-      }
-      
-      diff = filtered.join('\n');
+        return !skipResource;
+      });
     }
     
     // Step 3: Apply suppression by regex
     if (suppressRegex && diff) {
       try {
         const regex = new RegExp(suppressRegex);
-        const lines = diff.split('\n');
-        diff = lines.filter(line => !regex.test(line)).join('\n');
+        diff = filterDiffLines(diff, (line) => !regex.test(line));
       } catch (e) {
         console.warn('Invalid suppress regex:', e);
       }
