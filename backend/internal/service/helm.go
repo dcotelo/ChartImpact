@@ -133,7 +133,7 @@ func (h *HelmService) CompareVersions(ctx context.Context, req *models.CompareRe
 	}
 
 	// Compare the rendered templates
-	diff, err := h.compareRendered(ctx, rendered1, rendered2, req.IgnoreLabels)
+	diffResult, diffRaw, err := h.compareRendered(ctx, rendered1, rendered2, req.IgnoreLabels)
 	if err != nil {
 		return &models.CompareResponse{
 			Success: false,
@@ -143,12 +143,19 @@ func (h *HelmService) CompareVersions(ctx context.Context, req *models.CompareRe
 
 	log.Info("Chart comparison completed successfully")
 
-	return &models.CompareResponse{
+	response := &models.CompareResponse{
 		Success:  true,
-		Diff:     diff,
+		Diff:     diffRaw,
 		Version1: req.Version1,
 		Version2: req.Version2,
-	}, nil
+	}
+
+	// Add structured diff if available
+	if diffResult != nil {
+		response.StructuredDiff = h.convertToStructuredDiff(diffResult)
+	}
+
+	return response, nil
 }
 
 // createWorkDir creates a unique working directory for this comparison operation
@@ -412,9 +419,10 @@ func (h *HelmService) renderTemplate(ctx context.Context, chartDir string, value
 }
 
 // compareRendered compares two rendered YAML manifests
+// Returns the structured diff result, raw string output, and any error
 // Tries internal diff engine first (if enabled), then dyff, then falls back to simple diff
 // If ignoreLabels is true, filters out metadata.labels and metadata.annotations changes
-func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 string, ignoreLabels bool) (string, error) {
+func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 string, ignoreLabels bool) (*diff.DiffResult, string, error) {
 	log.Info("Comparing rendered templates")
 
 	// Check if internal diff engine is enabled (default: true)
@@ -427,7 +435,7 @@ func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 
 		result, err := diffEngine.Compare(rendered1, rendered2)
 		if err == nil {
 			log.Info("Internal diff engine comparison completed successfully")
-			return result.Raw, nil
+			return result, result.Raw, nil
 		}
 		log.Warnf("Internal diff engine failed, falling back to dyff: %v", err)
 	}
@@ -435,15 +443,15 @@ func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 
 	// Check if dyff is enabled (default: true)
 	if util.GetBoolEnv("DYFF_ENABLED", true) {
 		// Try using dyff
-		diff, err := h.dyffCompare(ctx, rendered1, rendered2, ignoreLabels)
+		diffRaw, err := h.dyffCompare(ctx, rendered1, rendered2, ignoreLabels)
 		if err == nil {
-			return diff, nil
+			return nil, diffRaw, nil
 		}
 		log.Warnf("dyff comparison failed, falling back to simple diff: %v", err)
 	}
 
 	// Fallback to simple line-by-line comparison
-	return h.simpleDiff(rendered1, rendered2), nil
+	return nil, h.simpleDiff(rendered1, rendered2), nil
 }
 
 // dyffCompare uses the dyff tool for enhanced YAML comparison
@@ -578,6 +586,104 @@ func (h *HelmService) isDyffPathLine(line string) bool {
 	// This is more reliable than checking for markers anywhere in the string
 	firstChar := trimmed[0]
 	return firstChar != '±' && firstChar != '+' && firstChar != '-' && firstChar != ' '
+}
+
+// convertToStructuredDiff converts the internal diff.DiffResult to models.StructuredDiffResult
+func (h *HelmService) convertToStructuredDiff(diffResult *diff.DiffResult) *models.StructuredDiffResult {
+	if diffResult == nil {
+		return nil
+	}
+
+	result := &models.StructuredDiffResult{
+		Metadata: models.DiffMetadata{
+			EngineVersion:      diffResult.Metadata.EngineVersion,
+			CompareID:          diffResult.Metadata.CompareID,
+			GeneratedAt:        diffResult.Metadata.GeneratedAt,
+			NormalizationRules: diffResult.Metadata.NormalizationRules,
+			Inputs: models.InputMetadata{
+				Left: models.SourceMetadata{
+					Source:     diffResult.Metadata.Inputs.Left.Source,
+					Chart:      diffResult.Metadata.Inputs.Left.Chart,
+					Version:    diffResult.Metadata.Inputs.Left.Version,
+					ValuesHash: diffResult.Metadata.Inputs.Left.ValuesHash,
+				},
+				Right: models.SourceMetadata{
+					Source:     diffResult.Metadata.Inputs.Right.Source,
+					Chart:      diffResult.Metadata.Inputs.Right.Chart,
+					Version:    diffResult.Metadata.Inputs.Right.Version,
+					ValuesHash: diffResult.Metadata.Inputs.Right.ValuesHash,
+				},
+			},
+		},
+		Resources: make([]models.ResourceDiff, 0, len(diffResult.Resources)),
+	}
+
+	// Convert stats if present
+	if diffResult.Stats != nil {
+		result.Stats = &models.DiffStats{
+			Resources: models.DiffStatsResources{
+				Added:    diffResult.Stats.Resources.Added,
+				Removed:  diffResult.Stats.Resources.Removed,
+				Modified: diffResult.Stats.Resources.Modified,
+			},
+			Changes: models.DiffStatsChanges{
+				Total: diffResult.Stats.Changes.Total,
+			},
+		}
+	}
+
+	// Convert resources
+	for _, r := range diffResult.Resources {
+		resource := models.ResourceDiff{
+			Identity: models.ResourceIdentity{
+				APIVersion: r.Identity.APIVersion,
+				Kind:       r.Identity.Kind,
+				Name:       r.Identity.Name,
+				Namespace:  r.Identity.Namespace,
+				UID:        r.Identity.UID,
+			},
+			ChangeType: string(r.ChangeType),
+			BeforeHash: r.BeforeHash,
+			AfterHash:  r.AfterHash,
+			Changes:    make([]models.Change, 0, len(r.Changes)),
+		}
+
+		// Convert summary if present
+		if r.Summary != nil {
+			resource.Summary = &models.ResourceSummary{
+				TotalChanges: r.Summary.TotalChanges,
+				ByImportance: r.Summary.ByImportance,
+				Categories:   r.Summary.Categories,
+			}
+		}
+
+		// Convert changes
+		for _, c := range r.Changes {
+			// Convert PathTokens to []interface{}
+			pathTokens := make([]interface{}, len(c.PathTokens))
+			for i, token := range c.PathTokens {
+				pathTokens[i] = token
+			}
+
+			change := models.Change{
+				Op:             string(c.Op),
+				Path:           c.Path,
+				PathTokens:     pathTokens,
+				Before:         c.Before,
+				After:          c.After,
+				ValueType:      c.ValueType,
+				SemanticType:   c.SemanticType,
+				ChangeCategory: c.ChangeCategory,
+				Importance:     c.Importance,
+				Flags:          c.Flags,
+			}
+			resource.Changes = append(resource.Changes, change)
+		}
+
+		result.Resources = append(result.Resources, resource)
+	}
+
+	return result
 }
 
 // suggestChartPath searches for Chart.yaml files and suggests valid chart paths
