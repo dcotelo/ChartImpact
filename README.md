@@ -9,11 +9,12 @@ A modern web application for comparing differences between two Helm chart versio
 ## ✨ Features
 
 - 🔍 **Version Comparison** - Compare any two versions (tags, branches, or commits) of a Helm chart
-- 📊 **Visual Diff Display** - Beautiful syntax-highlighted diff output with dyff integration
+- 📊 **Visual Diff Display** - Beautiful syntax-highlighted diff output powered by internal diff engine
+- ⚡ **High Performance** - Fast internal diff engine optimized for Kubernetes manifests
 - 🎨 **Modern UI** - Clean, responsive interface built with React and Next.js
-- ⚡ **Fast & Efficient** - Go backend with Helm Go SDK for optimal performance
+- 🚀 **Fast & Efficient** - Go backend with Helm Go SDK for optimal performance
 - 🔧 **Flexible** - Support for custom values files or inline values content
-- 🚀 **Easy Deployment** - Docker Compose setup with separate backend/frontend containers
+- 📦 **No External Dependencies** - Internal diff engine eliminates need for dyff
 - 🛡️ **Production Ready** - Comprehensive error handling, logging, and health checks
 
 ## 📋 Table of Contents
@@ -39,13 +40,14 @@ ChartImpact uses a modern separated architecture:
 │  (Port 3000)    │         │                  │
 │                 │         │  - Helm SDK      │
 │  - React UI     │         │  - Git Ops       │
-│  - TypeScript   │         │  - dyff          │
+│  - TypeScript   │         │  - Internal Diff │
 │                 │         │                  │
 └─────────────────┘         └──────────────────┘
 ```
 
 **Backend** (`/backend`):
 - Go 1.21+ with Helm Go SDK
+- Internal diff engine for fast, deterministic comparisons
 - REST API with gorilla/mux
 - Structured logging with logrus
 - Docker containerized
@@ -241,7 +243,7 @@ For detailed API documentation, see [backend/README.md](backend/README.md).
 
 ### Optional Tools
 
-- **dyff**: For enhanced YAML diff output (falls back to simple diff if not available)
+- **dyff**: Only needed if you disable the internal diff engine (not recommended)
 
 ### Installing Helm
 

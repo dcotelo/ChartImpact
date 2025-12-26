@@ -9,10 +9,11 @@ Go-based REST API for comparing Helm chart versions using the Helm Go SDK.
 - 🚀 **High Performance** - Built with Go for speed and efficiency
 - 📦 **Helm SDK Integration** - Uses official Helm Go SDK for chart operations
 - 🔄 **Git Integration** - Clones and compares charts from Git repositories
-- 🔍 **Enhanced Diffs** - Supports dyff for semantic YAML comparisons
+- 🔍 **Internal Diff Engine** - Fast, deterministic, Kubernetes-aware diff engine (no external dependencies)
+- 🔧 **Optional dyff Support** - Can use dyff for backwards compatibility if needed
 - 🛡️ **Robust Error Handling** - Comprehensive error messages and logging
 - 📊 **Health Checks** - Built-in health check endpoint
-- 🔧 **Configurable** - Environment-based configuration
+- ⚙️ **Configurable** - Environment-based configuration
 
 ## Architecture
 
@@ -31,6 +32,11 @@ backend/
 │   │       ├── cors.go          # CORS handling
 │   │       ├── logging.go       # Request logging
 │   │       └── recovery.go      # Panic recovery
+│   ├── diff/
+│   │   ├── engine.go            # Internal diff engine
+│   │   ├── parser.go            # YAML manifest parser
+│   │   ├── types.go             # Diff data structures
+│   │   └── diff_test.go         # Comprehensive tests
 │   ├── service/
 │   │   └── helm.go              # Helm chart operations using SDK
 │   └── models/
@@ -46,7 +52,7 @@ backend/
 - **Go 1.21+** - [Download](https://golang.org/dl/)
 - **Helm 3.x** - [Installation Guide](https://helm.sh/docs/intro/install/)
 - **Git** - For cloning repositories
-- **dyff** (optional) - For enhanced YAML diffs
+- **dyff** (optional) - Only needed if INTERNAL_DIFF_ENABLED is set to false
   ```bash
   # macOS
   brew install homeport/tap/dyff
@@ -55,6 +61,9 @@ backend/
   curl -fsSL https://github.com/homeport/dyff/releases/latest/download/dyff_linux_amd64.tar.gz | tar -xz
   sudo mv dyff /usr/local/bin/
   ```
+
+> **Note**: The backend now includes an internal diff engine that is faster and more deterministic than dyff. 
+> dyff is only required if you explicitly disable the internal diff engine (not recommended).
 
 ## Quick Start
 
@@ -103,6 +112,36 @@ From the project root:
 ```bash
 docker-compose up backend
 ```
+
+## Internal Diff Engine
+
+The backend includes a high-performance internal diff engine designed specifically for Kubernetes manifests:
+
+### Key Features
+- ⚡ **Fast**: No external process overhead, pure Go implementation
+- 🎯 **Deterministic**: Same inputs always produce identical output
+- 🧠 **Kubernetes-Aware**: Understands resource structure (apiVersion, kind, metadata)
+- 📊 **Structured Output**: Field-level diffs optimized for frontend consumption
+- 🔧 **Configurable**: Can ignore labels, annotations, or specific fields
+
+### How It Works
+1. **Normalization**: Parses YAML manifests into canonical structures
+2. **Resource Matching**: Identifies resources by apiVersion, kind, name, and namespace
+3. **Field-Level Diffing**: Compares resources field-by-field with deep equality
+4. **Structured Output**: Generates both human-readable and structured JSON diffs
+
+### Comparison with dyff
+
+| Feature | Internal Engine | dyff |
+|---------|----------------|------|
+| Performance | ⚡ Very Fast | Moderate |
+| External Dependency | ❌ None | ✅ Required |
+| Deterministic Output | ✅ Yes | ✅ Yes |
+| Kubernetes-Aware | ✅ Yes | ✅ Yes |
+| Field Filtering | ✅ Built-in | Limited |
+| Output Format | Structured + Raw | Raw text |
+
+The internal diff engine is **enabled by default** and recommended for production use. dyff support is maintained for backwards compatibility.
 
 ## API Endpoints
 
@@ -172,9 +211,12 @@ Health check endpoint.
   "version": "1.0.0",
   "helmOk": true,
   "gitOk": true,
-  "dyffOk": true
+  "dyffOk": false
 }
 ```
+
+**Note:** `dyffOk` can be `false` when using the internal diff engine (INTERNAL_DIFF_ENABLED=true). 
+The status will still be "ok" as dyff is not required.
 
 ## Configuration
 
@@ -208,7 +250,10 @@ All configuration is done via environment variables. Copy `.env.example` to `.en
 - `LOG_FORMAT` - Log format: json, text (default: json)
 
 ### Features
-- `DYFF_ENABLED` - Use dyff for diffs (default: true)
+- `INTERNAL_DIFF_ENABLED` - Use internal diff engine (default: true, recommended)
+  - When enabled: Fast, deterministic, Kubernetes-aware diffing without external dependencies
+  - When disabled: Falls back to dyff or simple diff
+- `DYFF_ENABLED` - Use dyff for diffs when internal diff is disabled (default: true)
 
 ## Development
 
