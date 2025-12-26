@@ -10,8 +10,10 @@ import {
   filterResources,
   EmptyState,
   ViewModeButton,
+  ValueComparison,
   COLORS,
   STYLES,
+  CODE_BOX_STYLE,
 } from './utils';
 
 interface ViewPanelProps {
@@ -152,42 +154,7 @@ function TreeView({ resources }: { resources: ResourceDiff[] }) {
                   }}>
                     {change.path}
                   </div>
-                  <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem' }}>
-                    {change.before !== undefined && (
-                      <div style={{ flex: 1 }}>
-                        <div style={{ color: COLORS.textLighter, fontSize: '0.75rem', marginBottom: '0.25rem' }}>
-                          Before:
-                        </div>
-                        <div style={{
-                          background: COLORS.removedBg,
-                          padding: '0.5rem',
-                          borderRadius: '4px',
-                          fontFamily: 'monospace',
-                          fontSize: '0.8rem',
-                          color: COLORS.removedText
-                        }}>
-                          {JSON.stringify(change.before, null, 2)}
-                        </div>
-                      </div>
-                    )}
-                    {change.after !== undefined && (
-                      <div style={{ flex: 1 }}>
-                        <div style={{ color: COLORS.textLighter, fontSize: '0.75rem', marginBottom: '0.25rem' }}>
-                          After:
-                        </div>
-                        <div style={{
-                          background: COLORS.addedBg,
-                          padding: '0.5rem',
-                          borderRadius: '4px',
-                          fontFamily: 'monospace',
-                          fontSize: '0.8rem',
-                          color: COLORS.addedText
-                        }}>
-                          {JSON.stringify(change.after, null, 2)}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <ValueComparison before={change.before} after={change.after} />
                   {change.importance && (
                     <div style={{
                       marginTop: '0.5rem',
@@ -308,14 +275,7 @@ function SideBySideView({ resources }: { resources: ResourceDiff[] }) {
               }}>
                 Before
               </div>
-              <pre style={{
-                margin: 0,
-                fontSize: '0.8rem',
-                fontFamily: 'monospace',
-                color: COLORS.text,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word'
-              }}>
+              <pre style={CODE_BOX_STYLE}>
                 {resource.changes && resource.changes.length > 0
                   ? resource.changes.map(c => `${c.path}: ${JSON.stringify(c.before, null, 2)}`).join('\n\n')
                   : 'No changes'}
@@ -336,14 +296,7 @@ function SideBySideView({ resources }: { resources: ResourceDiff[] }) {
               }}>
                 After
               </div>
-              <pre style={{
-                margin: 0,
-                fontSize: '0.8rem',
-                fontFamily: 'monospace',
-                color: COLORS.text,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word'
-              }}>
+              <pre style={CODE_BOX_STYLE}>
                 {resource.changes && resource.changes.length > 0
                   ? resource.changes.map(c => `${c.path}: ${JSON.stringify(c.after, null, 2)}`).join('\n\n')
                   : 'No changes'}

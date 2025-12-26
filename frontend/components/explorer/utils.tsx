@@ -234,6 +234,41 @@ export function EmptyState({ message = 'No resources to display' }: { message?: 
 }
 
 /**
+ * Common code box style
+ */
+export const CODE_BOX_STYLE = {
+  margin: 0,
+  fontSize: '0.8rem',
+  fontFamily: 'monospace',
+  color: COLORS.text,
+  whiteSpace: 'pre-wrap' as const,
+  wordBreak: 'break-word' as const,
+};
+
+/**
+ * Label style for before/after
+ */
+export const LABEL_STYLE = {
+  color: COLORS.textLighter,
+  fontSize: '0.75rem',
+  marginBottom: '0.25rem',
+};
+
+/**
+ * Code display box style generator
+ */
+export function getCodeBoxStyle(background: string, textColor: string) {
+  return {
+    background,
+    padding: '0.5rem',
+    borderRadius: '4px',
+    fontFamily: 'monospace',
+    fontSize: '0.8rem',
+    color: textColor,
+  };
+}
+
+/**
  * Reusable button component for view mode selection
  */
 interface ViewModeButtonProps {
@@ -251,5 +286,36 @@ export function ViewModeButton({ label, icon, isActive, onClick }: ViewModeButto
     >
       {icon} {label}
     </button>
+  );
+}
+
+/**
+ * Component for displaying before/after value comparison
+ */
+interface ValueComparisonProps {
+  before?: any;
+  after?: any;
+}
+
+export function ValueComparison({ before, after }: ValueComparisonProps) {
+  return (
+    <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem' }}>
+      {before !== undefined && (
+        <div style={{ flex: 1 }}>
+          <div style={LABEL_STYLE}>Before:</div>
+          <div style={getCodeBoxStyle(COLORS.removedBg, COLORS.removedText)}>
+            {JSON.stringify(before, null, 2)}
+          </div>
+        </div>
+      )}
+      {after !== undefined && (
+        <div style={{ flex: 1 }}>
+          <div style={LABEL_STYLE}>After:</div>
+          <div style={getCodeBoxStyle(COLORS.addedBg, COLORS.addedText)}>
+            {JSON.stringify(after, null, 2)}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
