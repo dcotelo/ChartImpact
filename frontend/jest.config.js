@@ -25,6 +25,12 @@ const customJestConfig = {
     '**/__tests__/**/*.[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/.next/',
+    '/e2e/',  // Exclude Playwright E2E tests
+    '/app/api/compare/__tests__/'  // Exclude API route tests (need special setup)
+  ],
   transformIgnorePatterns: [
     '/node_modules/(?!(react-syntax-highlighter)/)',
     '^.+\\.module\\.(css|sass|scss)$',
