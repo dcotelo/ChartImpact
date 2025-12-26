@@ -8,6 +8,7 @@ import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { DiffExplorer } from '@/components/explorer/DiffExplorer';
 import { CompareResponse, CompareRequest, DiffResultV2 } from '@/lib/types';
 import { API_ENDPOINTS } from '@/lib/api-config';
+import { mockDiffResultV2 } from '@/lib/mock-data';
 
 export default function Home() {
   const [result, setResult] = useState<CompareResponse | null>(null);
@@ -259,6 +260,7 @@ export default function Home() {
             {activeTab === 'explorer' && (
               <DiffExplorer 
                 result={result}
+                diffData={result.structuredDiff || mockDiffResultV2}
               />
             )}
           </div>
