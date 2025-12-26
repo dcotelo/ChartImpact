@@ -178,3 +178,24 @@ export interface ChangeV2 {
   flags?: string[];
 }
 
+// ============================================================================
+// Compatibility aliases for Explorer v2 components
+// These allow the Explorer to work with the main v2 types seamlessly
+// ============================================================================
+
+export type ResourceDiff = ResourceDiffV2;
+export type ResourceIdentity = ResourceIdentityV2;
+export type Change = ChangeV2 & {
+  type?: 'value-change' | 'added' | 'removed' | 'type-change' | 'array-diff';
+};
+export type ChangeSummaryDetail = ResourceSummaryV2 & {
+  bySemanticType?: Record<string, number>;
+};
+export type DiffStats = DiffStatsV2 & {
+  totalResources?: number;
+  byChangeType?: Record<string, number>;
+  byKind?: Record<string, number>;
+  byNamespace?: Record<string, number>;
+  flagSummary?: Record<string, number>;
+};
+
