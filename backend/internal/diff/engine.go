@@ -23,7 +23,7 @@ const (
 type Engine struct {
 	IgnoreLabels      bool
 	IgnoreAnnotations bool
-	
+
 	// Metadata for traceability
 	LeftSource  *SourceMetadata
 	RightSource *SourceMetadata
@@ -111,13 +111,13 @@ func (e *Engine) Compare(manifest1, manifest2 string) (*DiffResult, error) {
 			if len(changes) > 0 {
 				resourceDiff = e.createResourceDiff(key, resource1, resource2, ChangeTypeModified)
 				resourceDiff.Changes = changes
-				
+
 				// Calculate summary
 				resourceDiff.Summary = e.calculateResourceSummary(changes)
-				
+
 				// Convert to legacy Fields format
 				resourceDiff.Fields = e.convertToFieldDiffs(changes)
-				
+
 				result.Stats.Resources.Modified++
 				result.Summary.Modified++ // Legacy
 				totalChanges += len(changes)
@@ -178,7 +178,7 @@ func (e *Engine) createResourceDiff(key ResourceKey, before, after Resource, cha
 		},
 		ChangeType: changeType,
 		Changes:    []Change{},
-		
+
 		// Legacy fields
 		APIVersion: key.APIVersion,
 		Kind:       key.Kind,
@@ -224,17 +224,17 @@ func (e *Engine) getSourceMetadata(isLeft bool) SourceMetadata {
 // getNormalizationRules returns the list of normalization rules applied
 func (e *Engine) getNormalizationRules() []string {
 	rules := []string{}
-	
+
 	if e.IgnoreLabels {
 		rules = append(rules, "ignoreLabels")
 	}
 	if e.IgnoreAnnotations {
 		rules = append(rules, "ignoreAnnotations")
 	}
-	
+
 	// Always applied normalization
 	rules = append(rules, "normalizeDefaults")
-	
+
 	return rules
 }
 
@@ -253,7 +253,7 @@ func (e *Engine) calculateResourceSummary(changes []Change) *ResourceSummary {
 		if change.Importance != "" {
 			summary.ByImportance[change.Importance]++
 		}
-		
+
 		// Collect unique categories
 		if change.ChangeCategory != "" {
 			categorySet[change.ChangeCategory] = true
@@ -272,7 +272,7 @@ func (e *Engine) calculateResourceSummary(changes []Change) *ResourceSummary {
 // convertToFieldDiffs converts Changes to legacy FieldDiff format
 func (e *Engine) convertToFieldDiffs(changes []Change) []FieldDiff {
 	fields := make([]FieldDiff, len(changes))
-	
+
 	for i, change := range changes {
 		var changeType ChangeType
 		switch change.Op {
@@ -283,7 +283,7 @@ func (e *Engine) convertToFieldDiffs(changes []Change) []FieldDiff {
 		case OpReplace:
 			changeType = ChangeTypeModified
 		}
-		
+
 		fields[i] = FieldDiff{
 			Path:     change.Path,
 			OldValue: change.Before,
@@ -291,7 +291,7 @@ func (e *Engine) convertToFieldDiffs(changes []Change) []FieldDiff {
 			Type:     changeType,
 		}
 	}
-	
+
 	return fields
 }
 

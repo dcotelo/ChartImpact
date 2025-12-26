@@ -37,11 +37,11 @@ data:
 	assert.Equal(t, "1.0.0", result.Metadata.EngineVersion)
 	assert.NotEmpty(t, result.Metadata.CompareID)
 	assert.NotEmpty(t, result.Metadata.GeneratedAt)
-	
+
 	// Verify inputs metadata
 	assert.Equal(t, "helm", result.Metadata.Inputs.Left.Source)
 	assert.Equal(t, "helm", result.Metadata.Inputs.Right.Source)
-	
+
 	// Verify normalization rules
 	assert.Contains(t, result.Metadata.NormalizationRules, "normalizeDefaults")
 }
@@ -75,14 +75,14 @@ spec:
 	require.Len(t, result.Resources, 1)
 
 	resource := result.Resources[0]
-	
+
 	// Verify identity structure
 	assert.Equal(t, "apps/v1", resource.Identity.APIVersion)
 	assert.Equal(t, "Deployment", resource.Identity.Kind)
 	assert.Equal(t, "my-app", resource.Identity.Name)
 	assert.Equal(t, "production", resource.Identity.Namespace)
 	assert.Nil(t, resource.Identity.UID)
-	
+
 	// Verify legacy fields still present
 	assert.Equal(t, "apps/v1", resource.APIVersion)
 	assert.Equal(t, "Deployment", resource.Kind)
@@ -145,9 +145,9 @@ spec:
 			break
 		}
 	}
-	
+
 	require.NotNil(t, replicasChange, "replicas change should be present")
-	
+
 	// Verify change structure
 	assert.Equal(t, OpReplace, replicasChange.Op)
 	assert.Equal(t, "spec.replicas", replicasChange.Path)
@@ -189,7 +189,7 @@ data:
 	require.Greater(t, len(result.Resources[0].Changes), 0)
 
 	change := result.Resources[0].Changes[0]
-	
+
 	// Verify path tokens
 	assert.Equal(t, "data.key", change.Path)
 	require.Len(t, change.PathTokens, 2)
@@ -239,12 +239,12 @@ spec:
 
 	resource := result.Resources[0]
 	require.NotNil(t, resource.Summary)
-	
+
 	// Verify summary structure
 	assert.Greater(t, resource.Summary.TotalChanges, 0)
 	assert.NotNil(t, resource.Summary.ByImportance)
 	assert.Greater(t, len(resource.Summary.Categories), 0)
-	
+
 	// Categories should be sorted
 	if len(resource.Summary.Categories) > 1 {
 		for i := 1; i < len(resource.Summary.Categories); i++ {
@@ -338,21 +338,21 @@ data:
 	for i := 1; i < len(results); i++ {
 		currentJSON, err := json.Marshal(results[i])
 		require.NoError(t, err)
-		
+
 		// Compare only structure, not compareId and generatedAt
 		var first, current map[string]interface{}
 		require.NoError(t, json.Unmarshal(firstJSON, &first))
 		require.NoError(t, json.Unmarshal(currentJSON, &current))
-		
+
 		// Remove non-deterministic fields
 		delete(first["metadata"].(map[string]interface{}), "compareId")
 		delete(first["metadata"].(map[string]interface{}), "generatedAt")
 		delete(current["metadata"].(map[string]interface{}), "compareId")
 		delete(current["metadata"].(map[string]interface{}), "generatedAt")
-		
+
 		firstClean, _ := json.Marshal(first)
 		currentClean, _ := json.Marshal(current)
-		
+
 		assert.JSONEq(t, string(firstClean), string(currentClean))
 	}
 }
@@ -390,12 +390,12 @@ data:
 	// Verify legacy ResourceDiff fields
 	require.Len(t, result.Resources, 1)
 	resource := result.Resources[0]
-	
+
 	assert.NotEmpty(t, resource.APIVersion)
 	assert.NotEmpty(t, resource.Kind)
 	assert.NotEmpty(t, resource.Name)
 	assert.NotEmpty(t, resource.Fields)
-	
+
 	// Verify Fields match Changes
 	assert.Equal(t, len(resource.Changes), len(resource.Fields))
 }
@@ -403,10 +403,10 @@ data:
 // TestSemanticClassification tests semantic type classification
 func TestSemanticClassification(t *testing.T) {
 	tests := []struct {
-		path           string
-		expectedType   string
-		expectedCat    string
-		expectedImp    string
+		path         string
+		expectedType string
+		expectedCat  string
+		expectedImp  string
 	}{
 		{"spec.template.spec.containers.0.image", "container.image", "workload", "high"},
 		{"spec.replicas", "workload.replicas", "workload", "high"},
@@ -478,7 +478,7 @@ data:
 	require.Len(t, result.Resources, 1)
 
 	resource := result.Resources[0]
-	
+
 	// For modified resources, both hashes should be present
 	assert.NotEmpty(t, resource.BeforeHash)
 	assert.NotEmpty(t, resource.AfterHash)

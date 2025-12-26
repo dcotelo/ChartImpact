@@ -13,11 +13,11 @@ type DiffResult struct {
 
 // DiffMetadata provides traceability and context for the diff
 type DiffMetadata struct {
-	EngineVersion      string              `json:"engineVersion"`
-	CompareID          string              `json:"compareId"`
-	GeneratedAt        string              `json:"generatedAt"` // RFC3339 timestamp
-	Inputs             InputMetadata       `json:"inputs"`
-	NormalizationRules []string            `json:"normalizationRules,omitempty"`
+	EngineVersion      string        `json:"engineVersion"`
+	CompareID          string        `json:"compareId"`
+	GeneratedAt        string        `json:"generatedAt"` // RFC3339 timestamp
+	Inputs             InputMetadata `json:"inputs"`
+	NormalizationRules []string      `json:"normalizationRules,omitempty"`
 }
 
 // InputMetadata describes the sources being compared
@@ -28,7 +28,7 @@ type InputMetadata struct {
 
 // SourceMetadata describes a single input source
 type SourceMetadata struct {
-	Source     string `json:"source"`     // e.g., "helm", "kustomize"
+	Source     string `json:"source"` // e.g., "helm", "kustomize"
 	Chart      string `json:"chart,omitempty"`
 	Version    string `json:"version,omitempty"`
 	ValuesHash string `json:"valuesHash,omitempty"`
@@ -88,9 +88,9 @@ type ResourceIdentity struct {
 
 // ResourceSummary provides a derived summary of changes for a resource
 type ResourceSummary struct {
-	TotalChanges  int                  `json:"totalChanges"`
-	ByImportance  map[string]int       `json:"byImportance,omitempty"`
-	Categories    []string             `json:"categories,omitempty"`
+	TotalChanges int            `json:"totalChanges"`
+	ByImportance map[string]int `json:"byImportance,omitempty"`
+	Categories   []string       `json:"categories,omitempty"`
 }
 
 // ChangeType represents the type of change
