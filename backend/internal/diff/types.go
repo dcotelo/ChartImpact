@@ -2,9 +2,9 @@ package diff
 
 // DiffResult represents the structured output of a diff operation
 type DiffResult struct {
-	Summary   Summary           `json:"summary"`
-	Resources []ResourceDiff    `json:"resources"`
-	Raw       string            `json:"raw,omitempty"` // For backward compatibility
+	Summary   Summary        `json:"summary"`
+	Resources []ResourceDiff `json:"resources"`
+	Raw       string         `json:"raw,omitempty"` // For backward compatibility
 }
 
 // Summary provides high-level statistics about the diff
@@ -17,12 +17,12 @@ type Summary struct {
 
 // ResourceDiff represents the diff for a single Kubernetes resource
 type ResourceDiff struct {
-	APIVersion string       `json:"apiVersion"`
-	Kind       string       `json:"kind"`
-	Name       string       `json:"name"`
-	Namespace  string       `json:"namespace"`
-	ChangeType ChangeType   `json:"changeType"`
-	Fields     []FieldDiff  `json:"fields,omitempty"`
+	APIVersion string      `json:"apiVersion"`
+	Kind       string      `json:"kind"`
+	Name       string      `json:"name"`
+	Namespace  string      `json:"namespace"`
+	ChangeType ChangeType  `json:"changeType"`
+	Fields     []FieldDiff `json:"fields,omitempty"`
 }
 
 // ChangeType represents the type of change
