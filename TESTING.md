@@ -7,6 +7,7 @@ This guide covers how to test the Chart Impact application, including both manua
 - [Prerequisites](#prerequisites)
 - [Automated Testing](#automated-testing)
 - [Manual Testing](#manual-testing)
+- [Explorer v2 Testing](#explorer-v2-testing)
 - [Test Coverage](#test-coverage)
 - [Writing New Tests](#writing-new-tests)
 
@@ -17,6 +18,55 @@ Before running tests, ensure you have:
 1. **Node.js 18+** and **npm 9+** installed
 2. **Dependencies installed**: Run `npm install`
 3. **Helm 3.x** installed (for manual testing and integration tests)
+4. **Go 1.21+** installed (for backend testing)
+
+## Explorer v2 Testing
+
+Explorer v2 has comprehensive test coverage to ensure reliability:
+
+### Automated Tests
+
+Run Explorer v2 tests:
+```bash
+cd frontend
+npm test -- DiffExplorer.test.tsx
+```
+
+These tests verify:
+- **Demo mode fallback**: Explorer renders with demo data when backend data unavailable
+- **Backend data integration**: Explorer uses `structuredDiff` from API responses
+- **Mode indicators**: "DEMO MODE" badge displays correctly
+- **Blocking message**: Shows only when no data is available
+- **Version display**: Correctly shows version information
+
+### Manual Testing - Demo Mode
+
+1. Navigate to `http://localhost:3000/demo`
+2. Verify:
+   - Explorer v2 renders without backend
+   - "DEMO MODE" badge is visible
+   - Resource list shows sample data
+   - Filtering and navigation work
+   - No blocking message appears
+
+### Manual Testing - Real Backend Data
+
+1. Perform a chart comparison from the main page
+2. Switch to "Explorer (v2)" tab
+3. Verify:
+   - Explorer renders if backend provides `structuredDiff`
+   - No "DEMO MODE" badge (indicates real data)
+   - Resources from actual comparison appear
+   - Blocking message only if backend doesn't support structured diff
+
+### Backend Structured Diff Testing
+
+Test backend structured diff availability:
+```bash
+cd backend
+go test -v ./internal/service -run TestStructuredDiffAvailableFlag
+go test -v ./internal/models -run TestCompareResponse
+```
 
 ## Automated Testing
 

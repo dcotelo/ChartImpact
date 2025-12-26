@@ -10,6 +10,37 @@ The backend now exposes structured diff data in the `structuredDiff` field of th
 - **Summary graphs and analytics**: Display aggregate statistics and change impact
 - **Frontend-only interactions**: Filter, search, and visualize without re-computing diffs
 
+## Explorer v2 Availability
+
+The backend explicitly indicates whether structured diff data is available through the `structuredDiffAvailable` flag in the response:
+
+```json
+{
+  "success": true,
+  "structuredDiffAvailable": true,
+  "structuredDiff": { ... }
+}
+```
+
+### Frontend Behavior
+
+The Explorer (v2) component intelligently handles structured diff availability:
+
+1. **Backend provides structured diff**: Uses `result.structuredDiff` from the API response
+2. **Demo mode**: When demo data is explicitly provided via the `diffData` prop, displays a "DEMO MODE" badge
+3. **Fallback**: When structured diff is not available, displays a helpful message directing users to Classic view
+
+### When is Structured Diff Available?
+
+Structured diff is available when:
+- The internal diff engine is enabled (default: `INTERNAL_DIFF_ENABLED=true`)
+- The comparison completes successfully
+- Both chart versions are successfully rendered
+
+### Demo Mode
+
+Visit `/demo` to see Explorer v2 in action with mock data. The demo showcases all features without requiring a backend comparison.
+
 ## Backend Implementation
 
 The backend generates structured diff data using the internal diff engine (enabled by default via `INTERNAL_DIFF_ENABLED=true` environment variable).
@@ -22,6 +53,7 @@ The backend generates structured diff data using the internal diff engine (enabl
   "diff": "... plain text diff for backward compatibility ...",
   "version1": "v1.0.0",
   "version2": "v1.1.0",
+  "structuredDiffAvailable": true,
   "structuredDiff": {
     "metadata": {
       "engineVersion": "1.0.0",
@@ -149,6 +181,32 @@ Visit `/demo` to see Explorer v2 in action with mock data. The demo showcases:
 - **Interactive filtering**: Filter by importance level and category
 - **Resource navigation**: Browse changes by resource
 - **Change details**: View before/after values with semantic context
+- **Demo mode indicator**: Clear badge showing it's using demo data
+
+The demo works without any backend dependency, allowing you to explore all Explorer v2 features immediately.
+
+## How Explorer v2 Determines Data Source
+
+The `DiffExplorer` component intelligently selects data in this priority order:
+
+1. **Explicit demo data** (via `diffData` prop) - Shows "DEMO MODE" badge
+2. **Backend structured diff** (from `result.structuredDiff`) - Normal mode
+3. **No data available** - Shows blocking message with Classic view suggestion
+
+This ensures Explorer v2 is always functional when data is available, whether from demo or backend.
+- **Demo mode indicator**: Clear badge showing it's using demo data
+
+The demo works without any backend dependency, allowing you to explore all Explorer v2 features immediately.
+
+## How Explorer v2 Determines Data Source
+
+The `DiffExplorer` component intelligently selects data in this priority order:
+
+1. **Explicit demo data** (via `diffData` prop) - Shows "DEMO MODE" badge
+2. **Backend structured diff** (from `result.structuredDiff`) - Normal mode
+3. **No data available** - Shows blocking message with Classic view suggestion
+
+This ensures Explorer v2 is always functional when data is available, whether from demo or backend.
 
 ## Usage Examples
 
