@@ -115,25 +115,9 @@ func parseMetadata(metadata map[string]interface{}) Metadata {
 		m.Namespace = namespace
 	}
 
-	// Extract labels
-	if labels, ok := metadata["labels"].(map[string]interface{}); ok {
-		m.Labels = make(map[string]string)
-		for k, v := range labels {
-			if strVal, ok := v.(string); ok {
-				m.Labels[k] = strVal
-			}
-		}
-	}
-
-	// Extract annotations
-	if annotations, ok := metadata["annotations"].(map[string]interface{}); ok {
-		m.Annotations = make(map[string]string)
-		for k, v := range annotations {
-			if strVal, ok := v.(string); ok {
-				m.Annotations[k] = strVal
-			}
-		}
-	}
+	// Extract labels and annotations
+	m.Labels = extractStringMap(metadata, "labels")
+	m.Annotations = extractStringMap(metadata, "annotations")
 
 	// Store other metadata fields
 	for key, value := range metadata {
@@ -143,6 +127,19 @@ func parseMetadata(metadata map[string]interface{}) Metadata {
 	}
 
 	return m
+}
+
+// extractStringMap extracts a map[string]string from a map[string]interface{}
+func extractStringMap(source map[string]interface{}, key string) map[string]string {
+	result := make(map[string]string)
+	if rawMap, ok := source[key].(map[string]interface{}); ok {
+		for k, v := range rawMap {
+			if strVal, ok := v.(string); ok {
+				result[k] = strVal
+			}
+		}
+	}
+	return result
 }
 
 // normalizeMap recursively normalizes a map for comparison

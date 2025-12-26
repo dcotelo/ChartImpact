@@ -143,53 +143,16 @@ func (e *Engine) compareResources(r1, r2 Resource) []FieldDiff {
 
 // compareStringMaps compares two string maps
 func (e *Engine) compareStringMaps(basePath string, map1, map2 map[string]string) []FieldDiff {
-	diffs := make([]FieldDiff, 0)
-
-	// Collect all keys
-	allKeys := make(map[string]bool)
-	for key := range map1 {
-		allKeys[key] = true
+	// Convert string maps to interface maps for unified comparison
+	iMap1 := make(map[string]interface{}, len(map1))
+	iMap2 := make(map[string]interface{}, len(map2))
+	for k, v := range map1 {
+		iMap1[k] = v
 	}
-	for key := range map2 {
-		allKeys[key] = true
+	for k, v := range map2 {
+		iMap2[k] = v
 	}
-
-	// Get sorted keys for deterministic output
-	sortedKeys := make([]string, 0, len(allKeys))
-	for key := range allKeys {
-		sortedKeys = append(sortedKeys, key)
-	}
-	sort.Strings(sortedKeys)
-
-	for _, key := range sortedKeys {
-		val1, exists1 := map1[key]
-		val2, exists2 := map2[key]
-
-		path := basePath + "." + key
-
-		if exists1 && !exists2 {
-			diffs = append(diffs, FieldDiff{
-				Path:     path,
-				OldValue: val1,
-				Type:     ChangeTypeRemoved,
-			})
-		} else if !exists1 && exists2 {
-			diffs = append(diffs, FieldDiff{
-				Path:     path,
-				NewValue: val2,
-				Type:     ChangeTypeAdded,
-			})
-		} else if val1 != val2 {
-			diffs = append(diffs, FieldDiff{
-				Path:     path,
-				OldValue: val1,
-				NewValue: val2,
-				Type:     ChangeTypeModified,
-			})
-		}
-	}
-
-	return diffs
+	return e.compareMaps(basePath, iMap1, iMap2)
 }
 
 // compareMaps compares two generic maps
