@@ -249,64 +249,48 @@ function TableView({ resources }: { resources: ResourceDiff[] }) {
 
 // Side-by-side View Component
 function SideBySideView({ resources }: { resources: ResourceDiff[] }) {
+  const renderSide = (label: string, data: Array<Change>, bgColor: string, textColor: string, hasBorder: boolean) => {
+    const content = data.length > 0
+      ? data.map(c => `${c.path}: ${JSON.stringify(label === 'Before' ? c.before : c.after, null, 2)}`).join('\n\n')
+      : 'No changes';
+    
+    return (
+      <div style={{
+        flex: 1,
+        padding: '1rem',
+        ...(hasBorder && { borderRight: `1px solid ${COLORS.border}` }),
+        background: bgColor
+      }}>
+        <div style={{
+          fontSize: '0.85rem',
+          fontWeight: '600',
+          marginBottom: '0.5rem',
+          color: textColor
+        }}>
+          {label}
+        </div>
+        <pre style={CODE_BOX_STYLE}>{content}</pre>
+      </div>
+    );
+  };
+
   return (
     <div>
       {resources.map((resource) => {
         const resourceId = getResourceId(resource);
+        const changes = resource.changes || [];
         return (
           <div key={resourceId} style={STYLES.card}>
-          <div style={STYLES.cardHeader}>
-            {resource.identity.kind} / {resource.identity.name}
-          </div>
-
-          <div style={{ display: 'flex' }}>
-            {/* Before (Left) */}
-            <div style={{
-              flex: 1,
-              padding: '1rem',
-              borderRight: `1px solid ${COLORS.border}`,
-              background: COLORS.removedBg
-            }}>
-              <div style={{
-                fontSize: '0.85rem',
-                fontWeight: '600',
-                marginBottom: '0.5rem',
-                color: COLORS.removedText
-              }}>
-                Before
-              </div>
-              <pre style={CODE_BOX_STYLE}>
-                {resource.changes && resource.changes.length > 0
-                  ? resource.changes.map(c => `${c.path}: ${JSON.stringify(c.before, null, 2)}`).join('\n\n')
-                  : 'No changes'}
-              </pre>
+            <div style={STYLES.cardHeader}>
+              {resource.identity.kind} / {resource.identity.name}
             </div>
-
-            {/* After (Right) */}
-            <div style={{
-              flex: 1,
-              padding: '1rem',
-              background: COLORS.addedBg
-            }}>
-              <div style={{
-                fontSize: '0.85rem',
-                fontWeight: '600',
-                marginBottom: '0.5rem',
-                color: COLORS.addedText
-              }}>
-                After
-              </div>
-              <pre style={CODE_BOX_STYLE}>
-                {resource.changes && resource.changes.length > 0
-                  ? resource.changes.map(c => `${c.path}: ${JSON.stringify(c.after, null, 2)}`).join('\n\n')
-                  : 'No changes'}
-              </pre>
+            <div style={{ display: 'flex' }}>
+              {renderSide('Before', changes, COLORS.removedBg, COLORS.removedText, true)}
+              {renderSide('After', changes, COLORS.addedBg, COLORS.addedText, false)}
             </div>
           </div>
-        </div>
-      );
-    })}
-
+        );
+      })}
       {resources.length === 0 && <EmptyState />}
     </div>
   );
