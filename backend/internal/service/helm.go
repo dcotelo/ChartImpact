@@ -659,7 +659,10 @@ func (h *HelmService) convertToStructuredDiff(diffResult *diff.DiffResult) *mode
 
 		// Convert changes
 		for _, c := range r.Changes {
-			// Convert PathTokens to []interface{}
+			// Convert PathTokens to []interface{} for API response
+			// Note: This conversion creates a new slice for each change. For large diffs,
+			// consider optimizing by having the API models use []PathToken directly.
+			// The conversion is done here to maintain type flexibility in the API layer.
 			pathTokens := make([]interface{}, len(c.PathTokens))
 			for i, token := range c.PathTokens {
 				pathTokens[i] = token

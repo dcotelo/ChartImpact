@@ -386,6 +386,9 @@ func (e *Engine) createChange(op OpType, path string, before, after interface{})
 }
 
 // pathToTokens converts a dot-notation path to typed tokens
+// Note: This simple implementation splits on dots without handling escaped dots.
+// Field names with literal dots are not currently supported but are rare in Kubernetes resources.
+// A future enhancement could use a proper JSON pointer parser if needed.
 func (e *Engine) pathToTokens(path string) []PathToken {
 	if path == "" {
 		return []PathToken{}

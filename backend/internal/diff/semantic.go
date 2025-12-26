@@ -7,32 +7,33 @@ import (
 // classifySemanticType determines the semantic type based on the path
 func classifySemanticType(path string) string {
 	// Match common Kubernetes paths to semantic types
+	// Use word boundary checks to avoid false positives
 	switch {
-	case strings.Contains(path, ".image"):
+	case strings.HasSuffix(path, ".image"):
 		return "container.image"
-	case strings.Contains(path, ".env"):
+	case strings.Contains(path, ".env") && (strings.Contains(path, "containers") || strings.Contains(path, "initContainers")):
 		return "container.env"
-	case strings.Contains(path, ".replicas"):
+	case strings.HasSuffix(path, ".replicas"):
 		return "workload.replicas"
 	case strings.Contains(path, ".resources.limits.cpu") || strings.Contains(path, ".resources.requests.cpu"):
 		return "resources.cpu"
 	case strings.Contains(path, ".resources.limits.memory") || strings.Contains(path, ".resources.requests.memory"):
 		return "resources.memory"
-	case strings.Contains(path, ".resources"):
+	case strings.Contains(path, ".resources") && (strings.Contains(path, ".limits") || strings.Contains(path, ".requests")):
 		return "resources.general"
-	case strings.Contains(path, ".ports"):
+	case strings.Contains(path, ".ports") && (strings.Contains(path, "containers") || strings.Contains(path, "service")):
 		return "service.port"
 	case strings.Contains(path, ".rules") && strings.Contains(path, "ingress"):
 		return "ingress.rule"
-	case strings.Contains(path, "metadata.annotations"):
+	case strings.Contains(path, "metadata.annotations."):
 		return "metadata.annotation"
-	case strings.Contains(path, "metadata.labels"):
+	case strings.Contains(path, "metadata.labels."):
 		return "metadata.label"
 	case strings.Contains(path, ".volumeMounts") || strings.Contains(path, ".volumes"):
 		return "storage.volume"
 	case strings.Contains(path, ".securityContext"):
 		return "security.context"
-	case strings.Contains(path, ".serviceAccountName"):
+	case strings.HasSuffix(path, ".serviceAccountName"):
 		return "security.serviceAccount"
 	default:
 		return ""
