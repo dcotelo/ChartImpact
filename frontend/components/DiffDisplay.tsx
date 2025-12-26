@@ -147,8 +147,83 @@ function categorizeChange(path: string, kind: string): string {
     return 'Configuration Data';
   }
   
-  // Default: group by kind if we have one, otherwise "Other"
   return kind || 'Other';
+}
+
+// Helper function to filter out metadata changes from diff output
+function filterMetadataFromDiff(diff: string): string {
+  if (!diff) return '';
+  
+  // Remove all lines that are part of metadata blocks
+  // A metadata block consists of:
+  // 1. A line containing "metadata." with a resource identifier
+  // 2. Following value change lines (starting with ±, +, or -)
+  // 3. Blank lines until the next resource
+  
+  const lines = diff.split('\n');
+  const filteredLines: string[] = [];
+  let skipMode = false; // Are we currently skipping a metadata block?
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    const lowerLine = line.toLowerCase();
+    
+    // Check if this line starts a metadata block
+    if (lowerLine.includes('metadata.') && line.match(/\([^)]+\/[^)]+\/[^)]+\)/)) {
+      skipMode = true;
+      continue;
+    }
+    
+    // If we're in skip mode, check if we should stop skipping
+    if (skipMode) {
+      // Stop skipping if we hit a new non-metadata resource
+      if (trimmed.match(/\([^)]+\/[^)]+\/[^)]+\)/)) {
+        if (!lowerLine.includes('metadata.')) {
+          skipMode = false;
+          filteredLines.push(line);
+        }
+        continue;
+      }
+      
+      // Skip value change indicators and value lines
+      if (trimmed === '± value change' || trimmed.startsWith('-') || trimmed.startsWith('+')) {
+        continue;
+      }
+      
+      // Handle blank lines - look ahead to see what comes next
+      if (trimmed === '') {
+        let foundNonMetadata = false;
+        for (let k = i + 1; k < lines.length && k < i + 5; k++) {
+          const aheadLine = lines[k].trim();
+          if (aheadLine === '') continue;
+          
+          if (aheadLine.match(/\([^)]+\/[^)]+\/[^)]+\)/)) {
+            if (!lines[k].toLowerCase().includes('metadata.')) {
+              foundNonMetadata = true;
+            }
+            break;
+          }
+          break;
+        }
+        
+        if (foundNonMetadata) {
+          skipMode = false;
+        }
+        continue;
+      }
+      
+      // Unexpected content - assume we've left the metadata block
+      skipMode = false;
+      filteredLines.push(line);
+      continue;
+    }
+    
+    // Include the line if we're not skipping
+    filteredLines.push(line);
+  }
+  
+  return filteredLines.join('\n');
 }
 
 function parseDiffByResources(diff: string): ResourceDiff[] {
@@ -759,118 +834,23 @@ export function DiffDisplay({
   suppressKinds = [],
   suppressRegex
 }: DiffDisplayProps) {
-  const hasDiff = result.diff && result.diff.trim().length > 0;
-  
   // Memoize the processed diff so it recalculates when ignoreLabels or other filters change
+  // This is the first useMemo in the chain - when ignoreLabels changes, this recalculates
   const processedDiff = useMemo(() => {
-    // Filter out ALL metadata changes if ignoreLabels is true
-    // This filters ALL metadata.* fields, including:
-    // - metadata.name, metadata.namespace, metadata.uid
-    // - metadata.labels.* (all label changes including helm.sh/chart)
-    // - metadata.annotations.* (all annotation changes)
-    // - metadata.generation, metadata.resourceVersion, metadata.managedFields
-    // - spec.template.metadata.* (nested metadata in pod templates)
-    // Filtered changes are excluded from both display and statistics calculation
-    let filteredDiff = result.diff || '';
-    if (ignoreLabels && filteredDiff) {
-      // Simple approach: remove all lines that are part of metadata blocks
-      // A metadata block consists of:
-      // 1. A line containing "metadata." with a resource identifier
-      // 2. Following value change lines (starting with ±, +, or -)
-      // 3. Blank lines until the next resource
-      
-      const lines = filteredDiff.split('\n');
-      const filteredLines: string[] = [];
-      let skipMode = false; // Are we currently skipping a metadata block?
-      
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const trimmed = line.trim();
-        const lowerLine = line.toLowerCase();
-        
-        // Check if this line starts a metadata block
-        if (lowerLine.includes('metadata.') && line.match(/\([^)]+\/[^)]+\/[^)]+\)/)) {
-          skipMode = true;
-          // Skip this line
-          continue;
-        }
-        
-        // If we're in skip mode, check if we should stop skipping
-        if (skipMode) {
-          // Stop skipping if we hit a new non-metadata resource
-          if (trimmed.match(/\([^)]+\/[^)]+\/[^)]+\)/)) {
-            if (!lowerLine.includes('metadata.')) {
-              // Found non-metadata resource, stop skipping
-              skipMode = false;
-              // Include this line
-              filteredLines.push(line);
-            }
-            // If it's still metadata, continue skipping
-            continue;
-          }
-          
-          // Continue skipping value change indicator
-          if (trimmed === '± value change') {
-            continue;
-          }
-          
-          // Continue skipping value lines
-          if (trimmed.startsWith('-') || trimmed.startsWith('+')) {
-            continue;
-          }
-          
-          // Handle blank lines - look ahead to see what comes next
-          if (trimmed === '') {
-            // Look ahead to find next non-empty line
-            for (let k = i + 1; k < lines.length && k < i + 5; k++) {
-              const aheadLine = lines[k].trim();
-              if (aheadLine === '') continue;
-              
-              // Check if it's a new resource
-              if (aheadLine.match(/\([^)]+\/[^)]+\/[^)]+\)/)) {
-                if (!lines[k].toLowerCase().includes('metadata.')) {
-                  // Found non-metadata resource, stop skipping at the blank line
-                  skipMode = false;
-                  // Include the blank line and continue processing
-                  break;
-                }
-                // Still metadata, continue skipping
-                break;
-              }
-              // Not a resource, might be value line - continue skipping
-              break;
-            }
-            // Skip the blank line
-            continue;
-          }
-          
-          // If we get here, we've encountered something unexpected
-          // Assume we've left the metadata block
-          skipMode = false;
-          // Include this line
-          filteredLines.push(line);
-        }
-        
-        // Include the line if we're not skipping
-        if (!skipMode) {
-          filteredLines.push(line);
-        }
-      }
-      
-      filteredDiff = filteredLines.join('\n');
+    let diff = result.diff || '';
+    
+    // Step 1: Filter out metadata changes if requested
+    if (ignoreLabels && diff) {
+      diff = filterMetadataFromDiff(diff);
     }
     
-    // Apply suppression filters
-    let processed = filteredDiff;
-    
-    // Suppress by resource kinds
-    if (suppressKinds && suppressKinds.length > 0) {
-      const lines = processed.split('\n');
+    // Step 2: Apply suppression filters by resource kinds
+    if (suppressKinds && suppressKinds.length > 0 && diff) {
+      const lines = diff.split('\n');
       const filtered: string[] = [];
       let skipResource = false;
       
       for (const line of lines) {
-        // Check if this line starts a new resource
         const resourceMatch = line.match(/\(([^)]+)\)/);
         if (resourceMatch) {
           const resourceParts = resourceMatch[1].split('/');
@@ -883,40 +863,37 @@ export function DiffDisplay({
         }
       }
       
-      processed = filtered.join('\n');
+      diff = filtered.join('\n');
     }
     
-    // Suppress by regex
-    if (suppressRegex) {
+    // Step 3: Apply suppression by regex
+    if (suppressRegex && diff) {
       try {
         const regex = new RegExp(suppressRegex);
-        const lines = processed.split('\n');
-        processed = lines.filter(line => !regex.test(line)).join('\n');
+        const lines = diff.split('\n');
+        diff = lines.filter(line => !regex.test(line)).join('\n');
       } catch (e) {
         console.warn('Invalid suppress regex:', e);
       }
     }
     
-    // Apply secret handling
-    if (secretHandling === 'suppress') {
-      // Redact secret values (basic implementation)
-      processed = processed.replace(/data:\s*([^\n]+)/gi, (match, data) => {
+    // Step 4: Apply secret handling
+    if (secretHandling === 'suppress' && diff) {
+      diff = diff.replace(/data:\s*([^\n]+)/gi, (match, data) => {
         if (data.includes(':')) {
           return `data: [REDACTED]`;
         }
         return match;
       });
-      processed = processed.replace(/value:\s*([^\n]+)/gi, (match, value) => {
+      diff = diff.replace(/value:\s*([^\n]+)/gi, (match, value) => {
         if (value.length > 20 || value.match(/^[A-Za-z0-9+/=]+$/)) {
           return `value: [REDACTED]`;
         }
         return match;
       });
-    } else if (secretHandling === 'decode') {
-      // Decode base64 secrets (basic implementation)
-      processed = processed.replace(/value:\s*([A-Za-z0-9+/=]+)/g, (match, encoded) => {
+    } else if (secretHandling === 'decode' && diff) {
+      diff = diff.replace(/value:\s*([A-Za-z0-9+/=]+)/g, (match, encoded) => {
         try {
-          // Use atob for browser-compatible base64 decoding
           const decoded = atob(encoded);
           return `value: ${decoded} (decoded from base64)`;
         } catch {
@@ -925,12 +902,17 @@ export function DiffDisplay({
       });
     }
     
-    return processed;
+    return diff;
   }, [result.diff, ignoreLabels, suppressKinds, suppressRegex, secretHandling]);
   
+  // CRITICAL FIX: Derive hasDiff from processedDiff (not result.diff) 
+  // This ensures the flag reflects the filtered state and triggers downstream recalculations
+  // when processedDiff changes (which happens when ignoreLabels toggles)
+  const hasDiff = processedDiff && processedDiff.trim().length > 0;
+  
   // Memoize resources and grouping so they recalculate when processedDiff changes
+  // This is the second useMemo in the chain - depends on processedDiff from first useMemo
   const { resources, groupedByCategory, categories } = useMemo(() => {
-    // Parse and group by category
     const parsedResources = hasDiff ? parseDiffByResources(processedDiff) : [];
     
     // Apply context lines filtering to resource lines
@@ -951,10 +933,8 @@ export function DiffDisplay({
   }, [hasDiff, processedDiff, contextLines]);
   
   // Memoize statistics so they recalculate when resources or processedDiff changes
+  // This is the third useMemo in the chain - depends on resources from second useMemo
   const statistics = useMemo(() => {
-    // Calculate statistics from filtered diff (processedDiff)
-    // This ensures that filtered changes (including ALL metadata.* fields) are not counted in statistics
-    // processedDiff is the filtered version that excludes all metadata changes (name, namespace, labels, annotations, etc.)
     return hasDiff ? calculateStatistics(resources, processedDiff) : null;
   }, [hasDiff, resources, processedDiff]);
   
