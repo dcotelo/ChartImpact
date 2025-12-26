@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CompareRequest, CompareResponse } from '@/lib/types';
 
-export const runtime = 'nodejs';
+// Cloudflare Pages supports edge runtime (faster) or nodejs runtime
+// Using edge runtime for better performance and lower latency
+export const runtime = 'edge';
 export const maxDuration = 120; // 2 minutes max
 
 export async function POST(request: NextRequest) {
