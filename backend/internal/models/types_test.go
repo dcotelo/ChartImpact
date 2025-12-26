@@ -43,7 +43,6 @@ func TestCompareRequest(t *testing.T) {
 			Version2:       "v2.0.0",
 			ValuesFile:     &valuesFile,
 			ValuesContent:  &valuesContent,
-			IgnoreLabels:   true,
 			SecretHandling: "suppress",
 			ContextLines:   &contextLines,
 			SuppressKinds:  []string{"Secret", "ConfigMap"},
@@ -59,7 +58,6 @@ func TestCompareRequest(t *testing.T) {
 
 		assert.Equal(t, valuesFile, *decoded.ValuesFile)
 		assert.Equal(t, valuesContent, *decoded.ValuesContent)
-		assert.True(t, decoded.IgnoreLabels)
 		assert.Equal(t, "suppress", decoded.SecretHandling)
 		assert.Equal(t, contextLines, *decoded.ContextLines)
 		assert.Len(t, decoded.SuppressKinds, 2)

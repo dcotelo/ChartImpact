@@ -8,7 +8,6 @@ type CompareRequest struct {
 	Version2       string   `json:"version2"`                 // Second version to compare (tag/branch/commit)
 	ValuesFile     *string  `json:"valuesFile,omitempty"`     // Optional: path to values file in repository
 	ValuesContent  *string  `json:"valuesContent,omitempty"`  // Optional: inline values content
-	IgnoreLabels   bool     `json:"ignoreLabels,omitempty"`   // Optional: ignore label changes in diff
 	SecretHandling string   `json:"secretHandling,omitempty"` // Optional: suppress|show|decode
 	ContextLines   *int     `json:"contextLines,omitempty"`   // Optional: number of context lines in diff
 	SuppressKinds  []string `json:"suppressKinds,omitempty"`  // Optional: resource kinds to suppress
