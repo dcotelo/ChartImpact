@@ -8,7 +8,10 @@ import {
   getChangeTypeTextColor,
   getResourceId,
   filterResources,
-  EmptyState
+  EmptyState,
+  ViewModeButton,
+  COLORS,
+  STYLES,
 } from './utils';
 
 interface ViewPanelProps {
@@ -53,60 +56,33 @@ export function ViewPanel({
       {/* View Mode Selector */}
       <div style={{
         padding: '1rem',
-        borderBottom: '1px solid #ddd',
-        background: '#f9f9f9',
+        borderBottom: `1px solid ${COLORS.border}`,
+        background: COLORS.bgLighter,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button
+          <ViewModeButton
+            label="Tree"
+            icon="🌳"
+            isActive={viewMode === 'tree'}
             onClick={() => onViewModeChange('tree')}
-            style={{
-              padding: '0.5rem 1rem',
-              background: viewMode === 'tree' ? '#667eea' : 'white',
-              color: viewMode === 'tree' ? 'white' : '#333',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.85rem',
-              fontWeight: '500'
-            }}
-          >
-            🌳 Tree
-          </button>
-          <button
+          />
+          <ViewModeButton
+            label="Table"
+            icon="📊"
+            isActive={viewMode === 'table'}
             onClick={() => onViewModeChange('table')}
-            style={{
-              padding: '0.5rem 1rem',
-              background: viewMode === 'table' ? '#667eea' : 'white',
-              color: viewMode === 'table' ? 'white' : '#333',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.85rem',
-              fontWeight: '500'
-            }}
-          >
-            📊 Table
-          </button>
-          <button
+          />
+          <ViewModeButton
+            label="Side-by-side"
+            icon="↔️"
+            isActive={viewMode === 'sidebyside'}
             onClick={() => onViewModeChange('sidebyside')}
-            style={{
-              padding: '0.5rem 1rem',
-              background: viewMode === 'sidebyside' ? '#667eea' : 'white',
-              color: viewMode === 'sidebyside' ? 'white' : '#333',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.85rem',
-              fontWeight: '500'
-            }}
-          >
-            ↔️ Side-by-side
-          </button>
+          />
         </div>
-        <div style={{ fontSize: '0.85rem', color: '#666' }}>
+        <div style={{ fontSize: '0.85rem', color: COLORS.textLight }}>
           {displayResources.length} resource{displayResources.length !== 1 ? 's' : ''}
         </div>
       </div>
@@ -128,20 +104,10 @@ function TreeView({ resources }: { resources: ResourceDiff[] }) {
       {resources.map((resource) => {
         const resourceId = getResourceId(resource);
         return (
-          <div
-            key={resourceId}
-          style={{
-            marginBottom: '1.5rem',
-            border: '1px solid #ddd',
-            borderRadius: '6px',
-            overflow: 'hidden'
-          }}
-        >
+          <div key={resourceId} style={STYLES.card}>
           {/* Resource Header */}
           <div style={{
-            padding: '0.75rem 1rem',
-            background: '#f5f5f5',
-            borderBottom: '1px solid #ddd',
+            ...STYLES.cardHeader,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center'
@@ -151,23 +117,13 @@ function TreeView({ resources }: { resources: ResourceDiff[] }) {
                 {resource.identity.kind} / {resource.identity.name}
               </span>
               {resource.identity.namespace && (
-                <span style={{ marginLeft: '1rem', fontSize: '0.85rem', color: '#666' }}>
+                <span style={{ marginLeft: '1rem', fontSize: '0.85rem', color: COLORS.textLight }}>
                   ns: {resource.identity.namespace}
                 </span>
               )}
             </div>
             <div>
-              <span
-                style={{
-                  padding: '0.25rem 0.75rem',
-                  background: getChangeTypeColor(resource.changeType),
-                  color: 'white',
-                  borderRadius: '4px',
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                  textTransform: 'uppercase'
-                }}
-              >
+              <span style={STYLES.badge(getChangeTypeColor(resource.changeType))}>
                 {resource.changeType}
               </span>
             </div>
@@ -182,15 +138,15 @@ function TreeView({ resources }: { resources: ResourceDiff[] }) {
                   style={{
                     marginBottom: '0.75rem',
                     padding: '0.75rem',
-                    background: '#fafafa',
-                    border: '1px solid #e0e0e0',
+                    background: COLORS.bgLightest,
+                    border: `1px solid ${COLORS.borderLight}`,
                     borderRadius: '4px'
                   }}
                 >
                   <div style={{
                     fontSize: '0.85rem',
                     fontWeight: '500',
-                    color: '#333',
+                    color: COLORS.text,
                     marginBottom: '0.5rem',
                     fontFamily: 'monospace'
                   }}>
@@ -199,16 +155,16 @@ function TreeView({ resources }: { resources: ResourceDiff[] }) {
                   <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem' }}>
                     {change.before !== undefined && (
                       <div style={{ flex: 1 }}>
-                        <div style={{ color: '#999', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                        <div style={{ color: COLORS.textLighter, fontSize: '0.75rem', marginBottom: '0.25rem' }}>
                           Before:
                         </div>
                         <div style={{
-                          background: '#ffebee',
+                          background: COLORS.removedBg,
                           padding: '0.5rem',
                           borderRadius: '4px',
                           fontFamily: 'monospace',
                           fontSize: '0.8rem',
-                          color: '#c62828'
+                          color: COLORS.removedText
                         }}>
                           {JSON.stringify(change.before, null, 2)}
                         </div>
@@ -216,16 +172,16 @@ function TreeView({ resources }: { resources: ResourceDiff[] }) {
                     )}
                     {change.after !== undefined && (
                       <div style={{ flex: 1 }}>
-                        <div style={{ color: '#999', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                        <div style={{ color: COLORS.textLighter, fontSize: '0.75rem', marginBottom: '0.25rem' }}>
                           After:
                         </div>
                         <div style={{
-                          background: '#e8f5e9',
+                          background: COLORS.addedBg,
                           padding: '0.5rem',
                           borderRadius: '4px',
                           fontFamily: 'monospace',
                           fontSize: '0.8rem',
-                          color: '#2e7d32'
+                          color: COLORS.addedText
                         }}>
                           {JSON.stringify(change.after, null, 2)}
                         </div>
@@ -236,7 +192,7 @@ function TreeView({ resources }: { resources: ResourceDiff[] }) {
                     <div style={{
                       marginTop: '0.5rem',
                       fontSize: '0.75rem',
-                      color: '#666'
+                      color: COLORS.textLight
                     }}>
                       Importance: <strong>{change.importance}</strong>
                     </div>
@@ -264,20 +220,20 @@ function TableView({ resources }: { resources: ResourceDiff[] }) {
         fontSize: '0.85rem'
       }}>
         <thead>
-          <tr style={{ background: '#f5f5f5' }}>
-            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>
+          <tr style={{ background: COLORS.bgLight }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: `2px solid ${COLORS.border}` }}>
               Kind
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: `2px solid ${COLORS.border}` }}>
               Name
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: `2px solid ${COLORS.border}` }}>
               Namespace
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: `2px solid ${COLORS.border}` }}>
               Change Type
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: `2px solid ${COLORS.border}` }}>
               Changes
             </th>
           </tr>
@@ -289,8 +245,8 @@ function TableView({ resources }: { resources: ResourceDiff[] }) {
               <tr
                 key={resourceId}
               style={{
-                borderBottom: '1px solid #e0e0e0',
-                background: resourceId.split('/')[2] === 'cluster' ? 'white' : '#fafafa'
+                borderBottom: `1px solid ${COLORS.borderLight}`,
+                background: resourceId.split('/')[2] === 'cluster' ? COLORS.white : COLORS.bgLightest
               }}
             >
               <td style={{ padding: '0.75rem' }}>{resource.identity.kind}</td>
@@ -331,21 +287,8 @@ function SideBySideView({ resources }: { resources: ResourceDiff[] }) {
       {resources.map((resource) => {
         const resourceId = getResourceId(resource);
         return (
-          <div
-            key={resourceId}
-          style={{
-            marginBottom: '1.5rem',
-            border: '1px solid #ddd',
-            borderRadius: '6px',
-            overflow: 'hidden'
-          }}
-        >
-          <div style={{
-            padding: '0.75rem 1rem',
-            background: '#f5f5f5',
-            borderBottom: '1px solid #ddd',
-            fontWeight: '600'
-          }}>
+          <div key={resourceId} style={STYLES.card}>
+          <div style={STYLES.cardHeader}>
             {resource.identity.kind} / {resource.identity.name}
           </div>
 
@@ -354,14 +297,14 @@ function SideBySideView({ resources }: { resources: ResourceDiff[] }) {
             <div style={{
               flex: 1,
               padding: '1rem',
-              borderRight: '1px solid #ddd',
-              background: '#ffebee'
+              borderRight: `1px solid ${COLORS.border}`,
+              background: COLORS.removedBg
             }}>
               <div style={{
                 fontSize: '0.85rem',
                 fontWeight: '600',
                 marginBottom: '0.5rem',
-                color: '#c62828'
+                color: COLORS.removedText
               }}>
                 Before
               </div>
@@ -369,7 +312,7 @@ function SideBySideView({ resources }: { resources: ResourceDiff[] }) {
                 margin: 0,
                 fontSize: '0.8rem',
                 fontFamily: 'monospace',
-                color: '#333',
+                color: COLORS.text,
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word'
               }}>
@@ -383,13 +326,13 @@ function SideBySideView({ resources }: { resources: ResourceDiff[] }) {
             <div style={{
               flex: 1,
               padding: '1rem',
-              background: '#e8f5e9'
+              background: COLORS.addedBg
             }}>
               <div style={{
                 fontSize: '0.85rem',
                 fontWeight: '600',
                 marginBottom: '0.5rem',
-                color: '#2e7d32'
+                color: COLORS.addedText
               }}>
                 After
               </div>
@@ -397,7 +340,7 @@ function SideBySideView({ resources }: { resources: ResourceDiff[] }) {
                 margin: 0,
                 fontSize: '0.8rem',
                 fontFamily: 'monospace',
-                color: '#333',
+                color: COLORS.text,
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word'
               }}>

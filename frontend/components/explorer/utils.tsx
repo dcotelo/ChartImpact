@@ -1,15 +1,116 @@
 import { ResourceDiff } from '@/lib/types';
 
 /**
+ * Common style constants
+ */
+export const COLORS = {
+  // Change type colors
+  added: '#4caf50',
+  removed: '#f44336',
+  modified: '#ff9800',
+  unchanged: '#9e9e9e',
+  
+  // Background colors
+  addedBg: '#e8f5e9',
+  removedBg: '#ffebee',
+  modifiedBg: '#fff3e0',
+  unchangedBg: '#f5f5f5',
+  
+  // Text colors
+  addedText: '#2e7d32',
+  removedText: '#c62828',
+  modifiedText: '#e65100',
+  unchangedText: '#666',
+  
+  // Importance colors
+  critical: '#d32f2f',
+  high: '#f57c00',
+  medium: '#fbc02d',
+  low: '#388e3c',
+  defaultImportance: '#757575',
+  
+  // UI colors
+  primary: '#667eea',
+  text: '#333',
+  textLight: '#666',
+  textLighter: '#999',
+  border: '#ddd',
+  borderLight: '#e0e0e0',
+  bgLight: '#f5f5f5',
+  bgLighter: '#f9f9f9',
+  bgLightest: '#fafafa',
+  white: 'white',
+} as const;
+
+/**
+ * Common style objects
+ */
+export const STYLES = {
+  button: (isActive: boolean) => ({
+    padding: '0.5rem 1rem',
+    background: isActive ? COLORS.primary : COLORS.white,
+    color: isActive ? COLORS.white : COLORS.text,
+    border: `1px solid ${COLORS.border}`,
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '0.85rem',
+    fontWeight: '500' as const,
+  }),
+  
+  card: {
+    marginBottom: '1.5rem',
+    border: `1px solid ${COLORS.border}`,
+    borderRadius: '6px',
+    overflow: 'hidden' as const,
+  },
+  
+  cardHeader: {
+    padding: '0.75rem 1rem',
+    background: COLORS.bgLight,
+    borderBottom: `1px solid ${COLORS.border}`,
+    fontWeight: '600' as const,
+  },
+  
+  badge: (color: string) => ({
+    padding: '0.25rem 0.75rem',
+    background: color,
+    color: COLORS.white,
+    borderRadius: '4px',
+    fontSize: '0.75rem',
+    fontWeight: '600' as const,
+    textTransform: 'uppercase' as const,
+  }),
+  
+  input: {
+    width: '100%',
+    padding: '0.5rem 1rem',
+    border: '1px solid rgba(255,255,255,0.3)',
+    borderRadius: '6px',
+    fontSize: '0.95rem',
+    background: 'rgba(255,255,255,0.2)',
+    color: 'white',
+    outline: 'none' as const,
+  },
+  
+  sectionHeader: {
+    fontSize: '0.8rem',
+    fontWeight: '600' as const,
+    color: COLORS.textLighter,
+    textTransform: 'uppercase' as const,
+    marginBottom: '0.5rem',
+  },
+} as const;
+
+/**
  * Get color for change type badge
  */
 export function getChangeTypeColor(changeType: string): string {
   switch (changeType) {
-    case 'added': return '#4caf50';
-    case 'removed': return '#f44336';
-    case 'modified': return '#ff9800';
-    case 'unchanged': return '#9e9e9e';
-    default: return '#666';
+    case 'added': return COLORS.added;
+    case 'removed': return COLORS.removed;
+    case 'modified': return COLORS.modified;
+    case 'unchanged': return COLORS.unchanged;
+    default: return COLORS.textLight;
   }
 }
 
@@ -31,11 +132,11 @@ export function getChangeTypeIcon(changeType: string): string {
  */
 export function getImportanceColor(importance?: string): string {
   switch (importance) {
-    case 'critical': return '#d32f2f';
-    case 'high': return '#f57c00';
-    case 'medium': return '#fbc02d';
-    case 'low': return '#388e3c';
-    default: return '#757575';
+    case 'critical': return COLORS.critical;
+    case 'high': return COLORS.high;
+    case 'medium': return COLORS.medium;
+    case 'low': return COLORS.low;
+    default: return COLORS.defaultImportance;
   }
 }
 
@@ -51,11 +152,11 @@ export function getResourceId(resource: ResourceDiff): string {
  */
 export function getChangeTypeBackground(changeType: string): string {
   switch (changeType) {
-    case 'added': return '#e8f5e9';
-    case 'removed': return '#ffebee';
-    case 'modified': return '#fff3e0';
-    case 'unchanged': return '#f5f5f5';
-    default: return '#f5f5f5';
+    case 'added': return COLORS.addedBg;
+    case 'removed': return COLORS.removedBg;
+    case 'modified': return COLORS.modifiedBg;
+    case 'unchanged': return COLORS.unchangedBg;
+    default: return COLORS.bgLight;
   }
 }
 
@@ -64,11 +165,11 @@ export function getChangeTypeBackground(changeType: string): string {
  */
 export function getChangeTypeTextColor(changeType: string): string {
   switch (changeType) {
-    case 'added': return '#2e7d32';
-    case 'removed': return '#c62828';
-    case 'modified': return '#e65100';
-    case 'unchanged': return '#666';
-    default: return '#666';
+    case 'added': return COLORS.addedText;
+    case 'removed': return COLORS.removedText;
+    case 'modified': return COLORS.modifiedText;
+    case 'unchanged': return COLORS.unchangedText;
+    default: return COLORS.textLight;
   }
 }
 
@@ -125,9 +226,30 @@ export function EmptyState({ message = 'No resources to display' }: { message?: 
     <div style={{
       padding: '3rem',
       textAlign: 'center',
-      color: '#999'
+      color: COLORS.textLighter
     }}>
       {message}
     </div>
+  );
+}
+
+/**
+ * Reusable button component for view mode selection
+ */
+interface ViewModeButtonProps {
+  label: string;
+  icon: string;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+export function ViewModeButton({ label, icon, isActive, onClick }: ViewModeButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      style={STYLES.button(isActive)}
+    >
+      {icon} {label}
+    </button>
   );
 }

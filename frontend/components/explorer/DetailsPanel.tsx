@@ -1,7 +1,8 @@
 'use client';
 
+import React from 'react';
 import { ResourceDiff, Change } from '@/lib/types';
-import { getChangeTypeColor, getImportanceColor } from './utils';
+import { getChangeTypeColor, getImportanceColor, COLORS, STYLES } from './utils';
 
 interface DetailsPanelProps {
   resource?: ResourceDiff;
@@ -12,7 +13,7 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
     return (
       <div style={{
         padding: '1.5rem',
-        color: '#999',
+        color: COLORS.textLighter,
         textAlign: 'center'
       }}>
         Select a resource to view details
@@ -26,29 +27,20 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
       <div style={{
         marginBottom: '1.5rem',
         paddingBottom: '1rem',
-        borderBottom: '2px solid #ddd'
+        borderBottom: `2px solid ${COLORS.border}`
       }}>
         <h3 style={{
           fontSize: '1.1rem',
           fontWeight: '600',
           margin: '0 0 0.5rem 0',
-          color: '#333'
+          color: COLORS.text
         }}>
           Resource Details
         </h3>
       </div>
 
       {/* Identity */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <div style={{
-          fontSize: '0.8rem',
-          fontWeight: '600',
-          color: '#999',
-          textTransform: 'uppercase',
-          marginBottom: '0.5rem'
-        }}>
-          Identity
-        </div>
+      <Section title="Identity">
         <div style={{ fontSize: '0.85rem', lineHeight: '1.8' }}>
           <div>
             <strong>Kind:</strong> {resource.identity.kind}
@@ -69,7 +61,7 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
               <strong>UID:</strong>{' '}
               <code style={{
                 fontSize: '0.75rem',
-                background: '#f5f5f5',
+                background: COLORS.bgLight,
                 padding: '0.1rem 0.3rem',
                 borderRadius: '3px'
               }}>
@@ -78,55 +70,31 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
             </div>
           )}
         </div>
-      </div>
+      </Section>
 
       {/* Change Type */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <div style={{
-          fontSize: '0.8rem',
-          fontWeight: '600',
-          color: '#999',
-          textTransform: 'uppercase',
-          marginBottom: '0.5rem'
-        }}>
-          Change Type
-        </div>
+      <Section title="Change Type">
         <div>
-          <span
-            style={{
-              padding: '0.4rem 0.8rem',
-              background: getChangeTypeColor(resource.changeType),
-              color: 'white',
-              borderRadius: '4px',
-              fontSize: '0.85rem',
-              fontWeight: '600',
-              textTransform: 'uppercase'
-            }}
-          >
+          <span style={{
+            ...STYLES.badge(getChangeTypeColor(resource.changeType)),
+            padding: '0.4rem 0.8rem',
+            fontSize: '0.85rem',
+          }}>
             {resource.changeType}
           </span>
         </div>
-      </div>
+      </Section>
 
       {/* Hashes */}
       {(resource.beforeHash || resource.afterHash) && (
-        <div style={{ marginBottom: '1.5rem' }}>
-          <div style={{
-            fontSize: '0.8rem',
-            fontWeight: '600',
-            color: '#999',
-            textTransform: 'uppercase',
-            marginBottom: '0.5rem'
-          }}>
-            Hashes
-          </div>
+        <Section title="Hashes">
           <div style={{ fontSize: '0.85rem', lineHeight: '1.8' }}>
             {resource.beforeHash && (
               <div>
                 <strong>Before:</strong>{' '}
                 <code style={{
                   fontSize: '0.75rem',
-                  background: '#f5f5f5',
+                  background: COLORS.bgLight,
                   padding: '0.1rem 0.3rem',
                   borderRadius: '3px'
                 }}>
@@ -139,7 +107,7 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
                 <strong>After:</strong>{' '}
                 <code style={{
                   fontSize: '0.75rem',
-                  background: '#f5f5f5',
+                  background: COLORS.bgLight,
                   padding: '0.1rem 0.3rem',
                   borderRadius: '3px'
                 }}>
@@ -148,21 +116,12 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
               </div>
             )}
           </div>
-        </div>
+        </Section>
       )}
 
       {/* Summary */}
       {resource.summary && (
-        <div style={{ marginBottom: '1.5rem' }}>
-          <div style={{
-            fontSize: '0.8rem',
-            fontWeight: '600',
-            color: '#999',
-            textTransform: 'uppercase',
-            marginBottom: '0.5rem'
-          }}>
-            Summary
-          </div>
+        <Section title="Summary">
           <div style={{ fontSize: '0.85rem', lineHeight: '1.8' }}>
             <div>
               <strong>Total Changes:</strong> {resource.summary.totalChanges}
@@ -202,21 +161,12 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
               </div>
             )}
           </div>
-        </div>
+        </Section>
       )}
 
       {/* Changes */}
       {resource.changes && resource.changes.length > 0 && (
-        <div>
-          <div style={{
-            fontSize: '0.8rem',
-            fontWeight: '600',
-            color: '#999',
-            textTransform: 'uppercase',
-            marginBottom: '0.5rem'
-          }}>
-            Changes ({resource.changes.length})
-          </div>
+        <Section title={`Changes (${resource.changes.length})`}>
           <div style={{
             maxHeight: '400px',
             overflow: 'auto'
@@ -335,8 +285,20 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
               </div>
             ))}
           </div>
-        </div>
+        </Section>
       )}
+    </div>
+  );
+}
+
+// Helper Section component to reduce duplication
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: '1.5rem' }}>
+      <div style={STYLES.sectionHeader}>
+        {title}
+      </div>
+      {children}
     </div>
   );
 }
