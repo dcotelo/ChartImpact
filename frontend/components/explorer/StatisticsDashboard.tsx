@@ -38,6 +38,7 @@ function computeStatistics(diffData: DiffResultV2) {
   let specChanges = 0;
   let metadataOnlyChanges = 0;
   let impactfulChanges = 0;
+  let lowRiskChanges = 0;
   
   resources.forEach(resource => {
     if (resource.changeType === 'modified' && resource.changes) {
@@ -47,11 +48,11 @@ function computeStatistics(diffData: DiffResultV2) {
       
       resource.changes.forEach(change => {
         // Check if change is in spec
-        if (change.path.startsWith('/spec') || change.path.startsWith('.spec')) {
+        if (change.path.includes('/spec') || change.path.startsWith('spec')) {
           hasSpecChange = true;
         }
-        // Check if change is metadata-only (labels, annotations)
-        if (change.path.includes('metadata') && !change.path.includes('/spec')) {
+        // Check if change is metadata-only (labels, annotations in metadata section)
+        if ((change.path.includes('/metadata') || change.path.startsWith('metadata')) && !hasSpecChange) {
           hasMetadataOnlyChange = true;
         }
         // Check importance
@@ -62,7 +63,11 @@ function computeStatistics(diffData: DiffResultV2) {
       
       if (hasSpecChange) specChanges++;
       if (hasMetadataOnlyChange && !hasSpecChange) metadataOnlyChanges++;
-      if (hasImportantChange) impactfulChanges++;
+      if (hasImportantChange) {
+        impactfulChanges++;
+      } else {
+        lowRiskChanges++;
+      }
     }
   });
   
@@ -91,6 +96,7 @@ function computeStatistics(diffData: DiffResultV2) {
     specChanges,
     metadataOnlyChanges,
     impactfulChanges,
+    lowRiskChanges,
     topKinds,
   };
 }
@@ -288,7 +294,7 @@ export function StatisticsDashboard({ diffData }: StatisticsDashboardProps) {
                 fontSize: '0.85rem',
                 fontWeight: '600',
               }}>
-                {stats.metadataOnlyChanges}
+                {stats.lowRiskChanges}
               </span>
             </div>
           </div>
