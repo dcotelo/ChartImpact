@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/yaml"
 )
 
@@ -28,7 +29,8 @@ func ParseManifests(yamlContent string) ([]Resource, error) {
 		// Parse the YAML document
 		var raw map[string]interface{}
 		if err := yaml.Unmarshal([]byte(doc), &raw); err != nil {
-			// Skip invalid YAML documents
+			// Log warning for invalid YAML to aid debugging
+			log.Warnf("Skipping invalid YAML document: %v", err)
 			continue
 		}
 
@@ -40,7 +42,8 @@ func ParseManifests(yamlContent string) ([]Resource, error) {
 		// Extract resource
 		resource, err := parseResource(raw)
 		if err != nil {
-			// Skip resources that can't be parsed
+			// Log warning when resource cannot be parsed
+			log.Warnf("Skipping unparseable resource: %v", err)
 			continue
 		}
 

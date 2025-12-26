@@ -416,9 +416,8 @@ func (h *HelmService) renderTemplate(ctx context.Context, chartDir string, value
 func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 string, ignoreLabels bool) (string, error) {
 	log.Info("Comparing rendered templates")
 
-	// Check if internal diff engine is enabled
-	internalDiffEnabled := os.Getenv("INTERNAL_DIFF_ENABLED")
-	if internalDiffEnabled == "true" {
+	// Check if internal diff engine is enabled (default: true)
+	if h.getBoolEnv("INTERNAL_DIFF_ENABLED", true) {
 		log.Info("Using internal diff engine")
 		diffEngine := diff.NewEngine()
 		diffEngine.IgnoreLabels = ignoreLabels
@@ -432,9 +431,8 @@ func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 
 		log.Warnf("Internal diff engine failed, falling back to dyff: %v", err)
 	}
 
-	// Check if dyff is enabled
-	dyffEnabled := os.Getenv("DYFF_ENABLED")
-	if dyffEnabled == "true" || dyffEnabled == "" {
+	// Check if dyff is enabled (default: true)
+	if h.getBoolEnv("DYFF_ENABLED", true) {
 		// Try using dyff
 		diff, err := h.dyffCompare(ctx, rendered1, rendered2, ignoreLabels)
 		if err == nil {
@@ -631,6 +629,33 @@ func (h *HelmService) copyFile(src, dst string) error {
 		return err
 	}
 	return os.WriteFile(dst, data, 0644)
+}
+
+// getBoolEnv retrieves a boolean environment variable with a default value
+// Supports various truthy values: true, yes, 1, on (case-insensitive)
+// and falsy values: false, no, 0, off (case-insensitive)
+func (h *HelmService) getBoolEnv(key string, defaultValue bool) bool {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultValue
+	}
+	
+	// Normalize to lowercase for comparison
+	val = strings.ToLower(strings.TrimSpace(val))
+	
+	// Check for truthy values
+	if val == "true" || val == "yes" || val == "1" || val == "on" {
+		return true
+	}
+	
+	// Check for falsy values
+	if val == "false" || val == "no" || val == "0" || val == "off" {
+		return false
+	}
+	
+	// If unrecognized, use default
+	log.Warnf("Unrecognized boolean value '%s' for %s, using default: %v", val, key, defaultValue)
+	return defaultValue
 }
 
 // cleanup removes the work directory and all its contents
