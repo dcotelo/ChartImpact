@@ -194,19 +194,6 @@ The `DiffExplorer` component intelligently selects data in this priority order:
 3. **No data available** - Shows blocking message with Classic view suggestion
 
 This ensures Explorer v2 is always functional when data is available, whether from demo or backend.
-- **Demo mode indicator**: Clear badge showing it's using demo data
-
-The demo works without any backend dependency, allowing you to explore all Explorer v2 features immediately.
-
-## How Explorer v2 Determines Data Source
-
-The `DiffExplorer` component intelligently selects data in this priority order:
-
-1. **Explicit demo data** (via `diffData` prop) - Shows "DEMO MODE" badge
-2. **Backend structured diff** (from `result.structuredDiff`) - Normal mode
-3. **No data available** - Shows blocking message with Classic view suggestion
-
-This ensures Explorer v2 is always functional when data is available, whether from demo or backend.
 
 ## Usage Examples
 

@@ -214,20 +214,8 @@ data:
 		require.NotNil(t, diffResult)
 		require.NotEmpty(t, diffRaw)
 
-		// Simulate what CompareVersions does
-		response := &models.CompareResponse{
-			Success:  true,
-			Diff:     diffRaw,
-			Version1: "v1",
-			Version2: "v2",
-		}
-
-		if diffResult != nil {
-			response.StructuredDiff = service.convertToStructuredDiff(diffResult)
-			response.StructuredDiffAvailable = true
-		} else {
-			response.StructuredDiffAvailable = false
-		}
+		// Use the service helper method to build response
+		response := service.buildCompareResponse("v1", "v2", diffRaw, diffResult)
 
 		assert.True(t, response.StructuredDiffAvailable, "structuredDiffAvailable should be true when internal diff engine is enabled")
 		assert.NotNil(t, response.StructuredDiff, "structuredDiff should not be nil")
@@ -264,20 +252,8 @@ data:
 		require.NoError(t, err)
 		require.NotEmpty(t, diffRaw)
 
-		// Simulate what CompareVersions does
-		response := &models.CompareResponse{
-			Success:  true,
-			Diff:     diffRaw,
-			Version1: "v1",
-			Version2: "v2",
-		}
-
-		if diffResult != nil {
-			response.StructuredDiff = service.convertToStructuredDiff(diffResult)
-			response.StructuredDiffAvailable = true
-		} else {
-			response.StructuredDiffAvailable = false
-		}
+		// Use the service helper method to build response
+		response := service.buildCompareResponse("v1", "v2", diffRaw, diffResult)
 
 		assert.False(t, response.StructuredDiffAvailable, "structuredDiffAvailable should be false when internal diff engine is disabled")
 		assert.Nil(t, response.StructuredDiff, "structuredDiff should be nil")
