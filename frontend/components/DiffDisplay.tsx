@@ -10,6 +10,7 @@ interface DiffDisplayProps {
   contextLines?: number;
   suppressKinds?: string[];
   suppressRegex?: string;
+  searchQuery?: string;
 }
 
 interface ResourceDiff {
@@ -757,7 +758,8 @@ export function DiffDisplay({
   secretHandling = 'suppress',
   contextLines = 3,
   suppressKinds = [],
-  suppressRegex
+  suppressRegex,
+  searchQuery = ''
 }: DiffDisplayProps) {
   const hasDiff = result.diff && result.diff.trim().length > 0;
   
@@ -926,20 +928,34 @@ export function DiffDisplay({
   // Parse and group by category
   const resources = hasDiff ? parseDiffByResources(processedDiff) : [];
   
+  // Apply search filtering if search query is provided
+  const filteredResources = searchQuery.trim() 
+    ? resources.filter(resource => {
+        const query = searchQuery.toLowerCase();
+        // Search in resource kind, name, namespace, category, path, and diff content
+        return resource.kind.toLowerCase().includes(query) ||
+               resource.name.toLowerCase().includes(query) ||
+               (resource.namespace || '').toLowerCase().includes(query) ||
+               resource.category.toLowerCase().includes(query) ||
+               resource.path.toLowerCase().includes(query) ||
+               resource.diff.toLowerCase().includes(query);
+      })
+    : resources;
+  
   // Apply context lines filtering to resource lines
   if (contextLines !== undefined && contextLines >= 0) {
-    for (const resource of resources) {
+    for (const resource of filteredResources) {
       resource.lines = applyContextLines(resource.lines, contextLines);
     }
   }
   
-  const groupedByCategory = groupResourcesByCategory(resources);
+  const groupedByCategory = groupResourcesByCategory(filteredResources);
   const categories = Object.keys(groupedByCategory);
   
   // Calculate statistics from filtered diff (processedDiff)
   // This ensures that filtered changes (including ALL metadata.* fields) are not counted in statistics
   // processedDiff is the filtered version that excludes all metadata changes (name, namespace, labels, annotations, etc.)
-  const statistics = hasDiff ? calculateStatistics(resources, processedDiff) : null;
+  const statistics = hasDiff ? calculateStatistics(filteredResources, processedDiff) : null;
   
   // Initialize with all categories expanded
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -1399,7 +1415,7 @@ export function DiffDisplay({
                           Total Changes
                         </div>
                         <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#fff' }}>
-                          {resources.length}
+                          {filteredResources.length}
                         </div>
                       </div>
                       
@@ -1427,7 +1443,7 @@ export function DiffDisplay({
                           Resources Affected
                         </div>
                         <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#fff' }}>
-                          {new Set(resources.map(r => `${r.kind}/${r.name}`)).size}
+                          {new Set(filteredResources.map(r => `${r.kind}/${r.name}`)).size}
                         </div>
                       </div>
                     </div>
@@ -1479,7 +1495,7 @@ export function DiffDisplay({
                     </div>
                     
                     {/* Key Changes Highlight */}
-                    {resources.some(r => !r.category.includes('Metadata') && !r.category.includes('Status') && !r.category.includes('Tags')) && (
+                    {filteredResources.some(r => !r.category.includes('Metadata') && !r.category.includes('Status') && !r.category.includes('Tags')) && (
                       <div style={{
                         marginTop: '1rem',
                         padding: '0.75rem',

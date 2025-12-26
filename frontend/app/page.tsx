@@ -8,8 +8,30 @@ import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { CompareResponse, CompareRequest } from '@/lib/types';
 import { API_ENDPOINTS } from '@/lib/api-config';
 
+// UI state for client-side filtering and search
+interface UIState {
+  ignoreLabels: boolean;
+  secretHandling: 'suppress' | 'show' | 'decode';
+  contextLines: number;
+  suppressKinds: string[];
+  suppressRegex: string;
+  searchQuery: string;
+}
+
 export default function Home() {
-  const [result, setResult] = useState<CompareResponse | null>(null);
+  // Raw diff data from initial compare (immutable once loaded)
+  const [rawResult, setRawResult] = useState<CompareResponse | null>(null);
+  
+  // UI state for client-side transformations (does NOT trigger re-compare)
+  const [uiState, setUIState] = useState<UIState>({
+    ignoreLabels: false,
+    secretHandling: 'suppress',
+    contextLines: 3,
+    suppressKinds: [],
+    suppressRegex: '',
+    searchQuery: ''
+  });
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<CompareRequest | undefined>(undefined);
@@ -20,8 +42,18 @@ export default function Home() {
   const handleCompare = async (formData: CompareRequest) => {
     setLoading(true);
     setError(null);
-    setResult(null);
+    setRawResult(null);
     setProgressStep(0);
+    
+    // Reset UI state when starting a new compare
+    setUIState({
+      ignoreLabels: false,
+      secretHandling: 'suppress',
+      contextLines: 3,
+      suppressKinds: [],
+      suppressRegex: '',
+      searchQuery: ''
+    });
     
     // Progress steps: 1-Initializing, 2-Cloning, 3-Extracting v1, 4-Extracting v2, 
     // 5-Building dependencies, 6-Rendering templates, 7-Comparing
@@ -92,7 +124,7 @@ export default function Home() {
 
         setProgressMessage('Comparison complete!');
         setProgressStep(7);
-        setResult(data);
+        setRawResult(data);
         
         setTimeout(() => {
           setProgressMessage('');
@@ -202,11 +234,136 @@ export default function Home() {
           </div>
         )}
 
-        {result && (
+        {rawResult && (
           <div style={{ marginTop: '2rem' }}>
+            {/* Filter Controls - operates on rawResult without re-compare */}
+            <div style={{
+              padding: '1.5rem',
+              background: '#f5f5f5',
+              borderRadius: '8px',
+              marginBottom: '1rem',
+              border: '1px solid #ddd'
+            }}>
+              <h3 style={{
+                fontSize: '1.1rem',
+                marginBottom: '1rem',
+                fontWeight: '600',
+                color: '#333'
+              }}>
+                🔍 Filter & Search Results
+              </h3>
+              
+              <div style={{
+                display: 'grid',
+                gap: '1rem',
+                gridTemplateColumns: '1fr'
+              }}>
+                {/* Search input */}
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                    fontWeight: '500',
+                    color: '#333',
+                    fontSize: '0.9rem'
+                  }}>
+                    Search diff content
+                  </label>
+                  <input
+                    type="text"
+                    value={uiState.searchQuery}
+                    onChange={(e) => setUIState({ ...uiState, searchQuery: e.target.value })}
+                    placeholder="Search for resource names, kinds, or content..."
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '0.9rem'
+                    }}
+                  />
+                </div>
+                
+                {/* Filter toggles */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                  gap: '0.75rem'
+                }}>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    cursor: 'pointer',
+                    userSelect: 'none'
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={uiState.ignoreLabels}
+                      onChange={(e) => setUIState({ ...uiState, ignoreLabels: e.target.checked })}
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <span style={{ fontSize: '0.9rem', color: '#333' }}>
+                      Ignore metadata/labels
+                    </span>
+                  </label>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <label style={{ fontSize: '0.9rem', color: '#333', fontWeight: '500' }}>
+                      Secret handling:
+                    </label>
+                    <select
+                      value={uiState.secretHandling}
+                      onChange={(e) => setUIState({ ...uiState, secretHandling: e.target.value as 'suppress' | 'show' | 'decode' })}
+                      style={{
+                        padding: '0.4rem',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '0.85rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="suppress">Suppress (redact)</option>
+                      <option value="show">Show</option>
+                      <option value="decode">Decode base64</option>
+                    </select>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <label style={{ fontSize: '0.9rem', color: '#333', fontWeight: '500' }}>
+                      Context lines:
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="10"
+                      value={uiState.contextLines}
+                      onChange={(e) => setUIState({ ...uiState, contextLines: parseInt(e.target.value) || 0 })}
+                      style={{
+                        width: '60px',
+                        padding: '0.4rem',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '0.85rem'
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <DiffDisplay 
-              result={result} 
-              ignoreLabels={formData?.ignoreLabels}
+              result={rawResult}
+              ignoreLabels={uiState.ignoreLabels}
+              secretHandling={uiState.secretHandling}
+              contextLines={uiState.contextLines}
+              suppressKinds={uiState.suppressKinds}
+              suppressRegex={uiState.suppressRegex}
+              searchQuery={uiState.searchQuery}
             />
           </div>
         )}
