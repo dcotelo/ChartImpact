@@ -1,19 +1,27 @@
 ![ChartInspect](ChartInspect.png)
 
-# Chart Impact
+# ChartImpact
 
-A modern web application for comparing differences between two Helm chart versions. Built with a **Go backend** using the Helm SDK and a **Next.js frontend** for a fast, scalable, and maintainable architecture.
+**Understand potentially disruptive Helm chart changes before deployment.**
+
+ChartImpact helps teams gain clarity and confidence by surfacing availability, rollout risk, and security changes in Helm chart upgrades. Built with a **Go backend** using the Helm SDK and a **Next.js frontend** for a fast, scalable, and maintainable architecture.
 
 [![CI/CD Pipeline](https://github.com/dcotelo/ChartImpact/actions/workflows/ci.yml/badge.svg)](https://github.com/dcotelo/ChartImpact/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/dcotelo/ChartImpact/actions/workflows/codeql.yml/badge.svg)](https://github.com/dcotelo/ChartImpact/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/dcotelo/ChartImpact/badge)](https://securityscorecards.dev/viewer/?uri=github.com/dcotelo/ChartImpact)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## ✨ Features
+## 🎯 Mission
+
+ChartImpact provides visibility into Helm chart changes, helping teams understand potential impacts on **availability** and **security** before deployment. We focus on surfacing risk signals with clarity—giving teams the information they need to make confident deployment decisions without imposing judgment or automated enforcement.
+
+## ✨ Current Features
 
 - 🔍 **Version Comparison** - Compare any two versions (tags, branches, or commits) of a Helm chart
 - 📊 **Visual Diff Display** - Beautiful syntax-highlighted diff output powered by internal diff engine
-- 🔬 **Explorer View** - Interactive structured diff explorer with filtering and search capabilities
+- 🔬 **Interactive Explorer** - Structured diff explorer with client-side filtering and search capabilities
+- 🎯 **Risk Signal Visibility** - Understand changes to availability-critical resources (Deployments, StatefulSets, Services)
+- 🔐 **Security Impact Awareness** - Surface changes to security-sensitive configurations (RBAC, NetworkPolicies, ServiceAccounts)
 - ⚡ **High Performance** - Fast internal diff engine optimized for Kubernetes manifests
 - 🎨 **Modern UI** - Clean, responsive interface built with React and Next.js
 - 🚀 **Fast & Efficient** - Go backend with Helm Go SDK for optimal performance
@@ -23,6 +31,9 @@ A modern web application for comparing differences between two Helm chart versio
 
 ## 📋 Table of Contents
 
+- [Mission](#-mission)
+- [Current Features](#-current-features)
+- [Roadmap](#-roadmap)
 - [Architecture](#-architecture)
 - [Getting Started](#-getting-started)
 - [Usage](#-usage)
@@ -31,6 +42,18 @@ A modern web application for comparing differences between two Helm chart versio
 - [Deployment](#-deployment)
 - [Contributing](#-contributing)
 - [License](#-license)
+
+## 🗺️ Roadmap
+
+We're working on extending ChartImpact's capabilities to provide earlier feedback in the development workflow:
+
+### Planned Features
+
+- **Automated GitHub PR Checks** *(Planned)* - Automated analysis of Helm chart changes in pull requests
+- **CI/CD Integration** *(Planned)* - Early workflow feedback during continuous integration
+- **Configurable Risk Thresholds** *(Planned)* - Team-defined criteria for highlighting significant changes
+
+These features will maintain our clarity-first philosophy: providing information and visibility without imposing blocking or enforcement mechanisms.
 
 ## 🏗️ Architecture
 
@@ -112,6 +135,15 @@ npm run dev
 ```
 
 ## 📖 Usage
+
+### How ChartImpact Works Today
+
+ChartImpact provides an **interactive web interface** for manually inspecting Helm chart changes:
+
+1. **Compare Versions** - Enter repository details and select two versions to compare
+2. **Review Changes** - Examine differences through the visual diff or Explorer view
+3. **Understand Impact** - Identify changes to availability-critical and security-sensitive resources
+4. **Make Informed Decisions** - Use the insights to guide your deployment choices
 
 ### Basic Comparison
 
@@ -286,16 +318,18 @@ docker build -t chartimpact-frontend .
 docker run -p 3000:3000 -e NEXT_PUBLIC_API_URL=http://localhost:8080 chartimpact-frontend
 ```
 
-## 🔄 CI/CD
+## 🔄 Continuous Integration
 
-This project includes GitHub Actions workflows for automated testing and deployment:
+This project includes GitHub Actions workflows for testing and maintaining code quality:
 
 - **CI Pipeline** (`ci.yml`): Runs backend and frontend tests, linting, and builds on every PR
 - **Frontend Tests** (`frontend-tests.yml`): Comprehensive frontend testing including unit, integration, and E2E tests
 - **Release Workflow** (`release.yml`): Creates releases and builds Docker images when version tags are pushed
-- **CodeQL Analysis** (`codeql.yml`): Automated security scanning for vulnerabilities
+- **CodeQL Analysis** (`codeql.yml`): Security scanning for vulnerabilities
 
 See [`.github/workflows/README.md`](.github/workflows/README.md) for detailed documentation.
+
+> **Note:** These workflows are for maintaining ChartImpact itself. Integration of ChartImpact as an automated check in your own GitHub PRs is a [planned feature](#-roadmap).
 
 ## 🛠️ Development
 

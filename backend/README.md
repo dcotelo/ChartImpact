@@ -4,12 +4,15 @@
 
 Go-based REST API for comparing Helm chart versions using the Helm Go SDK.
 
+**Mission:** Provide visibility into Helm chart changes, helping teams understand potential impacts on availability and security before deployment.
+
 ## Features
 
 - 🚀 **High Performance** - Built with Go for speed and efficiency
 - 📦 **Helm SDK Integration** - Uses official Helm Go SDK for chart operations
 - 🔄 **Git Integration** - Clones and compares charts from Git repositories
 - 🔍 **Internal Diff Engine** - Fast, deterministic, Kubernetes-aware diff engine (no external dependencies)
+- 🎯 **Structured Diff Output** - Field-level changes optimized for understanding availability and security impacts
 - 🔧 **Optional dyff Support** - Can use dyff for backwards compatibility if needed
 - 🛡️ **Robust Error Handling** - Comprehensive error messages and logging
 - 📊 **Health Checks** - Built-in health check endpoint
@@ -121,7 +124,7 @@ The backend includes a high-performance internal diff engine designed specifical
 - ⚡ **Fast**: No external process overhead, pure Go implementation
 - 🎯 **Deterministic**: Same inputs always produce identical output
 - 🧠 **Kubernetes-Aware**: Understands resource structure (apiVersion, kind, metadata)
-- 📊 **Structured Output**: Field-level diffs optimized for frontend consumption
+- 📊 **Structured Output**: Field-level diffs optimized for surfacing availability and security risk signals
 - 🔧 **Configurable**: Can ignore labels, annotations, or specific fields
 
 ### How It Works
