@@ -1,7 +1,7 @@
 {
-  "name": "helm-chart-diff-viewer",
+  "name": "chartimpact-frontend",
   "version": "1.0.0",
-  "description": "Web application for comparing differences between two Helm chart versions",
+  "description": "Modern web frontend for comparing Helm chart versions",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -49,8 +49,14 @@
     "kubernetes",
     "diff",
     "comparison",
-    "charts"
+    "charts",
+    "devops"
   ],
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dcotelo/ChartImpact.git",
+    "directory": "frontend"
+  },
+  "author": "dcotelo",
   "license": "MIT"
 }

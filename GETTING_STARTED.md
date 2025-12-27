@@ -1,6 +1,6 @@
-# Getting Started with Chart Impact
+# Getting Started with ChartImpact
 
-This guide will help you quickly get started with the Chart Impact web application.
+This guide will help you quickly get started with the ChartImpact web application.
 
 ## 🚀 Quick Start
 
@@ -8,46 +8,57 @@ This guide will help you quickly get started with the Chart Impact web applicati
 
 Before you begin, ensure you have:
 
+- **Docker and Docker Compose** (recommended for quick start)
+
+**OR for local development:**
+
 - **Node.js 18+** installed ([Download](https://nodejs.org/))
 - **npm 9+** (comes with Node.js)
+- **Go 1.21+** installed ([Download](https://golang.org/dl/))
 - **Helm 3.x** installed ([Installation Guide](https://helm.sh/docs/intro/install/))
 - **Git** installed
 
-### Installation Steps
+### Quick Start with Docker Compose (Recommended)
 
-1. **Clone or download the repository**
-
-```bash
-git clone https://github.com/your-username/helm-chart-diff-viewer.git
-cd helm-chart-diff-viewer
-```
-
-2. **Install dependencies**
+1. **Clone the repository**
 
 ```bash
-npm install
+git clone https://github.com/dcotelo/ChartImpact.git
+cd ChartImpact
 ```
 
-3. **Verify Helm installation**
+2. **Start the application**
 
 ```bash
-helm version
+docker-compose up
 ```
 
-You should see something like:
-```
-version.BuildInfo{Version:"v3.x.x", ...}
-```
-
-4. **Start the development server**
-
-```bash
-npm run dev
-```
-
-5. **Open your browser**
+3. **Open your browser**
 
 Navigate to [http://localhost:3000](http://localhost:3000)
+
+### Local Development Setup
+
+If you want to run the services separately for development:
+
+**Backend:**
+```bash
+cd backend
+cp .env.example .env
+go mod download
+go run cmd/server/main.go
+# Server runs on http://localhost:8080
+```
+
+**Frontend:**
+```bash
+cd frontend
+cp .env.example .env
+# Edit .env to set NEXT_PUBLIC_API_URL=http://localhost:8080
+npm install
+npm run dev
+# Frontend runs on http://localhost:3000
+```
 
 ## 📝 First Comparison
 
@@ -63,8 +74,14 @@ Click **Compare Versions** and wait for the results!
 
 ### Understanding the Output
 
-- **✅ No differences**: The two versions are identical
-- **⚠️ Differences detected**: A syntax-highlighted diff showing what changed
+The application provides two views for comparing charts:
+
+- **Classic View**: Traditional text-based diff with syntax highlighting
+- **Explorer View**: Interactive structured view with:
+  - Resource-by-resource navigation
+  - Field-level change details
+  - Filtering and search capabilities
+  - Statistics dashboard showing change impact
 
 ## 🔧 Common Use Cases
 
@@ -136,19 +153,33 @@ choco install kubernetes-helm
 
 ## 🚢 Running in Production
 
-### Using Docker
+### Using Docker Compose
 
 ```bash
-docker build -t helm-chart-diff-viewer .
-docker run -p 3000:3000 helm-chart-diff-viewer
+docker-compose up -d
 ```
 
-### Using npm
+This starts both backend and frontend services in production mode.
 
+### Using Individual Docker Containers
+
+**Backend:**
 ```bash
-npm run build
-npm start
+cd backend
+docker build -t chartimpact-backend .
+docker run -p 8080:8080 chartimpact-backend
 ```
+
+**Frontend:**
+```bash
+cd frontend
+docker build -t chartimpact-frontend .
+docker run -p 3000:3000 -e NEXT_PUBLIC_API_URL=http://localhost:8080 chartimpact-frontend
+```
+
+### Cloudflare Pages (Frontend)
+
+See [frontend/CLOUDFLARE_PAGES.md](frontend/CLOUDFLARE_PAGES.md) for deploying the frontend to Cloudflare Pages. You'll need to deploy the backend separately.
 
 ## 📚 Next Steps
 

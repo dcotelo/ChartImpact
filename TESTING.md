@@ -1,24 +1,94 @@
 # Testing Guide
 
-This guide covers how to test the Chart Impact application, including both manual testing and automated testing.
+This guide covers how to test ChartImpact, including both backend and frontend testing.
 
 ## 📋 Table of Contents
 
 - [Prerequisites](#prerequisites)
-- [Automated Testing](#automated-testing)
+- [Backend Testing](#backend-testing)
+- [Frontend Testing](#frontend-testing)
+- [Explorer Testing](#explorer-testing)
+- [End-to-End Testing](#end-to-end-testing)
 - [Manual Testing](#manual-testing)
-- [Explorer v2 Testing](#explorer-v2-testing)
-- [Test Coverage](#test-coverage)
-- [Writing New Tests](#writing-new-tests)
+- [CI/CD Testing](#cicd-testing)
 
 ## Prerequisites
 
 Before running tests, ensure you have:
 
-1. **Node.js 18+** and **npm 9+** installed
-2. **Dependencies installed**: Run `npm install`
-3. **Helm 3.x** installed (for manual testing and integration tests)
-4. **Go 1.21+** installed (for backend testing)
+1. **Node.js 18+** and **npm 9+** installed (for frontend)
+2. **Go 1.21+** installed (for backend)
+3. **Dependencies installed**: Run `npm install` in frontend and `go mod download` in backend
+
+## Backend Testing
+
+### Running Go Tests
+
+```bash
+cd backend
+
+# Run all tests
+go test ./...
+
+# Run with coverage
+go test -cover ./...
+
+# Run with verbose output
+go test -v ./...
+
+# Run with race detection
+go test -race ./...
+```
+
+### Test Structure
+
+Backend tests are located alongside the code they test:
+- `internal/diff/diff_test.go` - Internal diff engine tests
+- `internal/service/helm_test.go` - Helm service tests
+- `internal/api/handlers/*_test.go` - API handler tests
+
+### Key Test Areas
+
+1. **Diff Engine** - Tests for Kubernetes-aware diffing
+2. **Helm Operations** - Chart rendering and comparison
+3. **API Endpoints** - Request validation and error handling
+4. **Git Operations** - Repository cloning and version fetching
+
+## Frontend Testing
+
+Frontend tests use **Jest** and **React Testing Library** for unit and integration tests, plus **Playwright** for E2E tests.
+
+### Running Jest Tests
+
+```bash
+cd frontend
+
+# Run all tests
+npm test
+
+# Run tests in watch mode (for development)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Run specific test file
+npm test -- DiffExplorer.test.tsx
+```
+
+### Test Structure
+
+```
+frontend/
+├── components/__tests__/         # Component tests
+│   ├── CompareForm.test.tsx
+│   ├── DiffDisplay.test.tsx
+│   ├── DiffExplorer.test.tsx
+│   └── DiffExplorer.integration.test.tsx
+└── e2e/                         # Playwright E2E tests
+    ├── explorer-v2.spec.ts
+    └── README.md
+```
 
 ## Explorer Testing
 
@@ -68,203 +138,111 @@ go test -v ./internal/service -run TestStructuredDiffAvailableFlag
 go test -v ./internal/models -run TestCompareResponse
 ```
 
-## Automated Testing
+## End-to-End Testing
 
-### Running Tests
+E2E tests use **Playwright** for browser-based integration testing.
 
-The project uses **Jest** and **React Testing Library** for automated testing.
+### Running Playwright Tests
 
-#### Run all tests:
 ```bash
-npm test
+cd frontend
+
+# Run E2E tests
+npm run test:e2e
+
+# Run with UI mode (interactive)
+npm run test:e2e:ui
+
+# Run in headed mode (see browser)
+npm run test:e2e:headed
+
+# Run all tests (Jest + Playwright)
+npm run test:all
 ```
 
-#### Run tests in watch mode (for development):
-```bash
-npm run test:watch
-```
+### E2E Test Coverage
 
-#### Run tests with coverage report:
-```bash
-npm run test:coverage
-```
+- Full user workflows (comparison, view switching)
+- Backend API integration
+- Error handling and edge cases
+- Regression prevention
 
-### Test Structure
-
-Tests are organized as follows:
-
-```
-├── app/
-│   └── api/
-│       └── compare/
-│           └── __tests__/
-│               └── route.test.ts          # API route tests
-├── components/
-│   └── __tests__/
-│       ├── CompareForm.test.tsx          # Form component tests
-│       └── DiffDisplay.test.tsx          # Display component tests
-└── services/
-    └── __tests__/
-        └── helm-service.test.ts          # Service unit tests
-```
-
-### Test Types
-
-#### 1. Unit Tests (`services/__tests__/helm-service.test.ts`)
-
-Tests for the `HelmService` class, including:
-- Version comparison logic
-- Error handling (missing chart paths, git failures)
-- Values file handling
-- Template rendering
-
-**Example:**
-```bash
-npm test -- helm-service
-```
-
-#### 2. Component Tests
-
-**CompareForm Tests** (`components/__tests__/CompareForm.test.tsx`):
-- Form field rendering
-- Form submission
-- Loading states
-- Optional field handling
-
-**DiffDisplay Tests** (`components/__tests__/DiffDisplay.test.tsx`):
-- Version information display
-- Diff content rendering
-- Empty diff handling
-
-**Example:**
-```bash
-npm test -- CompareForm
-npm test -- DiffDisplay
-```
-
-#### 3. API Route Tests (`app/api/compare/__tests__/route.test.ts`)
-
-Tests for the `/api/compare` endpoint:
-- Request validation
-- Error handling
-- Successful comparisons
-- Parameter passing
-
-**Example:**
-```bash
-npm test -- route.test
-```
-
-### Running Specific Tests
-
-Run a specific test file:
-```bash
-npm test -- CompareForm.test.tsx
-```
-
-Run tests matching a pattern:
-```bash
-npm test -- --testNamePattern="should successfully compare"
-```
-
-Run tests for a specific directory:
-```bash
-npm test -- components
-```
+See [frontend/e2e/README.md](frontend/e2e/README.md) for detailed E2E testing documentation.
 
 ## Manual Testing
 
-### 1. Start the Development Server
+### Starting the Services
 
+**With Docker Compose:**
 ```bash
+docker-compose up
+```
+
+**Or start services individually:**
+
+Backend:
+```bash
+cd backend
+go run cmd/server/main.go
+```
+
+Frontend:
+```bash
+cd frontend
 npm run dev
 ```
 
-The application will be available at `http://localhost:3000`
-
-### 2. Test the UI
+### Testing the UI
 
 #### Basic Comparison Test
 
 1. Open `http://localhost:3000` in your browser
-2. Fill in the form:
-   - **Repository URL**: `https://github.com/your-org/helm-charts.git`
-   - **Chart Path**: `charts/myapp`
-   - **Version 1**: `v1.0.0` (or a branch/commit)
-   - **Version 2**: `v1.1.0` (or a branch/commit)
+2. Fill in the form with real repository details or use demo examples
 3. Click **Compare Versions**
-4. Verify the diff is displayed correctly
+4. Verify both Classic and Explorer views display correctly
 
-#### Test with Values File
+#### Test Explorer View
 
-1. Fill in the form as above
-2. Add a **Values File Path**: `values/prod.yaml`
-3. Click **Compare Versions**
-4. Verify the comparison uses the values file
+1. After a successful comparison, switch to the **Explorer** tab
+2. Verify:
+   - Resource list shows all changed resources
+   - Statistics dashboard displays change metrics
+   - Filtering and search work correctly
+   - Details panel shows field-level changes
 
-#### Test with Values Content
+#### Test Demo Mode
 
-1. Fill in the form as above
-2. Paste YAML content in **Values Content**:
-   ```yaml
-   replicaCount: 3
-   image:
-     repository: nginx
-     tag: latest
-   ```
-3. Click **Compare Versions**
-4. Verify the comparison uses the provided values
+1. Navigate to `http://localhost:3000/demo`
+2. Verify Explorer view renders with demo data
+3. Check for "DEMO MODE" badge
 
-#### Error Handling Tests
+### Testing the Backend API Directly
 
-1. **Invalid Repository URL**: Enter an invalid URL and verify error message
-2. **Missing Fields**: Submit form with empty required fields and verify validation
-3. **Non-existent Chart Path**: Use a chart path that doesn't exist and verify error
-4. **Invalid Version**: Use a version/tag that doesn't exist and verify error
-
-### 3. Test the API Directly
-
-You can test the API endpoint directly using `curl`:
+You can test the backend API directly using `curl`:
 
 ```bash
-curl -X POST http://localhost:3000/api/compare \
+curl -X POST http://localhost:8080/api/compare \
   -H "Content-Type: application/json" \
   -d '{
-    "repository": "https://github.com/your-org/helm-charts.git",
-    "chartPath": "charts/myapp",
-    "version1": "v1.0.0",
-    "version2": "v1.1.0",
-    "valuesFile": "values/prod.yaml"
+    "repository": "https://github.com/argoproj/argo-helm.git",
+    "chartPath": "charts/argo-cd",
+    "version1": "5.0.0",
+    "version2": "5.1.0"
   }'
 ```
 
-Or using a tool like [Postman](https://www.postman.com/) or [Insomnia](https://insomnia.rest/).
+Or test the health endpoint:
 
-### 4. Integration Testing
-
-For full integration testing, you'll need:
-
-1. A test Helm chart repository (or use a public one)
-2. Multiple versions/tags to compare
-3. Values files for testing
-
-**Example test repository setup:**
 ```bash
-# Create a test repo
-git clone https://github.com/your-org/test-helm-charts.git
-cd test-helm-charts
-
-# Create test versions
-git tag v1.0.0
-# Make changes
-git commit -am "Update chart"
-git tag v1.1.0
+curl http://localhost:8080/api/health
 ```
 
 ## Test Coverage
 
-View coverage report:
+### Frontend Coverage
+
 ```bash
+cd frontend
 npm run test:coverage
 ```
 
@@ -274,127 +252,36 @@ This generates a coverage report showing:
 - **Functions**: Percentage of functions executed
 - **Lines**: Percentage of lines executed
 
-Coverage reports are generated in the `coverage/` directory. Open `coverage/lcov-report/index.html` in a browser for a detailed view.
+### Backend Coverage
 
-### Coverage Goals
-
-- **Statements**: > 80%
-- **Branches**: > 75%
-- **Functions**: > 80%
-- **Lines**: > 80%
-
-## Writing New Tests
-
-### Test File Naming
-
-- Test files should be named `*.test.ts` or `*.test.tsx`
-- Place test files in `__tests__` directories next to the code they test
-- Or use the `.test.ts` suffix in the same directory
-
-### Example: Writing a Component Test
-
-```typescript
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { MyComponent } from '../MyComponent';
-
-describe('MyComponent', () => {
-  it('should render correctly', () => {
-    render(<MyComponent />);
-    expect(screen.getByText('Hello')).toBeInTheDocument();
-  });
-
-  it('should handle user interaction', async () => {
-    const user = userEvent.setup();
-    render(<MyComponent />);
-    
-    await user.click(screen.getByRole('button'));
-    expect(screen.getByText('Clicked!')).toBeInTheDocument();
-  });
-});
+```bash
+cd backend
+go test -cover ./...
 ```
 
-### Example: Writing a Service Test
+Backend tests also support coverage reporting.
 
-```typescript
-import { MyService } from '../my-service';
+Coverage reports are generated in the `coverage/` directory for frontend. Open `frontend/coverage/lcov-report/index.html` in a browser for a detailed view.
 
-// Mock external dependencies
-jest.mock('child_process');
+## CI/CD Testing
 
-describe('MyService', () => {
-  it('should perform operation', async () => {
-    const service = new MyService();
-    const result = await service.doSomething();
-    
-    expect(result).toBeDefined();
-  });
-});
-```
+The project includes automated testing in CI/CD workflows:
 
-### Best Practices
+- **ci.yml**: Runs backend and frontend tests on every PR
+- **frontend-tests.yml**: Comprehensive frontend testing including:
+  - Unit tests (Jest)
+  - Integration tests
+  - E2E tests (Playwright)
+  - Regression checks
 
-1. **Isolate tests**: Each test should be independent
-2. **Use descriptive names**: Test names should clearly describe what they test
-3. **Arrange-Act-Assert**: Structure tests with clear sections
-4. **Mock external dependencies**: Don't make real API calls or file system operations in unit tests
-5. **Test edge cases**: Include tests for error conditions and boundary cases
-6. **Keep tests simple**: One assertion per test when possible
-
-### Testing Utilities
-
-The project includes:
-
-- **@testing-library/react**: For React component testing
-- **@testing-library/user-event**: For simulating user interactions
-- **@testing-library/jest-dom**: For additional DOM matchers
-- **jest**: Test runner and assertion library
-
-## Troubleshooting
-
-### Tests fail with "Cannot find module"
-
-Run `npm install` to ensure all dependencies are installed.
-
-### Tests timeout
-
-Increase timeout in test file:
-```typescript
-jest.setTimeout(10000); // 10 seconds
-```
-
-### Mock not working
-
-Ensure mocks are set up in `beforeEach` or at the top of the test file:
-```typescript
-jest.mock('module-name');
-```
-
-### Coverage not generating
-
-Check that `collectCoverageFrom` in `jest.config.js` includes your files.
-
-## Continuous Integration
-
-For CI/CD pipelines, add these steps:
-
-```yaml
-# Example GitHub Actions
-- name: Install dependencies
-  run: npm ci
-
-- name: Run tests
-  run: npm test
-
-- name: Generate coverage
-  run: npm run test:coverage
-```
+Tests must pass before code can be merged. See [`.github/workflows/`](.github/workflows/) for workflow details.
 
 ## Additional Resources
 
 - [Jest Documentation](https://jestjs.io/docs/getting-started)
 - [React Testing Library](https://testing-library.com/react)
-- [Testing Best Practices](https://kentcdodds.com/blog/common-mistakes-with-react-testing-library)
+- [Playwright Documentation](https://playwright.dev/)
+- [Go Testing](https://golang.org/pkg/testing/)
 
 ---
 

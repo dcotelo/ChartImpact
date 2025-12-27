@@ -5,10 +5,13 @@ node_modules/
 
 # Testing
 /coverage
+frontend/coverage/
+backend/coverage.txt
 
 # Next.js
 /.next/
 /out/
+frontend/.next/
 
 # Production
 /build
@@ -26,7 +29,6 @@ yarn-error.log*
 .env*.local
 .env
 backend/.env
-backend/server
 frontend/.env
 
 # Vercel
@@ -40,4 +42,23 @@ next-env.d.ts
 /tmp
 /charts-tmp
 
-frontend/.next/
+# Go
+backend/server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Playwright
+frontend/test-results/
+frontend/playwright-report/
+frontend/playwright/.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
