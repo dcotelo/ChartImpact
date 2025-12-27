@@ -21,3 +21,19 @@ primary_region = 'gru'
   cpu_kind = 'shared'
   cpus = 1
   memory_mb = 1024
+
+[ENV]
+  CORS_ALLOWED_ORIGINS="https://ci.dcotelo.dev,https://*.chartimpact.pages.dev,http://localhost:3000"
+  CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,OPTIONS
+  CORS_ALLOWED_HEADERS=Content-Type,Authorization
+  GIT_TERMINAL=dumb
+  GIT_ASKPASS=echo
+  GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=no
+  TEMP_DIR=/tmp/chartimpact
+  COMPARE_TIMEOUT=120
+  VERSIONS_TIMEOUT=60
+  GIT_CLONE_TIMEOUT=120
+  HELM_TIMEOUT=60
+  LOG_LEVEL=info
+  LOG_FORMAT=text
+  DYFF_ENABLED=false
