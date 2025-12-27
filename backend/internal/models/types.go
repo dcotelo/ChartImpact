@@ -202,5 +202,5 @@ type HealthResponse struct {
 	Version string `json:"version,omitempty"` // API version
 	HelmOK  bool   `json:"helmOk"`            // Whether Helm is available
 	GitOK   bool   `json:"gitOk"`             // Whether Git is available
-	DyffOK  bool   `json:"dyffOk"`            // Whether dyff is available
+	DyffOK  bool   `json:"dyffOk"`            // DEPRECATED: Whether dyff is available (dyff is deprecated in favor of internal engine)
 }

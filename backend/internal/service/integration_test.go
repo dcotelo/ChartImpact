@@ -133,6 +133,8 @@ metadata:
 }
 
 // TestDyffFallback tests that the service falls back to dyff when internal diff is disabled
+// DEPRECATED: This test validates deprecated dyff fallback behavior
+// TODO: Remove this test when dyff support is removed
 func TestDyffFallback(t *testing.T) {
 	// Ensure internal diff is disabled
 	originalValue := os.Getenv("INTERNAL_DIFF_ENABLED")
@@ -159,6 +161,7 @@ data:
   key: value2
 `
 
+	// DEPRECATED: Testing deprecated dyff fallback behavior
 	// This should use dyff or fall back to simple diff
 	_, diffRaw, err := service.compareRendered(ctx, manifest1, manifest2, false)
 	assert.NoError(t, err)

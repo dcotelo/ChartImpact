@@ -26,20 +26,21 @@ func HealthHandler() http.HandlerFunc {
 			gitOK = true
 		}
 
-		// Check if dyff is available (optional - internal diff engine can be used instead)
+		// DEPRECATED: dyff support is deprecated and will be removed in a future version
+		// Check if dyff is available (optional - internal diff engine is the recommended approach)
 		dyffOK := false
 		if _, err := exec.LookPath("dyff"); err == nil {
 			dyffOK = true
 		}
 
 		// Status is ok if required tools are available
-		// dyff is optional when internal diff engine is enabled (default: true)
+		// DEPRECATED: dyff is optional and deprecated - internal diff engine is the recommended approach
 		status := "ok"
 		if !helmOK || !gitOK {
 			status = "degraded"
 			log.Warn("Health check: Missing required tools")
 		} else if !util.GetBoolEnv("INTERNAL_DIFF_ENABLED", true) && !dyffOK {
-			// dyff is only required when internal diff is not enabled
+			// DEPRECATED: dyff is only required when internal diff is not enabled (not recommended)
 			status = "degraded"
 			log.Warn("Health check: dyff not available and internal diff not enabled")
 		}
