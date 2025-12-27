@@ -35,4 +35,5 @@ primary_region = 'gru'
   HELM_TIMEOUT="60"
   LOG_LEVEL="info"
   LOG_FORMAT="text"
+  # DEPRECATED: DYFF_ENABLED is deprecated and will be removed in a future version
   DYFF_ENABLED="false"

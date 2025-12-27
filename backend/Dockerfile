@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for ChartImpact Go Backend
 # This builds a lightweight production-ready container with Helm and Git
-# dyff is optional - the internal diff engine is used by default
+# The internal diff engine is used by default (no external dependencies required)
 
 # Stage 1: Build the Go application
 FROM golang:1.21-alpine AS builder
@@ -27,7 +27,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server ./cmd/serv
 FROM alpine:3.19
 
 # Install runtime dependencies: Helm, Git, and CA certificates
-# Note: dyff is NOT installed - the internal diff engine is used by default
+# The internal diff engine is used by default (no external diff tools required)
 RUN apk add --no-cache \
     ca-certificates \
     git \
