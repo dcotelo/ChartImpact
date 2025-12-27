@@ -3,6 +3,9 @@ name: Frontend Tests
 on:
   pull_request:
     types: [opened, synchronize]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-tests.yml'
 
 jobs:
   unit-tests:
