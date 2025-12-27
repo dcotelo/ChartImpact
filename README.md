@@ -4,12 +4,16 @@
 
 A modern web application for comparing differences between two Helm chart versions. Built with a **Go backend** using the Helm SDK and a **Next.js frontend** for a fast, scalable, and maintainable architecture.
 
+[![CI/CD Pipeline](https://github.com/dcotelo/ChartImpact/actions/workflows/ci.yml/badge.svg)](https://github.com/dcotelo/ChartImpact/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/dcotelo/ChartImpact/actions/workflows/codeql.yml/badge.svg)](https://github.com/dcotelo/ChartImpact/actions/workflows/codeql.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/dcotelo/ChartImpact/badge)](https://securityscorecards.dev/viewer/?uri=github.com/dcotelo/ChartImpact)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## ✨ Features
 
 - 🔍 **Version Comparison** - Compare any two versions (tags, branches, or commits) of a Helm chart
 - 📊 **Visual Diff Display** - Beautiful syntax-highlighted diff output powered by internal diff engine
+- 🔬 **Explorer View** - Interactive structured diff explorer with filtering and search capabilities
 - ⚡ **High Performance** - Fast internal diff engine optimized for Kubernetes manifests
 - 🎨 **Modern UI** - Clean, responsive interface built with React and Next.js
 - 🚀 **Fast & Efficient** - Go backend with Helm Go SDK for optimal performance
@@ -66,8 +70,8 @@ The easiest way to run both backend and frontend:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/chartimpact.git
-cd chartimpact
+git clone https://github.com/dcotelo/ChartImpact.git
+cd ChartImpact
 
 # Start both services
 docker-compose up
@@ -206,31 +210,6 @@ Health check endpoint.
 ```
 
 For detailed API documentation, see [backend/README.md](backend/README.md).
-  "version2": "v1.1.0",
-  "valuesFile": "values/prod.yaml",
-  "valuesContent": "replicaCount: 3\nimage:\n  tag: latest"
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "diff": "--- version1\n+++ version2\n...",
-  "version1": "v1.0.0",
-  "version2": "v1.1.0"
-}
-```
-
-**Error Response:**
-
-```json
-{
-  "success": false,
-  "error": "Error message here"
-}
-```
 
 ## 🔒 Requirements
 
@@ -264,72 +243,89 @@ choco install kubernetes-helm
 
 ## 🚢 Deployment
 
-### Vercel (Recommended)
+### Docker Compose (Recommended for Self-Hosting)
 
-1. Push your code to GitHub
-2. Import project in Vercel
-3. Configure environment variables if needed
-4. Deploy!
-
-### Docker
+The easiest way to deploy both backend and frontend together:
 
 ```bash
-# Build the image
-docker build -t helm-chart-diff-viewer .
-
-# Run the container
-docker run -p 3000:3000 helm-chart-diff-viewer
+docker-compose up -d
 ```
 
-### Self-Hosted
+See [docker-compose.yml](docker-compose.yml) for configuration details.
+
+### Cloudflare Pages (Frontend Only)
+
+The frontend can be deployed to Cloudflare Pages. You'll need to deploy the backend separately.
+
+**Build Settings:**
+- **Framework preset**: Next.js
+- **Build command**: `npm run build`
+- **Build output directory**: `.next`
+- **Root directory**: `frontend`
+
+**Environment Variables:**
+```
+NEXT_PUBLIC_API_URL=https://your-backend-api.example.com
+```
+
+See [frontend/CLOUDFLARE_PAGES.md](frontend/CLOUDFLARE_PAGES.md) for detailed instructions.
+
+### Docker (Manual)
+
+Build and run individual services:
 
 ```bash
-# Build the application
-npm run build
+# Build backend
+cd backend
+docker build -t chartimpact-backend .
+docker run -p 8080:8080 chartimpact-backend
 
-# Start production server
-npm start
+# Build frontend
+cd frontend
+docker build -t chartimpact-frontend .
+docker run -p 3000:3000 -e NEXT_PUBLIC_API_URL=http://localhost:8080 chartimpact-frontend
 ```
 
 ## 🔄 CI/CD
 
-This project includes GitHub Actions workflows for automated testing, building, and deployment:
+This project includes GitHub Actions workflows for automated testing and deployment:
 
-- **CI Pipeline** (`ci.yml`): Runs tests and builds on every push/PR
-- **Release Workflow** (`release.yml`): Creates releases when version tags are pushed
-- **Vercel Deployment** (`deploy-vercel.yml`): Automatically deploys to Vercel
-- **Docker Publishing** (`docker-publish.yml`): Builds and publishes Docker images
+- **CI Pipeline** (`ci.yml`): Runs backend and frontend tests, linting, and builds on every PR
+- **Frontend Tests** (`frontend-tests.yml`): Comprehensive frontend testing including unit, integration, and E2E tests
+- **Release Workflow** (`release.yml`): Creates releases and builds Docker images when version tags are pushed
+- **CodeQL Analysis** (`codeql.yml`): Automated security scanning for vulnerabilities
 
-See [`.github/workflows/README.md`](.github/workflows/README.md) for detailed setup instructions.
-
-### Status Badge
-
-Add this to your README to show CI status:
-
-```markdown
-![CI](https://github.com/your-username/helm-chart-diff-viewer/workflows/CI/badge.svg)
-```
+See [`.github/workflows/README.md`](.github/workflows/README.md) for detailed documentation.
 
 ## 🛠️ Development
 
 ### Project Structure
 
 ```
-helm-chart-diff-viewer/
-├── app/                    # Next.js app directory
-│   ├── api/               # API routes
-│   │   └── compare/       # Comparison endpoint
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Home page
-│   └── globals.css        # Global styles
-├── components/            # React components
-│   ├── CompareForm.tsx    # Input form
-│   └── DiffDisplay.tsx    # Diff output display
-├── lib/                   # Shared utilities
-│   └── types.ts           # TypeScript types
-├── services/              # Business logic
-│   └── helm-service.ts    # Helm comparison service
-└── public/                # Static assets
+ChartImpact/
+├── backend/                   # Go backend API
+│   ├── cmd/server/           # Application entry point
+│   ├── internal/             # Internal packages
+│   │   ├── api/             # HTTP handlers and middleware
+│   │   ├── diff/            # Internal diff engine
+│   │   ├── service/         # Business logic (Helm operations)
+│   │   └── models/          # Data types and schemas
+│   ├── Dockerfile           # Backend container
+│   └── go.mod               # Go dependencies
+├── frontend/                 # Next.js frontend
+│   ├── app/                 # Next.js app directory
+│   │   ├── api/            # API routes (proxy to backend)
+│   │   ├── demo/           # Demo page
+│   │   └── page.tsx        # Main comparison page
+│   ├── components/          # React components
+│   │   ├── explorer/       # Explorer v2 components
+│   │   └── __tests__/      # Component tests
+│   ├── e2e/                # End-to-end tests (Playwright)
+│   ├── Dockerfile          # Frontend container
+│   └── package.json        # Frontend dependencies
+├── .github/workflows/       # CI/CD automation
+├── docker-compose.yml       # Multi-service deployment
+└── README.md               # This file
 ```
 
 ### Available Scripts
@@ -404,9 +400,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 🐛 [Report a bug](https://github.com/your-username/helm-chart-diff-viewer/issues/new?template=bug_report.md)
-- 💡 [Request a feature](https://github.com/your-username/helm-chart-diff-viewer/issues/new?template=feature_request.md)
-- 💬 [Start a discussion](https://github.com/your-username/helm-chart-diff-viewer/discussions)
+- 🐛 [Report a bug](https://github.com/dcotelo/ChartImpact/issues/new?template=bug_report.md)
+- 💡 [Request a feature](https://github.com/dcotelo/ChartImpact/issues/new?template=feature_request.md)
+- 💬 [Start a discussion](https://github.com/dcotelo/ChartImpact/discussions)
 
 ---
 
