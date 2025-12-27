@@ -27,7 +27,7 @@ This directory contains GitHub Actions workflows for CI/CD automation.
 **Requirements:**
 - `CLOUDFLARE_API_TOKEN` - Cloudflare API token
 - `CLOUDFLARE_ACCOUNT_ID` - Cloudflare account ID
-- `BACKEND_API_URL` - Backend API URL (optional, can be hardcoded)
+- `BACKEND_API_URL` - Backend API URL (**required**, not optional)
 
 **Features:**
 - Automatic deployment to Cloudflare Pages
@@ -42,7 +42,7 @@ This directory contains GitHub Actions workflows for CI/CD automation.
 3. Add secrets to GitHub:
    - `CLOUDFLARE_API_TOKEN`
    - `CLOUDFLARE_ACCOUNT_ID`
-   - `BACKEND_API_URL` (optional)
+   - `BACKEND_API_URL` (your deployed backend API endpoint)
 
 ### 3. `release.yml` - Release Workflow
 **Triggers:** When a tag matching `v*.*.*` is pushed (e.g., `v1.0.0`)
@@ -138,7 +138,7 @@ To configure deployment workflows, add the following secrets to your GitHub repo
 ### For Cloudflare Pages (Recommended):
 - `CLOUDFLARE_API_TOKEN` - API token with Cloudflare Pages edit permission
 - `CLOUDFLARE_ACCOUNT_ID` - Your Cloudflare account ID
-- `BACKEND_API_URL` - (Optional) Backend API URL
+- `BACKEND_API_URL` - Your deployed backend API endpoint (required)
 
 ### For Vercel Deployment (Legacy):
 - `VERCEL_TOKEN`
