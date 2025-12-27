@@ -1,6 +1,17 @@
 # Getting Started with ChartImpact
 
-This guide will help you quickly get started with the ChartImpact web application.
+**Understand potentially disruptive Helm chart changes before deployment.**
+
+This guide will help you quickly get started with ChartImpact's interactive web interface for inspecting Helm chart differences.
+
+## What ChartImpact Does
+
+ChartImpact helps you:
+- **Visualize changes** between Helm chart versions
+- **Identify risk signals** related to availability and security
+- **Make informed decisions** about chart upgrades
+
+ChartImpact provides information and visibility—it does not block deployments or enforce policies. You remain in control of your deployment decisions.
 
 ## 🚀 Quick Start
 
@@ -74,14 +85,16 @@ Click **Compare Versions** and wait for the results!
 
 ### Understanding the Output
 
-The application provides two views for comparing charts:
+The application provides two views for examining chart changes:
 
 - **Classic View**: Traditional text-based diff with syntax highlighting
 - **Explorer View**: Interactive structured view with:
   - Resource-by-resource navigation
   - Field-level change details
-  - Filtering and search capabilities
-  - Statistics dashboard showing change impact
+  - Client-side filtering and search capabilities
+  - Statistics dashboard showing types and counts of changes
+
+Both views help you understand the **impact** of changes on availability-critical resources (like Deployments and Services) and security-sensitive configurations (like RBAC and NetworkPolicies).
 
 ## 🔧 Common Use Cases
 
@@ -183,16 +196,27 @@ See [frontend/CLOUDFLARE_PAGES.md](frontend/CLOUDFLARE_PAGES.md) for deploying t
 
 ## 📚 Next Steps
 
-- Read the [full documentation](README.md)
+- Read the [full documentation](README.md) for detailed information
+- Learn about the [mission and roadmap](README.md#-mission)
 - Check out [API reference](README.md#api-reference)
 - Explore [deployment options](README.md#deployment)
+
+## 🗺️ Future Enhancements
+
+We're working on features to provide earlier feedback in your development workflow:
+
+- **Automated GitHub PR Checks** *(Planned)* - Automated analysis in pull requests
+- **CI/CD Integration** *(Planned)* - Early workflow feedback during continuous integration
+
+These planned features will maintain our clarity-first approach: providing visibility and information without imposing blocking or enforcement.
 
 ## 💡 Tips
 
 - Use **shallow clones** for faster performance (handled automatically)
 - **Values files** are optional but recommended for accurate comparisons
-- The app supports both **public and private** repositories (if properly authenticated)
+- The app supports **public repositories** and can work with private repositories (if properly authenticated)
 - **Commit SHAs** work great for comparing specific changes
+- ChartImpact surfaces risk signals to inform your decisions—you remain in control of when and how to deploy
 
 ---
 
