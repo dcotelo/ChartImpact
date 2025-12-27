@@ -13,7 +13,6 @@ Go-based REST API for comparing Helm chart versions using the Helm Go SDK.
 - 🔄 **Git Integration** - Clones and compares charts from Git repositories
 - 🔍 **Internal Diff Engine** - Fast, deterministic, Kubernetes-aware diff engine (no external dependencies)
 - 🎯 **Structured Diff Output** - Field-level changes optimized for understanding availability and security impacts
-- 🔧 **Optional dyff Support** - Can use dyff for backwards compatibility if needed
 - 🛡️ **Robust Error Handling** - Comprehensive error messages and logging
 - 📊 **Health Checks** - Built-in health check endpoint
 - ⚙️ **Configurable** - Environment-based configuration
@@ -55,18 +54,6 @@ backend/
 - **Go 1.21+** - [Download](https://golang.org/dl/)
 - **Helm 3.x** - [Installation Guide](https://helm.sh/docs/intro/install/)
 - **Git** - For cloning repositories
-- **dyff** (optional) - Only needed if INTERNAL_DIFF_ENABLED is set to false
-  ```bash
-  # macOS
-  brew install homeport/tap/dyff
-  
-  # Linux
-  curl -fsSL https://github.com/homeport/dyff/releases/latest/download/dyff_linux_amd64.tar.gz | tar -xz
-  sudo mv dyff /usr/local/bin/
-  ```
-
-> **Note**: The backend now includes an internal diff engine that is faster and more deterministic than dyff. 
-> dyff is only required if you explicitly disable the internal diff engine (not recommended).
 
 ## Quick Start
 
@@ -133,18 +120,7 @@ The backend includes a high-performance internal diff engine designed specifical
 3. **Field-Level Diffing**: Compares resources field-by-field with deep equality
 4. **Structured Output**: Generates both human-readable and structured JSON diffs
 
-### Comparison with dyff
-
-| Feature | Internal Engine | dyff |
-|---------|----------------|------|
-| Performance | ⚡ Very Fast | Moderate |
-| External Dependency | ❌ None | ✅ Required |
-| Deterministic Output | ✅ Yes | ✅ Yes |
-| Kubernetes-Aware | ✅ Yes | ✅ Yes |
-| Field Filtering | ✅ Built-in | Limited |
-| Output Format | Structured + Raw | Raw text |
-
-The internal diff engine is **enabled by default** and recommended for production use. dyff support is maintained for backwards compatibility.
+The internal diff engine is **enabled by default** and recommended for all use cases.
 
 ## API Endpoints
 
@@ -218,8 +194,8 @@ Health check endpoint.
 }
 ```
 
-**Note:** `dyffOk` can be `false` when using the internal diff engine (INTERNAL_DIFF_ENABLED=true). 
-The status will still be "ok" as dyff is not required.
+**Note:** `dyffOk` is a deprecated field and will always be `false` when using the internal diff engine (default). 
+The status will still be "ok" as the internal diff engine does not require external dependencies.
 
 ## Configuration
 
@@ -254,9 +230,8 @@ All configuration is done via environment variables. Copy `.env.example` to `.en
 
 ### Features
 - `INTERNAL_DIFF_ENABLED` - Use internal diff engine (default: true, recommended)
-  - When enabled: Fast, deterministic, Kubernetes-aware diffing without external dependencies
-  - When disabled: Falls back to dyff or simple diff
-- `DYFF_ENABLED` - Use dyff for diffs when internal diff is disabled (default: true)
+  - The internal diff engine provides fast, deterministic, Kubernetes-aware diffing without external dependencies
+  - **DEPRECATED**: Disabling this option is not recommended and fallback options will be removed in a future version
 
 ## Development
 
@@ -363,12 +338,6 @@ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 - Check repository URL format
 - Verify network connectivity
 - For private repos, use SSH keys or access tokens in URL
-
-### Dyff not available
-```bash
-# Dyff is optional - set DYFF_ENABLED=false to use simple diff
-export DYFF_ENABLED=false
-```
 
 ### Permission denied on /tmp
 ```bash
