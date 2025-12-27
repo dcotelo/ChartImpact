@@ -170,7 +170,7 @@ describe('Compare API Route', () => {
       const data: CompareResponse = await response.json();
 
       expect(data.statistics).toBeDefined();
-      expect(data.statistics?.totalChanges).toBe(5);
+      expect(data.statistics?.summary.totalChanges).toBe(5);
     });
   });
 

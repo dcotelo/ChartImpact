@@ -259,4 +259,3 @@ data:
 		assert.Nil(t, response.StructuredDiff, "structuredDiff should be nil")
 	})
 }
-

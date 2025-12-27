@@ -22,7 +22,11 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
   }
 
   return (
-    <div style={{ padding: '1rem' }}>
+    <div style={{ 
+      padding: '1rem',
+      height: '100%',
+      overflow: 'auto'
+    }}>
       {/* Header */}
       <div style={{
         marginBottom: '1.5rem',
@@ -168,7 +172,6 @@ export function DetailsPanel({ resource }: DetailsPanelProps) {
       {resource.changes && Array.isArray(resource.changes) && resource.changes.length > 0 && (
         <Section title={`Changes (${resource.changes.length})`}>
           <div style={{
-            maxHeight: '400px',
             overflow: 'auto'
           }}>
             {resource.changes.map((change, index) => {

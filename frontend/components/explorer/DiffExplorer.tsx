@@ -6,6 +6,7 @@ import { ResourceList } from './ResourceList';
 import { ViewPanel } from './ViewPanel';
 import { DetailsPanel } from './DetailsPanel';
 import { SearchBar } from './SearchBar';
+import { StatisticsDashboard } from './StatisticsDashboard';
 import { convertPlainDiffToV2 } from './diffConverter';
 import { COLORS } from './utils';
 
@@ -93,14 +94,16 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
       display: 'flex',
       flexDirection: 'column',
       height: '100vh',
-      background: COLORS.bgLightest
+      background: COLORS.bgLightest,
+      overflow: 'auto'
     }}>
       {/* Top Header */}
       <div style={{
         background: COLORS.bgLight,
         color: COLORS.text,
         padding: '1rem 2rem',
-        borderBottom: `2px solid ${COLORS.border}`
+        borderBottom: `2px solid ${COLORS.border}`,
+        flexShrink: 0
       }}>
         <div style={{
           display: 'flex',
@@ -145,6 +148,10 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
             </span>
           </div>
         </div>
+
+        {/* Statistics Dashboard */}
+        <StatisticsDashboard diffData={effectiveDiffData} />
+
         <SearchBar
           value={searchQuery}
           onChange={setSearchQuery}
@@ -156,14 +163,15 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
       {/* Main Content Area */}
       <div style={{
         display: 'flex',
-        flex: 1,
-        overflow: 'hidden'
+        minHeight: '700px',
+        flex: 1
       }}>
         {/* Left Rail - Resource List */}
         <div style={{
-          width: '250px',
+          width: '25%',
+          minWidth: '350px',
+          maxWidth: '600px',
           borderRight: `1px solid ${COLORS.border}`,
-          overflow: 'auto',
           background: COLORS.bgLighter
         }}>
           <ResourceList
@@ -178,8 +186,9 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
         {/* Main Panel - View */}
         <div style={{
           flex: 1,
-          overflow: 'auto',
-          background: COLORS.bgLight
+          minWidth: '400px',
+          background: COLORS.bgLight,
+          padding: '0'
         }}>
           <ViewPanel
             resources={effectiveDiffData.resources}
@@ -194,9 +203,10 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
         {/* Right Panel - Details */}
         {selectedResource && effectiveDiffData && effectiveDiffData.resources && (
           <div style={{
-            width: '350px',
+            width: '25%',
+            minWidth: '350px',
+            maxWidth: '500px',
             borderLeft: `1px solid ${COLORS.border}`,
-            overflow: 'auto',
             background: COLORS.bgLighter
           }}>
             <DetailsPanel
