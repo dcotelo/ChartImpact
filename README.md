@@ -58,14 +58,14 @@ ChartImpact is undergoing a comprehensive UX redesign to better align with our m
 
 Complete UX documentation is available:
 
-- **[START HERE: UX Documentation Guide](UX_DOCUMENTATION_GUIDE.md)** - Navigate all UX docs
-- **[UX Redesign Summary](UX_REDESIGN_SUMMARY.md)** - Executive overview (15 min read)
-- **[UX Audit](UX_AUDIT.md)** - Complete analysis of current UI
-- **[UX Principles](UX_PRINCIPLES.md)** - Mission-driven design principles
-- **[UX Redesign Specification](UX_REDESIGN.md)** - Detailed redesign specs
-- **[Terminology Guide](TERMINOLOGY.md)** - Canonical language and copy
-- **[Implementation Roadmap](IMPLEMENTATION_ROADMAP.md)** - 6-phase execution plan
-- **[Validation Framework](UX_VALIDATION.md)** - Testing and success metrics
+- **[START HERE: UX Documentation Guide](ux-revamp/UX_DOCUMENTATION_GUIDE.md)** - Navigate all UX docs
+- **[UX Redesign Summary](ux-revamp/UX_REDESIGN_SUMMARY.md)** - Executive overview (15 min read)
+- **[UX Audit](ux-revamp/UX_AUDIT.md)** - Complete analysis of current UI
+- **[UX Principles](ux-revamp/UX_PRINCIPLES.md)** - Mission-driven design principles
+- **[UX Redesign Specification](ux-revamp/UX_REDESIGN.md)** - Detailed redesign specs
+- **[Terminology Guide](ux-revamp/TERMINOLOGY.md)** - Canonical language and copy
+- **[Implementation Roadmap](ux-revamp/IMPLEMENTATION_ROADMAP.md)** - 6-phase execution plan
+- **[Validation Framework](ux-revamp/UX_VALIDATION.md)** - Testing and success metrics
 
 **Total:** 138,000+ words of comprehensive UX documentation
 
