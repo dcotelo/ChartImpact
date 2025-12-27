@@ -23,8 +23,7 @@ const defaultFormData: CompareRequest = {
   version1: '',
   version2: '',
   valuesFile: '',
-  valuesContent: '',
-  ignoreLabels: false
+  valuesContent: ''
 };
 
 export function CompareForm({ onSubmit, loading, initialData }: CompareFormProps) {
@@ -41,8 +40,7 @@ export function CompareForm({ onSubmit, loading, initialData }: CompareFormProps
         version1: initialData.version1 || '',
         version2: initialData.version2 || '',
         valuesFile: initialData.valuesFile || '',
-        valuesContent: initialData.valuesContent || '',
-        ignoreLabels: initialData.ignoreLabels || false
+        valuesContent: initialData.valuesContent || ''
       });
     } else {
       setFormData({ ...defaultFormData });
