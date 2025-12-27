@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CompareRequest, CompareResponse } from '@/lib/types';
 
-export const runtime = 'nodejs';
-export const maxDuration = 120; // 2 minutes max
+export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {
