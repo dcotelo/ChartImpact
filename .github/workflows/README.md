@@ -18,7 +18,33 @@ This directory contains GitHub Actions workflows for CI/CD automation.
 - Code coverage reporting (optional, requires Codecov token)
 - Build verification
 
-### 2. `release.yml` - Release Workflow
+### 2. `cloudflare-pages.yml` - Deploy to Cloudflare Pages
+**Triggers:** 
+- Push to `main` branch (production deployment)
+- Pull requests to `main` (preview deployment)
+- Manual workflow dispatch
+
+**Requirements:**
+- `CLOUDFLARE_API_TOKEN` - Cloudflare API token
+- `CLOUDFLARE_ACCOUNT_ID` - Cloudflare account ID
+- `BACKEND_API_URL` - Backend API URL (optional, can be hardcoded)
+
+**Features:**
+- Automatic deployment to Cloudflare Pages
+- Preview deployments for pull requests
+- Production deployments from main branch
+- Uses static export build (`npm run build:cloudflare`)
+
+**Setup:**
+1. Get your Cloudflare API token from [Cloudflare Dashboard → API Tokens](https://dash.cloudflare.com/profile/api-tokens)
+   - Use "Edit Cloudflare Pages" template or create custom token with `Cloudflare Pages:Edit` permission
+2. Get your account ID from Cloudflare Dashboard URL or account settings
+3. Add secrets to GitHub:
+   - `CLOUDFLARE_API_TOKEN`
+   - `CLOUDFLARE_ACCOUNT_ID`
+   - `BACKEND_API_URL` (optional)
+
+### 3. `release.yml` - Release Workflow
 **Triggers:** When a tag matching `v*.*.*` is pushed (e.g., `v1.0.0`)
 
 **Features:**
@@ -33,7 +59,22 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-### 3. `deploy-vercel.yml` - Deploy to Vercel
+### 3. `release.yml` - Release Workflow
+**Triggers:** When a tag matching `v*.*.*` is pushed (e.g., `v1.0.0`)
+
+**Features:**
+- Runs full test suite
+- Builds the application
+- Creates a GitHub release
+- Builds Docker image (optional push to registry)
+
+**Usage:**
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+### 4. `deploy-vercel.yml` - Deploy to Vercel (Legacy)
 **Triggers:** Push to `main` branch or manual dispatch
 
 **Requirements:**
@@ -48,7 +89,24 @@ git push origin v1.0.0
    - Go to Repository Settings → Secrets and variables → Actions
    - Add the three secrets
 
-### 4. `docker-publish.yml` - Build and Publish Docker Image
+### 4. `deploy-vercel.yml` - Deploy to Vercel (Legacy)
+**Triggers:** Push to `main` branch or manual dispatch
+
+**Requirements:**
+- `VERCEL_TOKEN` - Vercel authentication token
+- `VERCEL_ORG_ID` - Vercel organization ID
+- `VERCEL_PROJECT_ID` - Vercel project ID
+
+**Setup:**
+1. Get your Vercel token from [Vercel Settings](https://vercel.com/account/tokens)
+2. Get your org and project IDs from your Vercel project settings
+3. Add them as GitHub Secrets:
+   - Go to Repository Settings → Secrets and variables → Actions
+   - Add the three secrets
+
+**Note:** This workflow is legacy. Consider using Cloudflare Pages instead.
+
+### 5. `docker-publish.yml` - Build and Publish Docker Image
 **Triggers:** Push to `main`, version tags, or manual dispatch
 
 **Requirements:**
@@ -77,7 +135,12 @@ To configure deployment workflows, add the following secrets to your GitHub repo
 3. Click **New repository secret**
 4. Add the required secrets:
 
-### For Vercel Deployment:
+### For Cloudflare Pages (Recommended):
+- `CLOUDFLARE_API_TOKEN` - API token with Cloudflare Pages edit permission
+- `CLOUDFLARE_ACCOUNT_ID` - Your Cloudflare account ID
+- `BACKEND_API_URL` - (Optional) Backend API URL
+
+### For Vercel Deployment (Legacy):
 - `VERCEL_TOKEN`
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`

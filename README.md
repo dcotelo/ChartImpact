@@ -56,7 +56,33 @@ ChartImpact uses a modern separated architecture:
 - Next.js 14 with App Router
 - TypeScript and React 18
 - TailwindCSS for styling
-- Docker containerized
+- **Dual build modes:**
+  - Static export for Cloudflare Pages
+  - Standalone for Docker deployment
+
+### Deployment Architecture
+
+The frontend can be deployed in two modes:
+
+**Static Export (Cloudflare Pages):**
+```
+┌─────────────────────┐         ┌──────────────────┐
+│  Cloudflare Pages   │  HTTPS  │  Backend API     │
+│  (Static Frontend)  ├────────►│  (Go Service)    │
+│  - HTML/CSS/JS      │         │  - Cloud Run     │
+│  - No server        │         │  - AWS Lambda    │
+└─────────────────────┘         │  - etc.          │
+                                └──────────────────┘
+```
+
+**Standalone (Docker):**
+```
+┌─────────────────┐         ┌──────────────────┐
+│  Next.js Server │  HTTP   │  Go Backend      │
+│  (Node.js)      ├────────►│  (Container)     │
+│  Port 3000      │         │  Port 8080       │
+└─────────────────┘         └──────────────────┘
+```
 
 ## 🚀 Getting Started
 
@@ -264,31 +290,89 @@ choco install kubernetes-helm
 
 ## 🚢 Deployment
 
-### Vercel (Recommended)
+ChartImpact supports multiple deployment options:
+
+### Option 1: Cloudflare Pages (Recommended for Frontend)
+
+Deploy the frontend as a static site to Cloudflare Pages:
+
+**Prerequisites:**
+- Deploy the Go backend to a cloud service (e.g., Cloud Run, AWS Lambda, etc.)
+- Cloudflare account with Pages enabled
+
+**Quick Start:**
+```bash
+cd frontend
+npm run build:cloudflare
+# Output in frontend/out/ ready for Cloudflare Pages
+```
+
+See [CLOUDFLARE_PAGES_DEPLOYMENT.md](CLOUDFLARE_PAGES_DEPLOYMENT.md) for complete setup guide.
+
+### Option 2: Docker Compose (Recommended for Self-Hosted)
+
+Deploy both frontend and backend together:
+
+```bash
+# Start both services
+docker-compose up
+
+# Or in detached mode
+docker-compose up -d
+```
+
+See [docker-compose.yml](docker-compose.yml) for configuration options.
+
+### Option 3: Vercel (Legacy)
+
+Frontend-only deployment to Vercel:
 
 1. Push your code to GitHub
 2. Import project in Vercel
 3. Configure environment variables if needed
 4. Deploy!
 
-### Docker
+**Note:** Consider using Cloudflare Pages for better static site performance.
+
+### Option 4: Individual Docker Images
+
+For separate deployment of frontend and backend:
 
 ```bash
-# Build the image
-docker build -t helm-chart-diff-viewer .
+# Build frontend image
+docker build -t chartimpact-frontend frontend/
 
-# Run the container
-docker run -p 3000:3000 helm-chart-diff-viewer
+# Build backend image
+docker build -t chartimpact-backend backend/
+
+# Run containers
+docker run -p 3000:3000 chartimpact-frontend
+docker run -p 8080:8080 chartimpact-backend
 ```
 
-### Self-Hosted
+### Option 5: Self-Hosted
 
+For production deployment on your own infrastructure:
+
+**Frontend:**
 ```bash
-# Build the application
-npm run build
+cd frontend
+npm run build  # For server-side rendering
+# or
+npm run build:cloudflare  # For static export
 
-# Start production server
+# Serve with Node.js (if using standalone build)
 npm start
+
+# Or serve with any static file server (if using static export)
+npx serve out
+```
+
+**Backend:**
+```bash
+cd backend
+go build -o chartimpact-server ./cmd/server
+./chartimpact-server
 ```
 
 ## 🔄 CI/CD
@@ -296,9 +380,10 @@ npm start
 This project includes GitHub Actions workflows for automated testing, building, and deployment:
 
 - **CI Pipeline** (`ci.yml`): Runs tests and builds on every push/PR
+- **Cloudflare Pages** (`cloudflare-pages.yml`): Deploys frontend to Cloudflare Pages
 - **Release Workflow** (`release.yml`): Creates releases when version tags are pushed
-- **Vercel Deployment** (`deploy-vercel.yml`): Automatically deploys to Vercel
-- **Docker Publishing** (`docker-publish.yml`): Builds and publishes Docker images
+- **Frontend Tests** (`frontend-tests.yml`): Comprehensive frontend testing
+- **Docker Publishing** (`docker-publish.yml`): Builds and publishes Docker images (optional)
 
 See [`.github/workflows/README.md`](.github/workflows/README.md) for detailed setup instructions.
 
