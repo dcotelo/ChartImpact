@@ -39,10 +39,10 @@ func HealthHandler() http.HandlerFunc {
 		if !helmOK || !gitOK {
 			status = "degraded"
 			log.Warn("Health check: Missing required tools")
-		} else if !util.GetBoolEnv("INTERNAL_DIFF_ENABLED", true) && !dyffOK {
-			// DEPRECATED: dyff is only required when internal diff is not enabled (not recommended)
+		} else if !util.GetBoolEnv("INTERNAL_DIFF_ENABLED", true) {
+			// DEPRECATED: Internal diff should always be enabled. Disabling it is not recommended.
 			status = "degraded"
-			log.Warn("Health check: dyff not available and internal diff not enabled")
+			log.Warn("Health check: DEPRECATED configuration detected - internal diff is disabled. This configuration is deprecated and will not be supported in future versions.")
 		}
 
 		respondJSON(w, http.StatusOK, models.HealthResponse{

@@ -454,8 +454,8 @@ func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 
 
 	// DEPRECATED: dyff fallback is deprecated and will be removed in a future version
 	// TODO: Remove dyff support once internal diff engine is fully validated
-	// Check if dyff is enabled (default: true)
-	if util.GetBoolEnv("DYFF_ENABLED", true) {
+	// Check if dyff is enabled (default: false since dyff is deprecated)
+	if util.GetBoolEnv("DYFF_ENABLED", false) {
 		// Try using dyff (DEPRECATED)
 		diffRaw, err := h.dyffCompare(ctx, rendered1, rendered2, ignoreLabels)
 		if err == nil {
