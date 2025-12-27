@@ -39,8 +39,6 @@ Navigate to [http://localhost:3000](http://localhost:3000)
 
 ### Local Development Setup
 
-### Local Development Setup
-
 If you want to run the services separately for development:
 
 **Backend:**

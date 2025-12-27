@@ -74,13 +74,9 @@ git push origin v1.0.0
 
 ## Workflow Status Badges
 
-Add these to your README.md:
-
-```markdown
 [![CI/CD Pipeline](https://github.com/dcotelo/ChartImpact/actions/workflows/ci.yml/badge.svg)](https://github.com/dcotelo/ChartImpact/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/dcotelo/ChartImpact/actions/workflows/codeql.yml/badge.svg)](https://github.com/dcotelo/ChartImpact/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/dcotelo/ChartImpact/badge)](https://securityscorecards.dev/viewer/?uri=github.com/dcotelo/ChartImpact)
-```
 
 ## Security Features
 
@@ -110,13 +106,6 @@ All workflows are configured to work out of the box. They use:
 - GitHub-provided secrets (automatically available)
 - No external service authentication needed
 - Standard GitHub Actions features
-
-### Optional: Codecov Integration
-
-To enable code coverage reporting:
-1. Sign up at [Codecov](https://codecov.io)
-2. Add your repository
-3. No token needed - Codecov automatically detects public repos
 
 ## Troubleshooting
 
