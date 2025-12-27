@@ -3,6 +3,10 @@ import { DiffResultV2, ResourceDiffV2, ResourceIdentityV2, ChangeV2 } from '@/li
 /**
  * Converts plain text diff output to DiffResultV2 format
  * This allows Explorer v2 to work with plain text diffs when structured diff isn't available
+ * 
+ * DEPRECATED: This converter includes legacy dyff format detection for backwards compatibility.
+ * It should primarily be used with internal diff engine output.
+ * TODO: Simplify this once dyff support is fully removed from backend.
  */
 export function convertPlainDiffToV2(plainDiff: string, version1?: string, version2?: string): DiffResultV2 | null {
   if (!plainDiff || plainDiff.trim() === '') {
@@ -12,8 +16,10 @@ export function convertPlainDiffToV2(plainDiff: string, version1?: string, versi
   const resources: ResourceDiffV2[] = [];
   const lines = plainDiff.split('\n');
   
+  // DEPRECATED: Legacy dyff format detection for backwards compatibility
   // Try to detect dyff format (paths with resource identifiers in parentheses)
   // Format: "metadata.labels.helm.sh/chart  (v1/ServiceAccount/default/argocd-application-controller)"
+  // TODO: This can be simplified once dyff support is fully removed from backend
   const dyffPattern = /\(([^)]+)\)/;
   
   let currentResource: Partial<ResourceDiffV2> | null = null;
@@ -23,6 +29,7 @@ export function convertPlainDiffToV2(plainDiff: string, version1?: string, versi
     const line = lines[i];
     const trimmed = line.trim();
     
+    // DEPRECATED: Legacy dyff format detection for backwards compatibility
     // Check if this line contains a resource identifier in parentheses (dyff format)
     const resourceMatch = trimmed.match(dyffPattern);
     if (resourceMatch) {
@@ -65,7 +72,7 @@ export function convertPlainDiffToV2(plainDiff: string, version1?: string, versi
           namespace: namespace === 'default' ? '' : namespace,
           uid: null,
         },
-        changeType: 'modified', // Default to modified, we can't easily detect add/remove from dyff output
+        changeType: 'modified', // Default to modified, we can't easily detect add/remove from legacy dyff output
         changes: [],
       };
       
@@ -80,6 +87,7 @@ export function convertPlainDiffToV2(plainDiff: string, version1?: string, versi
     finalizeResource(currentResource, currentLines, resources);
   }
   
+  // DEPRECATED: Legacy support for dyff-formatted resources
   // If we didn't find any dyff-formatted resources, try to create a basic structure
   if (resources.length === 0) {
     // Create a single generic resource for the entire diff

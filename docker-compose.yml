@@ -16,6 +16,7 @@ services:
       - GIT_ASKPASS=echo
       - LOG_LEVEL=info
       - LOG_FORMAT=text
+      # Internal diff engine is enabled by default (recommended)
       - INTERNAL_DIFF_ENABLED=true
       - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://frontend:3000
     volumes:
@@ -48,6 +49,4 @@ services:
 networks:
   chartimpact:
     driver: bridge
-    # Ensure Helm and Git are available in container
-    # These should be installed in the Dockerfile
 

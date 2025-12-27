@@ -112,7 +112,6 @@ docker-compose up
 - Node.js 18+ and npm 9+ - [Download](https://nodejs.org/)
 - Helm 3.x - [Install](https://helm.sh/docs/intro/install/)
 - Git
-- (Optional) dyff - `brew install homeport/tap/dyff`
 
 **Backend:**
 ```bash
@@ -197,7 +196,7 @@ Compare two Helm chart versions.
 ```json
 {
   "success": true,
-  "diff": "... dyff or plain diff output ...",
+  "diff": "... internal diff engine output ...",
   "version1": "5.0.0",
   "version2": "5.1.0"
 }
@@ -237,9 +236,11 @@ Health check endpoint.
   "version": "1.0.0",
   "helmOk": true,
   "gitOk": true,
-  "dyffOk": true
+  "dyffOk": false
 }
 ```
+
+**Note:** The `dyffOk` field is deprecated. ChartImpact uses an internal diff engine by default and does not require dyff.
 
 For detailed API documentation, see [backend/README.md](backend/README.md).
 
@@ -251,10 +252,6 @@ For detailed API documentation, see [backend/README.md](backend/README.md).
 - **npm**: 9.0.0 or higher
 - **Helm**: 3.x (must be installed and available in PATH)
 - **Git**: For cloning repositories
-
-### Optional Tools
-
-- **dyff**: Only needed if you disable the internal diff engine (not recommended)
 
 ### Installing Helm
 
@@ -428,7 +425,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - [Helm](https://helm.sh/) - The package manager for Kubernetes
-- [dyff](https://github.com/homeport/dyff) - YAML diff tool
 - [Next.js](https://nextjs.org/) - The React framework
 - [React Syntax Highlighter](https://github.com/react-syntax-highlighter/react-syntax-highlighter) - Syntax highlighting
 

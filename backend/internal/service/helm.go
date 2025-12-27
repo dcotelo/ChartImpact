@@ -60,7 +60,7 @@ func NewHelmService() *HelmService {
 // 3. Extracts both chart versions
 // 4. Builds dependencies for both versions
 // 5. Renders templates using Helm SDK
-// 6. Compares rendered manifests using dyff or simple diff
+// 6. Compares rendered manifests using the internal comparison engine
 func (h *HelmService) CompareVersions(ctx context.Context, req *models.CompareRequest) (*models.CompareResponse, error) {
 	// Create unique work directory with timestamp and random ID
 	workDir, err := h.createWorkDir()
@@ -429,8 +429,11 @@ func (h *HelmService) renderTemplate(ctx context.Context, chartDir string, value
 
 // compareRendered compares two rendered YAML manifests
 // Returns the structured diff result, raw string output, and any error
-// Tries internal diff engine first (if enabled), then dyff, then falls back to simple diff
+// Uses the internal diff engine as the primary comparison mechanism
 // If ignoreLabels is true, filters out metadata.labels and metadata.annotations changes
+//
+// DEPRECATED: The dyff and simple diff fallback paths are deprecated and will be removed in a future version.
+// The internal diff engine is now the recommended and default comparison mechanism.
 func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 string, ignoreLabels bool) (*diff.DiffResult, string, error) {
 	log.Info("Comparing rendered templates")
 
@@ -449,9 +452,11 @@ func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 
 		log.Warnf("Internal diff engine failed, falling back to dyff: %v", err)
 	}
 
-	// Check if dyff is enabled (default: true)
-	if util.GetBoolEnv("DYFF_ENABLED", true) {
-		// Try using dyff
+	// DEPRECATED: dyff fallback is deprecated and will be removed in a future version
+	// TODO: Remove dyff support once internal diff engine is fully validated
+	// Check if dyff is enabled (default: false since dyff is deprecated)
+	if util.GetBoolEnv("DYFF_ENABLED", false) {
+		// Try using dyff (DEPRECATED)
 		diffRaw, err := h.dyffCompare(ctx, rendered1, rendered2, ignoreLabels)
 		if err == nil {
 			return nil, diffRaw, nil
@@ -459,6 +464,7 @@ func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 
 		log.Warnf("dyff comparison failed, falling back to simple diff: %v", err)
 	}
 
+	// DEPRECATED: simple diff fallback is deprecated
 	// Fallback to simple line-by-line comparison
 	return nil, h.simpleDiff(rendered1, rendered2), nil
 }
@@ -466,6 +472,11 @@ func (h *HelmService) compareRendered(ctx context.Context, rendered1, rendered2 
 // dyffCompare uses the dyff tool for enhanced YAML comparison
 // Creates temporary files and runs dyff between command
 // If ignoreLabels is true, filters out metadata.labels and metadata.annotations from the output
+//
+// DEPRECATED: This function is deprecated and will be removed in a future version.
+// Use the internal diff engine (Engine.Compare) instead, which provides better performance,
+// semantic understanding, and structured output without requiring external dependencies.
+// TODO: Remove this function once all code paths use the internal engine exclusively.
 func (h *HelmService) dyffCompare(ctx context.Context, rendered1, rendered2 string, ignoreLabels bool) (string, error) {
 	// Check if dyff is available
 	if _, err := exec.LookPath("dyff"); err != nil {
@@ -513,6 +524,10 @@ func (h *HelmService) dyffCompare(ctx context.Context, rendered1, rendered2 stri
 
 // simpleDiff provides a basic line-by-line diff as fallback
 // Shows both versions side-by-side with line counts
+//
+// DEPRECATED: This function is deprecated and will be removed in a future version.
+// Use the internal diff engine instead for better structured output and semantic understanding.
+// TODO: Remove this function once all code paths use the internal engine exclusively.
 func (h *HelmService) simpleDiff(content1, content2 string) string {
 	lines1 := strings.Split(content1, "\n")
 	lines2 := strings.Split(content2, "\n")
@@ -530,6 +545,9 @@ func (h *HelmService) simpleDiff(content1, content2 string) string {
 // filterMetadataChanges filters out metadata.labels and metadata.annotations changes from dyff output
 // Parses the dyff output line by line and removes sections related to metadata changes
 // Handles both top-level and nested metadata paths (e.g., spec.template.metadata.labels)
+//
+// DEPRECATED: This function is only used with the deprecated dyff comparison path.
+// TODO: Remove this function when dyff support is removed.
 func (h *HelmService) filterMetadataChanges(diffOutput string) string {
 	lines := strings.Split(diffOutput, "\n")
 	var filteredLines []string
@@ -576,6 +594,9 @@ func (h *HelmService) filterMetadataChanges(diffOutput string) string {
 
 // isMetadataPath checks if a path contains metadata.labels or metadata.annotations
 // Handles both direct paths like "metadata.labels.app" and nested paths like "spec.template.metadata.labels.app"
+//
+// DEPRECATED: This function is only used with the deprecated dyff comparison path.
+// TODO: Remove this function when dyff support is removed.
 func (h *HelmService) isMetadataPath(path string) bool {
 	return strings.Contains(path, "metadata.labels") || strings.Contains(path, "metadata.annotations")
 }
@@ -583,6 +604,9 @@ func (h *HelmService) isMetadataPath(path string) bool {
 // isDyffPathLine checks if a line is a dyff path line (not indented and not containing diff markers)
 // Path lines in dyff output are not indented and don't start with diff marker characters
 // This is more precise than checking if markers exist anywhere in the line
+//
+// DEPRECATED: This function is only used with the deprecated dyff comparison path.
+// TODO: Remove this function when dyff support is removed.
 func (h *HelmService) isDyffPathLine(line string) bool {
 	if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
 		return false
