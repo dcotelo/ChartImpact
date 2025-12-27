@@ -14,8 +14,6 @@ const nextConfig = {
   },
   // Trailing slashes for better static hosting compatibility
   trailingSlash: isCloudflarePages,
-  // Output directory
-  ...(isCloudflarePages && { distDir: 'out' }),
 }
 
 module.exports = nextConfig

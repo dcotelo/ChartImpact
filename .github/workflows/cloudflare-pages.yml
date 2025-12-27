@@ -53,10 +53,10 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: chartimpact # Replace with your Cloudflare Pages project name
+          # IMPORTANT: Replace 'chartimpact' with your actual Cloudflare Pages project name
+          # Or set CLOUDFLARE_PROJECT_NAME as a repository secret/variable
+          projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME || 'chartimpact' }}
           directory: frontend/out
           # Optional: Git info for deployment metadata
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.head_ref || github.ref_name }}
-          # Wrangler version (optional)
-          wranglerVersion: '3'
