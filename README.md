@@ -33,6 +33,7 @@ ChartImpact provides visibility into Helm chart changes, helping teams understan
 
 - [Mission](#-mission)
 - [Current Features](#-current-features)
+- [UX Redesign](#-ux-redesign)
 - [Roadmap](#-roadmap)
 - [Architecture](#-architecture)
 - [Getting Started](#-getting-started)
@@ -42,6 +43,39 @@ ChartImpact provides visibility into Helm chart changes, helping teams understan
 - [Deployment](#-deployment)
 - [Contributing](#-contributing)
 - [License](#-license)
+
+## 🎨 UX Redesign
+
+ChartImpact is undergoing a comprehensive UX redesign to better align with our mission of helping teams understand deployment risk. The redesign focuses on:
+
+- **🚀 Immediate Value** - Pre-loaded examples showing risk signals in <5 seconds
+- **🎯 Risk-First Presentation** - NEW Impact Summary view surfacing availability and security risks immediately
+- **⚡ Simplified Entry** - Reduced friction with smart defaults and fewer required fields
+- **🔗 Shareable Results** - URL-based sharing for team collaboration
+- **📝 Mission-Aligned Language** - Clear, consistent terminology throughout
+
+### Documentation
+
+Complete UX documentation is available:
+
+- **[START HERE: UX Documentation Guide](ux-revamp/UX_DOCUMENTATION_GUIDE.md)** - Navigate all UX docs
+- **[UX Redesign Summary](ux-revamp/UX_REDESIGN_SUMMARY.md)** - Executive overview (15 min read)
+- **[UX Audit](ux-revamp/UX_AUDIT.md)** - Complete analysis of current UI
+- **[UX Principles](ux-revamp/UX_PRINCIPLES.md)** - Mission-driven design principles
+- **[UX Redesign Specification](ux-revamp/UX_REDESIGN.md)** - Detailed redesign specs
+- **[Terminology Guide](ux-revamp/TERMINOLOGY.md)** - Canonical language and copy
+- **[Implementation Roadmap](ux-revamp/IMPLEMENTATION_ROADMAP.md)** - 6-phase execution plan
+- **[Validation Framework](ux-revamp/UX_VALIDATION.md)** - Testing and success metrics
+
+**Total:** 138,000+ words of comprehensive UX documentation
+
+**Expected Impact:**
+- 10x faster time to understanding (5 min → 30s)
+- 3-5x faster risk assessment (4-7 min → 1-2 min)
+- Heuristic score improvement (3.0/5 → 5.0/5)
+- Enable collaboration with shareable URLs
+
+**Timeline:** 5-8 weeks, incremental delivery
 
 ## 🗺️ Roadmap
 
