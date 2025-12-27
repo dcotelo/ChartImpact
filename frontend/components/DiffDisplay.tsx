@@ -155,8 +155,10 @@ function parseDiffByResources(diff: string): ResourceDiff[] {
   const resources: ResourceDiff[] = [];
   const lines = diff.split('\n');
   
+  // DEPRECATED: Legacy dyff format detection for backwards compatibility
   // Try to detect dyff format first (paths with resource identifiers in parentheses)
   // Format: "metadata.labels.helm.sh/chart  (v1/ServiceAccount/default/argocd-application-controller)"
+  // TODO: This can be simplified once dyff support is fully removed from backend
   const dyffPattern = /\(([^)]+)\)/; // Matches (kind/namespace/name) or (apiVersion/kind/namespace/name)
   
   let currentResource: ResourceDiff | null = null;
@@ -166,6 +168,7 @@ function parseDiffByResources(diff: string): ResourceDiff[] {
     const line = lines[i];
     const trimmed = line.trim();
     
+    // DEPRECATED: Legacy dyff format detection for backwards compatibility
     // Check if this line contains a resource identifier in parentheses (dyff format)
     const resourceMatch = trimmed.match(dyffPattern);
     if (resourceMatch) {
@@ -275,7 +278,9 @@ function parseDiffByResources(diff: string): ResourceDiff[] {
     resources.push(currentResource);
   }
   
+  // DEPRECATED: Legacy dyff format support for backwards compatibility
   // If we found resources using dyff format, return them
+  // TODO: This can be simplified once dyff support is fully removed from backend
   if (resources.length > 0) {
     return resources;
   }
