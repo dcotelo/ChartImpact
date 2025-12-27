@@ -43,7 +43,7 @@ jobs:
     needs: changes
     if: |
       always() &&
-      (github.event_name == 'schedule' || 
+      (github.event_name == 'schedule' ||
        (needs.changes.result == 'success' && needs.changes.outputs.backend == 'true'))
     permissions:
       actions: read
@@ -74,7 +74,7 @@ jobs:
     needs: changes
     if: |
       always() &&
-      (github.event_name == 'schedule' || 
+      (github.event_name == 'schedule' ||
        (needs.changes.result == 'success' && needs.changes.outputs.frontend == 'true'))
     permissions:
       actions: read

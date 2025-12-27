@@ -199,6 +199,11 @@ jobs:
           retention-days: 7
 
   # Docker build (optional - for deployment)
+  # Note: This job uses always() to run even when dependencies are skipped
+  # It checks that:
+  # 1. We're on the main branch
+  # 2. At least one component (backend or frontend) has changes
+  # 3. Build jobs either succeeded or were skipped (no failures)
   docker-build:
     name: Build Docker Images
     runs-on: ubuntu-latest
