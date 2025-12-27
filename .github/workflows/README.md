@@ -5,23 +5,36 @@ This directory contains GitHub Actions workflows for CI/CD automation and securi
 ## Available Workflows
 
 ### 1. `ci.yml` - Continuous Integration
-**Triggers:** Pull Requests
+**Triggers:** Pull Requests (with path filtering)
+
+**Path Filters:**
+- `backend/**` - Backend code changes
+- `frontend/**` - Frontend code changes
+- `docker-compose.yml` - Docker configuration changes
+- `.github/workflows/ci.yml` - Workflow changes
 
 **Jobs:**
-- **test-backend**: Runs Go tests, race detection, coverage
-- **test-frontend**: Runs frontend linting, type checking, and tests
-- **build-backend**: Builds Go backend binary
-- **build-frontend**: Builds Next.js application
-- **docker-build**: Builds Docker images (on main branch only)
+- **changes**: Detects which parts of the codebase changed
+- **test-backend**: Runs Go tests, race detection, coverage (only on backend changes)
+- **test-frontend**: Runs frontend linting, type checking, and tests (only on frontend changes)
+- **build-backend**: Builds Go backend binary (only on backend changes)
+- **build-frontend**: Builds Next.js application (only on frontend changes)
+- **docker-build**: Builds Docker images (on main branch only, conditional on changes)
 
 **Features:**
 - Automated testing on every PR
+- Path-based job filtering to run only relevant checks
 - Code coverage reporting (Codecov)
 - Build verification for both backend and frontend
 - Docker image validation
+- Reduced CI runtime for focused changes
 
 ### 2. `frontend-tests.yml` - Frontend Test Suite
-**Triggers:** Pull Requests
+**Triggers:** Pull Requests (with path filtering)
+
+**Path Filters:**
+- `frontend/**` - Frontend code changes
+- `.github/workflows/frontend-tests.yml` - Workflow changes
 
 **Jobs:**
 - **unit-tests**: Jest unit tests with coverage
@@ -35,14 +48,22 @@ This directory contains GitHub Actions workflows for CI/CD automation and securi
 - Regression prevention for Explorer v2
 
 ### 3. `codeql.yml` - CodeQL Security Analysis
-**Triggers:** Push to main/develop, Pull Requests, Weekly schedule (Mondays)
+**Triggers:** Push to main, Pull Requests (with path filtering), Weekly schedule (Mondays)
+
+**Path Filters (Pull Requests only):**
+- `backend/**` - Backend code changes
+- `frontend/**` - Frontend code changes
+- `.github/workflows/codeql.yml` - Workflow changes
 
 **Jobs:**
-- **analyze-go**: Scans Go backend for security vulnerabilities
-- **analyze-javascript**: Scans TypeScript/JavaScript frontend for security vulnerabilities
+- **changes**: Detects which parts of the codebase changed (pull requests only)
+- **analyze-go**: Scans Go backend for security vulnerabilities (only on backend changes or schedule)
+- **analyze-javascript**: Scans TypeScript/JavaScript frontend for security vulnerabilities (only on frontend changes or schedule)
 
 **Features:**
 - Automated security scanning
+- Path-based analysis to scan only affected code on PRs
+- Full scan on scheduled runs
 - Security query suite
 - Results uploaded to GitHub Security tab
 
@@ -77,6 +98,51 @@ git push origin v1.0.0
 [![CI/CD Pipeline](https://github.com/dcotelo/ChartImpact/actions/workflows/ci.yml/badge.svg)](https://github.com/dcotelo/ChartImpact/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/dcotelo/ChartImpact/actions/workflows/codeql.yml/badge.svg)](https://github.com/dcotelo/ChartImpact/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/dcotelo/ChartImpact/badge)](https://securityscorecards.dev/viewer/?uri=github.com/dcotelo/ChartImpact)
+
+## Path-Based Workflow Filtering
+
+To reduce unnecessary CI runs and improve feedback loops, workflows are configured to run only when relevant paths change.
+
+### Path Ownership Mapping
+
+| Path Pattern | Triggers | Purpose |
+|--------------|----------|---------|
+| `backend/**` | CI backend jobs, CodeQL Go analysis | Backend API code, tests, configs |
+| `frontend/**` | CI frontend jobs, Frontend tests, CodeQL JS analysis | Frontend app code, tests, configs |
+| `docker-compose.yml` | CI backend & frontend jobs | Affects both backend and frontend |
+| `.github/workflows/*.yml` | Respective workflow | Workflow configuration changes |
+| `*.md` (docs) | _No workflows_ | Documentation-only changes |
+| `README.md`, `CONTRIBUTING.md`, etc. | _No workflows_ | Project documentation |
+
+### Workflow Behavior
+
+**On Pull Requests:**
+- **Backend-only changes**: Only backend tests, build, and Go CodeQL analysis run
+- **Frontend-only changes**: Only frontend tests, build, and JavaScript CodeQL analysis run
+- **Documentation-only changes**: No CI workflows run (except scheduled scans)
+- **Multi-path changes**: All affected workflows run
+- **Shared config changes** (e.g., `docker-compose.yml`): Both backend and frontend workflows run
+
+**On Scheduled Runs:**
+- CodeQL runs full analysis on all code (not path-filtered)
+- OpenSSF Scorecard runs full assessment
+
+**On Releases:**
+- All tests and builds run (not path-filtered)
+
+### Benefits
+
+✅ **Faster Feedback**: Only relevant checks run, reducing wait time  
+✅ **Clearer Signal**: PR checks directly relate to changes made  
+✅ **Reduced Costs**: Fewer compute minutes used  
+✅ **Better DX**: Contributors see only relevant test results
+
+### Edge Cases Handled
+
+- **Shared files** (`docker-compose.yml`): Triggers both backend and frontend
+- **Workflow changes**: Triggers the respective workflow to validate the change
+- **Multiple directory changes**: Runs all relevant workflows
+- **Schedule events**: Full scans run regardless of recent changes
 
 ## Security Features
 
