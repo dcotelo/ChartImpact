@@ -19,10 +19,8 @@ describe('DemoExamples', () => {
     render(<DemoExamples onSelectExample={mockOnSelectExample} />);
     
     // Check for example buttons
-    expect(screen.getByText(/Example 1: Compare Two Release Tags/i)).toBeInTheDocument();
-    expect(screen.getByText(/DataDog Helm Charts/i)).toBeInTheDocument();
-    expect(screen.getByText(/Example 2: With Custom Values/i)).toBeInTheDocument();
-    expect(screen.getByText(/Example 3: Compare with Values File/i)).toBeInTheDocument();
+    expect(screen.getByText(/ArgoCD Version Comparison/i)).toBeInTheDocument();
+    expect(screen.getByText(/DataDog Monorepo/i)).toBeInTheDocument();
   });
 
   it('displays example descriptions', () => {
@@ -30,13 +28,12 @@ describe('DemoExamples', () => {
     
     expect(screen.getByText(/Compare two ArgoCD release versions/i)).toBeInTheDocument();
     expect(screen.getByText(/Compare DataDog chart versions in monorepo structure/i)).toBeInTheDocument();
-    expect(screen.getByText(/Compare versions with custom values content/i)).toBeInTheDocument();
   });
 
   it('calls onSelectExample with correct data when example 1 is clicked', () => {
     render(<DemoExamples onSelectExample={mockOnSelectExample} />);
     
-    const example1Button = screen.getByText(/Example 1: Compare Two Release Tags/i);
+    const example1Button = screen.getByText(/ArgoCD Version Comparison/i);
     fireEvent.click(example1Button);
     
     expect(mockOnSelectExample).toHaveBeenCalledTimes(1);
@@ -51,7 +48,7 @@ describe('DemoExamples', () => {
   it('calls onSelectExample with correct data when DataDog example is clicked', () => {
     render(<DemoExamples onSelectExample={mockOnSelectExample} />);
     
-    const datadogButton = screen.getByText(/DataDog Helm Charts/i);
+    const datadogButton = screen.getByText(/DataDog Monorepo/i);
     fireEvent.click(datadogButton);
     
     expect(mockOnSelectExample).toHaveBeenCalledTimes(1);
@@ -63,50 +60,18 @@ describe('DemoExamples', () => {
     });
   });
 
-  it('calls onSelectExample with values content when example 2 is clicked', () => {
-    render(<DemoExamples onSelectExample={mockOnSelectExample} />);
-    
-    const example2Button = screen.getByText(/Example 2: With Custom Values/i);
-    fireEvent.click(example2Button);
-    
-    expect(mockOnSelectExample).toHaveBeenCalledTimes(1);
-    const call = mockOnSelectExample.mock.calls[0][0];
-    expect(call.repository).toBe('https://github.com/argoproj/argo-helm.git');
-    expect(call.chartPath).toBe('charts/argo-cd');
-    expect(call.version1).toBe('main');
-    expect(call.version2).toBe('main');
-    expect(call.valuesContent).toContain('global:');
-    expect(call.valuesContent).toContain('controller:');
-    expect(call.valuesContent).toContain('replicas: 2');
-  });
-
-  it('calls onSelectExample with custom values file when example 3 is clicked', () => {
-    render(<DemoExamples onSelectExample={mockOnSelectExample} />);
-    
-    const example3Button = screen.getByText(/Example 3: Compare with Values File/i);
-    fireEvent.click(example3Button);
-    
-    expect(mockOnSelectExample).toHaveBeenCalledTimes(1);
-    const call = mockOnSelectExample.mock.calls[0][0];
-    expect(call.repository).toBe('https://github.com/argoproj/argo-helm.git');
-    expect(call.version1).toBe('argo-cd-9.1.5');
-    expect(call.version2).toBe('argo-cd-9.1.6');
-    expect(call.valuesContent).toContain('controller:');
-    expect(call.valuesContent).toContain('redis-ha:');
-  });
-
   it('renders multiple example buttons', () => {
     render(<DemoExamples onSelectExample={mockOnSelectExample} />);
     
-    // Find all buttons that contain "Example"
+    // Find all buttons that contain example names
     const buttons = screen.getAllByRole('button');
-    expect(buttons.length).toBeGreaterThanOrEqual(4);
+    expect(buttons.length).toBe(2);
   });
 
   it('maintains button functionality after multiple clicks', () => {
     render(<DemoExamples onSelectExample={mockOnSelectExample} />);
     
-    const example1Button = screen.getByText(/Example 1: Compare Two Release Tags/i);
+    const example1Button = screen.getByText(/ArgoCD Version Comparison/i);
     
     fireEvent.click(example1Button);
     fireEvent.click(example1Button);
@@ -128,7 +93,7 @@ describe('DemoExamples', () => {
     const mockCallback = jest.fn();
     render(<DemoExamples onSelectExample={mockCallback} />);
     
-    const example1Button = screen.getByText(/Example 1: Compare Two Release Tags/i);
+    const example1Button = screen.getByText(/ArgoCD Version Comparison/i);
     fireEvent.click(example1Button);
     
     const calledData = mockCallback.mock.calls[0][0];
@@ -140,7 +105,7 @@ describe('DemoExamples', () => {
     const mockCallback = jest.fn();
     render(<DemoExamples onSelectExample={mockCallback} />);
     
-    const example1Button = screen.getByText(/Example 1: Compare Two Release Tags/i);
+    const example1Button = screen.getByText(/ArgoCD Version Comparison/i);
     fireEvent.click(example1Button);
     
     const calledData = mockCallback.mock.calls[0][0];
@@ -151,7 +116,7 @@ describe('DemoExamples', () => {
     const mockCallback = jest.fn();
     render(<DemoExamples onSelectExample={mockCallback} />);
     
-    const example1Button = screen.getByText(/Example 1: Compare Two Release Tags/i);
+    const example1Button = screen.getByText(/ArgoCD Version Comparison/i);
     fireEvent.click(example1Button);
     
     const calledData = mockCallback.mock.calls[0][0];
