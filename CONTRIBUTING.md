@@ -1,6 +1,10 @@
 # Contributing to ChartImpact
 
-Thank you for your interest in contributing to ChartImpact! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to ChartImpact! 
+
+**ChartImpact's Mission:** Provide visibility into Helm chart changes, helping teams understand potential impacts on availability and security before deployment. We focus on surfacing risk signals with clarity—giving teams the information they need to make confident deployment decisions.
+
+This document provides guidelines and instructions for contributing.
 
 ## Table of Contents
 
@@ -255,27 +259,33 @@ frontend/
 
 1. **Render vs Filter**:
    - Backend: Renders charts and computes diffs
-   - Frontend: Filters and presents the diff data
+   - Frontend: Filters and presents the diff data with risk signal visibility
 
 2. **Classic vs Explorer Views**:
    - Both consume the same comparison response
    - No duplicate API calls
-   - Explorer provides enhanced filtering/navigation
+   - Explorer provides enhanced filtering/navigation and highlights availability and security impacts
 
 3. **Demo Mode**:
    - Demo mode is frontend-only
    - Uses mock data for demonstration
    - Clearly marked with "DEMO MODE" badge
 
+4. **Philosophy**:
+   - Provide information and visibility, not enforcement
+   - Surface risk signals with clarity
+   - Empower users to make informed decisions
+
 ## Adding New Features
 
 When adding features:
 
 1. **Discuss first**: Open an issue to discuss major features before implementing
-2. **Start small**: Break large features into smaller, reviewable chunks
-3. **Write tests**: Add tests for new functionality
-4. **Update docs**: Document new features in README or relevant docs
-5. **Consider backward compatibility**: Don't break existing functionality
+2. **Align with mission**: Ensure new features support visibility and clarity without imposing enforcement
+3. **Start small**: Break large features into smaller, reviewable chunks
+4. **Write tests**: Add tests for new functionality
+5. **Update docs**: Document new features in README or relevant docs
+6. **Consider backward compatibility**: Don't break existing functionality
 
 ## Reporting Issues
 
