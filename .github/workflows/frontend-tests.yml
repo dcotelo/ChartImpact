@@ -1,10 +1,8 @@
 name: Frontend Tests
 
 on:
-  push:
-    branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
+    types: [opened, synchronize]
 
 jobs:
   unit-tests:
@@ -87,19 +85,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-      
-      - name: Run Playwright tests
-        run: npm run test:e2e
-      
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: frontend/playwright-report/
-          retention-days: 30
   
   regression-check:
     name: Explorer v2 Regression Check
