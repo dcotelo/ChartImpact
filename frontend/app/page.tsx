@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { CompareForm } from '@/components/CompareForm';
-import { DiffDisplay } from '@/components/DiffDisplay';
 import { DemoExamples } from '@/components/DemoExamples';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { DiffExplorer } from '@/components/explorer/DiffExplorer';
@@ -17,7 +16,6 @@ export default function Home() {
   const [progressMessage, setProgressMessage] = useState<string>('');
   const [progressStep, setProgressStep] = useState<number>(0);
   const [progressTotal] = useState<number>(7);
-  const [activeTab, setActiveTab] = useState<'classic' | 'explorer'>('classic');
 
   const handleCompare = async (formData: CompareRequest) => {
     setLoading(true);
@@ -206,61 +204,9 @@ export default function Home() {
 
         {result && (
           <div style={{ marginTop: '2rem' }}>
-            {/* Tab Navigation */}
-            <div style={{
-              display: 'flex',
-              gap: '0.5rem',
-              marginBottom: '1rem',
-              borderBottom: '2px solid #ddd'
-            }}>
-              <button
-                onClick={() => setActiveTab('classic')}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: activeTab === 'classic' ? '#667eea' : 'transparent',
-                  color: activeTab === 'classic' ? 'white' : '#333',
-                  border: 'none',
-                  borderBottom: activeTab === 'classic' ? '3px solid #667eea' : '3px solid transparent',
-                  cursor: 'pointer',
-                  fontSize: '0.95rem',
-                  fontWeight: '600',
-                  transition: 'all 0.2s',
-                  borderRadius: '4px 4px 0 0'
-                }}
-              >
-                📊 Classic View
-              </button>
-              <button
-                onClick={() => setActiveTab('explorer')}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: activeTab === 'explorer' ? '#667eea' : 'transparent',
-                  color: activeTab === 'explorer' ? 'white' : '#333',
-                  border: 'none',
-                  borderBottom: activeTab === 'explorer' ? '3px solid #4caf50' : '3px solid transparent',
-                  cursor: 'pointer',
-                  fontSize: '0.95rem',
-                  fontWeight: '600',
-                  transition: 'all 0.2s',
-                  borderRadius: '4px 4px 0 0'
-                }}
-              >
-                🔍 Explorer
-              </button>
-            </div>
-
-            {/* Tab Content */}
-            {activeTab === 'classic' && (
-              <DiffDisplay 
-                result={result} 
-                ignoreLabels={formData?.ignoreLabels}
-              />
-            )}
-            {activeTab === 'explorer' && (
-              <DiffExplorer 
-                result={result}
-              />
-            )}
+            <DiffExplorer 
+              result={result}
+            />
           </div>
         )}
       </div>
