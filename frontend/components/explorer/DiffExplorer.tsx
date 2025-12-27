@@ -163,12 +163,14 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
       {/* Main Content Area */}
       <div style={{
         display: 'flex',
-        minHeight: '800px',
+        minHeight: '700px',
         flex: 1
       }}>
         {/* Left Rail - Resource List */}
         <div style={{
-          width: '400px',
+          width: '25%',
+          minWidth: '350px',
+          maxWidth: '600px',
           borderRight: `1px solid ${COLORS.border}`,
           background: COLORS.bgLighter
         }}>
@@ -184,7 +186,9 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
         {/* Main Panel - View */}
         <div style={{
           flex: 1,
-          background: COLORS.bgLight
+          minWidth: '400px',
+          background: COLORS.bgLight,
+          padding: '0'
         }}>
           <ViewPanel
             resources={effectiveDiffData.resources}
@@ -199,7 +203,9 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
         {/* Right Panel - Details */}
         {selectedResource && effectiveDiffData && effectiveDiffData.resources && (
           <div style={{
-            width: '350px',
+            width: '25%',
+            minWidth: '350px',
+            maxWidth: '500px',
             borderLeft: `1px solid ${COLORS.border}`,
             background: COLORS.bgLighter
           }}>

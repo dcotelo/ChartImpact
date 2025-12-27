@@ -49,7 +49,13 @@ export function ResourceList({
   const kinds = Object.keys(resourcesByKind).sort();
 
   return (
-    <div style={{ padding: '1rem' }}>
+    <div style={{ 
+      padding: '1rem',
+      height: '100%',
+      overflow: 'auto',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
       <div style={{
         marginBottom: '1rem',
         fontSize: '0.9rem',
