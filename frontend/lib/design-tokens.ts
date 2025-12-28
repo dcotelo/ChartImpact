@@ -274,10 +274,7 @@ export const BREAKPOINTS = {
 // Risk Level Utilities
 // ============================================================================
 
-/**
- * Type for risk levels
- */
-export type RiskLevel = 'high' | 'medium' | 'low';
+import type { RiskLevel } from './types';
 
 /**
  * Get colors for a specific risk level
