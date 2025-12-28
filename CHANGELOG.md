@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/dcotelo/ChartImpact/compare/v1.2.0...v1.2.1) (2025-12-28)
+
+
+### Bug Fixes
+
+* update upload and download artifact actions to version 4 ([#67](https://github.com/dcotelo/ChartImpact/issues/67)) ([8550f4b](https://github.com/dcotelo/ChartImpact/commit/8550f4bc00c49774914d29f670fc222084f5b687))
+
 ## [1.2.0](https://github.com/dcotelo/ChartImpact/compare/v1.1.0...v1.2.0) (2025-12-28)
 
 
