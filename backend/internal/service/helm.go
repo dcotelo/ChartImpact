@@ -22,6 +22,7 @@ import (
 
 	"github.com/dcotelo/chartimpact/backend/internal/diff"
 	"github.com/dcotelo/chartimpact/backend/internal/models"
+	"github.com/dcotelo/chartimpact/backend/internal/signals"
 	"github.com/dcotelo/chartimpact/backend/internal/util"
 )
 
@@ -147,7 +148,7 @@ func (h *HelmService) CompareVersions(ctx context.Context, req *models.CompareRe
 	return response, nil
 }
 
-// buildCompareResponse constructs a CompareResponse with structured diff if available
+// buildCompareResponse constructs a CompareResponse with structured diff and signals if available
 func (h *HelmService) buildCompareResponse(version1, version2, diffRaw string, diffResult *diff.DiffResult) *models.CompareResponse {
 	response := &models.CompareResponse{
 		Success:  true,
@@ -160,8 +161,20 @@ func (h *HelmService) buildCompareResponse(version1, version2, diffRaw string, d
 	if diffResult != nil {
 		response.StructuredDiff = h.convertToStructuredDiff(diffResult)
 		response.StructuredDiffAvailable = true
+
+		// Generate signals from diff result
+		signalDetector := signals.NewDetector()
+		signalResult, err := signalDetector.DetectSignals(diffResult)
+		if err != nil {
+			log.Warnf("Failed to generate signals: %v", err)
+			response.SignalsAvailable = false
+		} else {
+			response.Signals = h.convertToSignalResult(signalResult)
+			response.SignalsAvailable = true
+		}
 	} else {
 		response.StructuredDiffAvailable = false
+		response.SignalsAvailable = false
 	}
 
 	return response
@@ -779,6 +792,124 @@ func (h *HelmService) cleanup(workDir string) {
 	if err := os.RemoveAll(workDir); err != nil {
 		log.Warnf("Failed to cleanup work directory %s: %v", workDir, err)
 	}
+}
+
+// convertToSignalResult converts signals.SignalResult to models.SignalResult
+func (h *HelmService) convertToSignalResult(signalResult *signals.SignalResult) *models.SignalResult {
+	if signalResult == nil {
+		return nil
+	}
+
+	result := &models.SignalResult{
+		Metadata: models.SignalMetadata{
+			SchemaVersion: signalResult.Metadata.SchemaVersion,
+			GeneratedAt:   signalResult.Metadata.GeneratedAt,
+			CompareID:     signalResult.Metadata.CompareID,
+			Inputs: models.SignalInputs{
+				Left: models.SignalSourceMetadata{
+					Source:     signalResult.Metadata.Inputs.Left.Source,
+					Chart:      signalResult.Metadata.Inputs.Left.Chart,
+					Version:    signalResult.Metadata.Inputs.Left.Version,
+					ValuesHash: signalResult.Metadata.Inputs.Left.ValuesHash,
+				},
+				Right: models.SignalSourceMetadata{
+					Source:     signalResult.Metadata.Inputs.Right.Source,
+					Chart:      signalResult.Metadata.Inputs.Right.Chart,
+					Version:    signalResult.Metadata.Inputs.Right.Version,
+					ValuesHash: signalResult.Metadata.Inputs.Right.ValuesHash,
+				},
+			},
+		},
+		Signals: make([]models.Signal, 0, len(signalResult.Signals)),
+		Summary: models.SignalSummary{
+			Total:        signalResult.Summary.Total,
+			ByCategory:   make(map[string]int),
+			ByImportance: make(map[string]int),
+			TopSignals:   make([]models.Signal, 0),
+		},
+	}
+
+	// Convert signals
+	for _, sig := range signalResult.Signals {
+		modelSignal := models.Signal{
+			Type:       sig.Type,
+			Category:   string(sig.Category),
+			Importance: string(sig.Importance),
+			Resource: models.SignalResourceIdentity{
+				Kind:       sig.Resource.Kind,
+				Name:       sig.Resource.Name,
+				Namespace:  sig.Resource.Namespace,
+				APIVersion: sig.Resource.APIVersion,
+			},
+			ChangeType:      string(sig.ChangeType),
+			Description:     sig.Description,
+			Explanation:     sig.Explanation,
+			AffectedPath:    sig.AffectedPath,
+			Before:          sig.Before,
+			After:           sig.After,
+			DetectedAt:      sig.DetectedAt,
+			DetectorVersion: sig.DetectorVersion,
+		}
+
+		// Convert raw changes
+		modelSignal.RawChanges = make([]models.Change, len(sig.RawChanges))
+		for i, rc := range sig.RawChanges {
+			pathTokens := make([]interface{}, len(rc.PathTokens))
+			for j, token := range rc.PathTokens {
+				pathTokens[j] = token
+			}
+
+			modelSignal.RawChanges[i] = models.Change{
+				Op:             string(rc.Op),
+				Path:           rc.Path,
+				PathTokens:     pathTokens,
+				Before:         rc.Before,
+				After:          rc.After,
+				ValueType:      rc.ValueType,
+				SemanticType:   rc.SemanticType,
+				ChangeCategory: rc.ChangeCategory,
+				Importance:     rc.Importance,
+				Flags:          rc.Flags,
+			}
+		}
+
+		result.Signals = append(result.Signals, modelSignal)
+	}
+
+	// Convert summary categories
+	for category, count := range signalResult.Summary.ByCategory {
+		result.Summary.ByCategory[string(category)] = count
+	}
+	for importance, count := range signalResult.Summary.ByImportance {
+		result.Summary.ByImportance[string(importance)] = count
+	}
+
+	// Convert top signals
+	for _, sig := range signalResult.Summary.TopSignals {
+		modelSignal := models.Signal{
+			Type:       sig.Type,
+			Category:   string(sig.Category),
+			Importance: string(sig.Importance),
+			Resource: models.SignalResourceIdentity{
+				Kind:       sig.Resource.Kind,
+				Name:       sig.Resource.Name,
+				Namespace:  sig.Resource.Namespace,
+				APIVersion: sig.Resource.APIVersion,
+			},
+			ChangeType:      string(sig.ChangeType),
+			Description:     sig.Description,
+			Explanation:     sig.Explanation,
+			AffectedPath:    sig.AffectedPath,
+			Before:          sig.Before,
+			After:           sig.After,
+			DetectedAt:      sig.DetectedAt,
+			DetectorVersion: sig.DetectorVersion,
+		}
+
+		result.Summary.TopSignals = append(result.Summary.TopSignals, modelSignal)
+	}
+
+	return result
 }
 
 // getTimeout retrieves a timeout value from environment or returns default

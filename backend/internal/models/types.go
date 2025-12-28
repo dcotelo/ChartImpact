@@ -25,6 +25,70 @@ type CompareResponse struct {
 	Statistics              *ChangeStatistics     `json:"statistics,omitempty"`     // Optional: statistics about changes (legacy)
 	StructuredDiff          *StructuredDiffResult `json:"structuredDiff,omitempty"` // v1 structured diff result
 	StructuredDiffAvailable bool                  `json:"structuredDiffAvailable"`  // Indicates if structured diff is available
+	Signals                 *SignalResult         `json:"signals,omitempty"`        // Mission-aligned impact signals
+	SignalsAvailable        bool                  `json:"signalsAvailable"`         // Indicates if signals are available
+}
+
+// SignalResult represents mission-aligned impact signals (from signals package)
+type SignalResult struct {
+	Metadata SignalMetadata `json:"metadata"`
+	Signals  []Signal       `json:"signals"`
+	Summary  SignalSummary  `json:"summary"`
+}
+
+// SignalMetadata provides traceability for signal detection
+type SignalMetadata struct {
+	SchemaVersion string       `json:"schemaVersion"`
+	GeneratedAt   string       `json:"generatedAt"`
+	CompareID     string       `json:"compareId"`
+	Inputs        SignalInputs `json:"inputs"`
+}
+
+// SignalInputs describes the sources being compared
+type SignalInputs struct {
+	Left  SignalSourceMetadata `json:"left"`
+	Right SignalSourceMetadata `json:"right"`
+}
+
+// SignalSourceMetadata describes a single input source for signals
+type SignalSourceMetadata struct {
+	Source     string `json:"source"`
+	Chart      string `json:"chart,omitempty"`
+	Version    string `json:"version,omitempty"`
+	ValuesHash string `json:"valuesHash,omitempty"`
+}
+
+// Signal represents a mission-aligned impact signal
+type Signal struct {
+	Type         string                 `json:"type"`
+	Category     string                 `json:"category"`
+	Importance   string                 `json:"importance"`
+	Resource     SignalResourceIdentity `json:"resource"`
+	ChangeType   string                 `json:"changeType"`
+	Description  string                 `json:"description"`
+	Explanation  string                 `json:"explanation"`
+	AffectedPath string                 `json:"affectedPath"`
+	Before       interface{}            `json:"before,omitempty"`
+	After        interface{}            `json:"after,omitempty"`
+	RawChanges   []Change               `json:"rawChanges"`
+	DetectedAt   string                 `json:"detectedAt,omitempty"`
+	DetectorVersion string              `json:"detectorVersion,omitempty"`
+}
+
+// SignalResourceIdentity uniquely identifies a resource for signals
+type SignalResourceIdentity struct {
+	Kind       string `json:"kind"`
+	Name       string `json:"name"`
+	Namespace  string `json:"namespace"`
+	APIVersion string `json:"apiVersion"`
+}
+
+// SignalSummary provides aggregate statistics
+type SignalSummary struct {
+	Total        int            `json:"total"`
+	ByCategory   map[string]int `json:"byCategory"`
+	ByImportance map[string]int `json:"byImportance"`
+	TopSignals   []Signal       `json:"topSignals"`
 }
 
 // ChangeStatistics provides detailed statistics about the changes between versions
