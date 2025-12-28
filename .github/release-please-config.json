@@ -5,14 +5,7 @@
       "package-name": "chartimpact-backend",
       "changelog-path": "CHANGELOG.md",
       "bump-minor-pre-major": true,
-      "bump-patch-for-minor-pre-major": true,
-      "extra-files": [
-        {
-          "type": "json",
-          "path": "../frontend/package.json",
-          "jsonpath": "$.version"
-        }
-      ]
+      "bump-patch-for-minor-pre-major": true
     },
     "frontend": {
       "release-type": "node",
