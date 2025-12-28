@@ -200,3 +200,51 @@ export type DiffStats = DiffStatsV2 & {
   flagSummary?: Record<string, number>;
 };
 
+// ============================================================================
+// Risk Assessment Types (Phase 3)
+// ============================================================================
+
+/**
+ * Risk level for a change or resource
+ */
+export type RiskLevel = 'high' | 'medium' | 'low';
+
+/**
+ * Change type classification
+ */
+export type ChangeType = 'added' | 'removed' | 'changed';
+
+/**
+ * Impact category for grouping related risks
+ */
+export type ImpactCategory = 'availability' | 'security' | 'other';
+
+/**
+ * Risk signal with contextual explanation
+ */
+export interface RiskSignal {
+  resource: string;
+  kind: string;
+  level: RiskLevel;
+  category: ImpactCategory;
+  title: string;
+  description: string;
+  field?: string;
+  oldValue?: any;
+  newValue?: any;
+}
+
+/**
+ * Impact summary for displaying risk-first results
+ */
+export interface ImpactSummary {
+  verdict: 'high-risk' | 'medium-risk' | 'low-risk' | 'no-changes';
+  availabilityImpact: RiskSignal[];
+  securityImpact: RiskSignal[];
+  otherChanges: RiskSignal[];
+  totalHighRisk: number;
+  totalMediumRisk: number;
+  totalLowRisk: number;
+}
+
+
