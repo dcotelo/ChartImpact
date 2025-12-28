@@ -3,7 +3,9 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'backend-v*.*.*'
+      - 'frontend-v*.*.*'
+  workflow_dispatch:
 
 jobs:
   # Test backend before release

@@ -18,6 +18,9 @@ import (
 	"github.com/dcotelo/chartimpact/backend/internal/service"
 )
 
+// version is set via ldflags at build time
+var version = "dev"
+
 func main() {
 	// Load environment variables from .env file
 	if err := godotenv.Load(); err != nil {
@@ -27,7 +30,7 @@ func main() {
 	// Configure logging
 	setupLogging()
 
-	log.Info("Starting ChartImpact Backend API")
+	log.Infof("Starting ChartImpact Backend API (version: %s)", version)
 
 	// Get configuration from environment
 	port := getEnv("PORT", "8080")
