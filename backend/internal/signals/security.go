@@ -173,8 +173,8 @@ func (d *Detector) detectServiceExposureSignal(resourceDiff diff.ResourceDiff, c
 	if strings.Contains(path, ".type") && strings.HasSuffix(path, ".type") {
 		signalType = "security.exposure.type"
 		
-		beforeType := fmt.Sprintf("%v", change.Before)
-		afterType := fmt.Sprintf("%v", change.After)
+		beforeType := formatValue(change.Before)
+		afterType := formatValue(change.After)
 		
 		description = fmt.Sprintf("Service type changed from %s to %s", beforeType, afterType)
 		
@@ -260,7 +260,11 @@ func (d *Detector) detectSecretReferenceSignal(resourceDiff diff.ResourceDiff, c
 				}
 			}
 		}
-		description = fmt.Sprintf("Secret reference %s added to environment variable", secretName)
+		if secretName != "" {
+			description = fmt.Sprintf("Secret reference %s added to environment variable", secretName)
+		} else {
+			description = "Secret reference added to environment variable"
+		}
 	} else if strings.Contains(path, ".volumes") && strings.Contains(path, ".secret") {
 		signalType = "security.secrets.volume"
 		description = "Secret volume mount changed"
@@ -297,9 +301,11 @@ func (d *Detector) detectHostAccessSignal(resourceDiff diff.ResourceDiff, change
 	var description string
 	var explanation string
 
+	afterValue := formatValue(change.After)
+
 	if strings.Contains(path, ".hostNetwork") {
 		signalType = "security.hostAccess.network"
-		if fmt.Sprintf("%v", change.After) == "true" {
+		if afterValue == "true" {
 			description = "Host network access enabled"
 			explanation = "Enabling hostNetwork allows pods to access the node's network stack directly, bypassing network policies. This increases security risk and should only be used when necessary."
 		} else {
@@ -335,5 +341,23 @@ func (d *Detector) detectHostAccessSignal(resourceDiff diff.ResourceDiff, change
 		After:           change.After,
 		RawChanges:      []diff.Change{change},
 		DetectorVersion: DetectorVersion,
+	}
+}
+
+// formatValue formats a value for display, handling nil values gracefully
+func formatValue(value interface{}) string {
+	if value == nil {
+		return "<nil>"
+	}
+	switch v := value.(type) {
+	case string:
+		return v
+	case bool:
+		if v {
+			return "true"
+		}
+		return "false"
+	default:
+		return fmt.Sprintf("%v", v)
 	}
 }

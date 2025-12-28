@@ -75,9 +75,11 @@ func (d *Detector) analyzeResource(resourceDiff diff.ResourceDiff) []Signal {
 	signals := make([]Signal, 0)
 
 	// Handle added/removed resources
+	// NOTE: Resource-level signals (for entire resources being added/removed) are not yet implemented.
+	// This is a known limitation documented in SIGNAL_TAXONOMY.md.
+	// Future enhancement: Add signals like "availability.resource.added" for new Deployments,
+	// "security.resource.removed" for deleted NetworkPolicies, etc.
 	if resourceDiff.ChangeType == diff.ChangeTypeAdded || resourceDiff.ChangeType == diff.ChangeTypeRemoved {
-		// For now, we'll skip resource-level signals and focus on field-level changes
-		// Future enhancement: Add signals for added/removed resources
 		return signals
 	}
 

@@ -3,6 +3,7 @@ package signals
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/dcotelo/chartimpact/backend/internal/diff"
 )
@@ -64,7 +65,7 @@ func (d *Detector) detectProbeSignal(resourceDiff diff.ResourceDiff, change diff
 		Before:       change.Before,
 		After:        change.After,
 		RawChanges:   []diff.Change{change},
-		DetectedAt:   "",
+		DetectedAt:   time.Now().UTC().Format(time.RFC3339),
 		DetectorVersion: DetectorVersion,
 	}
 }
