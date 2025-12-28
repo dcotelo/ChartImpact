@@ -201,15 +201,6 @@ See [frontend/CLOUDFLARE_PAGES.md](frontend/CLOUDFLARE_PAGES.md) for deploying t
 - Check out [API reference](README.md#api-reference)
 - Explore [deployment options](README.md#deployment)
 
-## 🗺️ Future Enhancements
-
-We're working on features to provide earlier feedback in your development workflow:
-
-- **Automated GitHub PR Checks** *(Planned)* - Automated analysis in pull requests
-- **CI/CD Integration** *(Planned)* - Early workflow feedback during continuous integration
-
-These planned features will maintain our clarity-first approach: providing visibility and information without imposing blocking or enforcement.
-
 ## 💡 Tips
 
 - Use **shallow clones** for faster performance (handled automatically)
