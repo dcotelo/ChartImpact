@@ -31,6 +31,7 @@ export function CompareForm({ onSubmit, loading, initialData }: CompareFormProps
   const [versions, setVersions] = useState<string[]>([]);
   const [loadingVersions, setLoadingVersions] = useState(false);
   const [versionsError, setVersionsError] = useState<string | null>(null);
+  const [showOptionalFields, setShowOptionalFields] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -371,59 +372,100 @@ export function CompareForm({ onSubmit, loading, initialData }: CompareFormProps
         </div>
       </div>
 
+      {/* Collapsible Optional Values Section */}
       <div>
-        <label style={{
-          display: 'block',
-          marginBottom: '0.5rem',
-          fontWeight: '600',
-          color: '#333'
-        }}>
-          Values File Path (Optional)
-        </label>
-        <input
-          type="text"
-          value={formData.valuesFile}
-          onChange={(e) => setFormData({ ...formData, valuesFile: e.target.value })}
-          placeholder="values/prod.yaml"
+        <button
+          type="button"
+          onClick={() => setShowOptionalFields(!showOptionalFields)}
           style={{
-            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
             padding: '0.75rem',
+            background: '#f8f9fa',
             border: '1px solid #ddd',
             borderRadius: '6px',
-            fontSize: '1rem'
-          }}
-        />
-        <small style={{ color: '#666', fontSize: '0.875rem' }}>
-          Path to values file within the repository (relative to repo root)
-        </small>
-      </div>
-
-      <div>
-        <label style={{
-          display: 'block',
-          marginBottom: '0.5rem',
-          fontWeight: '600',
-          color: '#333'
-        }}>
-          Or Paste Values Content (Optional)
-        </label>
-        <textarea
-          value={formData.valuesContent}
-          onChange={(e) => setFormData({ ...formData, valuesContent: e.target.value })}
-          placeholder="replicaCount: 3&#10;image:&#10;  repository: nginx&#10;  tag: latest"
-          rows={6}
-          style={{
             width: '100%',
-            padding: '0.75rem',
-            border: '1px solid #ddd',
-            borderRadius: '6px',
+            cursor: 'pointer',
             fontSize: '1rem',
-            fontFamily: 'monospace'
+            fontWeight: '600',
+            color: '#333',
+            transition: 'background 0.2s'
           }}
-        />
-        <small style={{ color: '#666', fontSize: '0.875rem' }}>
-          YAML content for values file (takes precedence over values file path)
-        </small>
+          onMouseEnter={(e) => e.currentTarget.style.background = '#e9ecef'}
+          onMouseLeave={(e) => e.currentTarget.style.background = '#f8f9fa'}
+        >
+          <span>{showOptionalFields ? '▼' : '▶'}</span>
+          <span>Optional Values Configuration</span>
+        </button>
+
+        {showOptionalFields && (
+          <div style={{
+            marginTop: '1rem',
+            padding: '1rem',
+            border: '1px solid #ddd',
+            borderRadius: '6px',
+            background: '#fafafa',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem'
+          }}>
+            <div>
+              <label style={{
+                display: 'block',
+                marginBottom: '0.5rem',
+                fontWeight: '600',
+                color: '#333'
+              }}>
+                Values File Path (Optional)
+              </label>
+              <input
+                type="text"
+                value={formData.valuesFile}
+                onChange={(e) => setFormData({ ...formData, valuesFile: e.target.value })}
+                placeholder="values/prod.yaml"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '6px',
+                  fontSize: '1rem'
+                }}
+              />
+              <small style={{ color: '#666', fontSize: '0.875rem' }}>
+                Path to values file within the repository (relative to repo root)
+              </small>
+            </div>
+
+            <div>
+              <label style={{
+                display: 'block',
+                marginBottom: '0.5rem',
+                fontWeight: '600',
+                color: '#333'
+              }}>
+                Or Paste Values Content (Optional)
+              </label>
+              <textarea
+                value={formData.valuesContent}
+                onChange={(e) => setFormData({ ...formData, valuesContent: e.target.value })}
+                placeholder="replicaCount: 3&#10;image:&#10;  repository: nginx&#10;  tag: latest"
+                rows={6}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '6px',
+                  fontSize: '1rem',
+                  fontFamily: 'monospace'
+                }}
+              />
+              <small style={{ color: '#666', fontSize: '0.875rem' }}>
+                YAML content for values file (takes precedence over values file path)
+              </small>
+            </div>
+          </div>
+        )}
       </div>
 
       <button

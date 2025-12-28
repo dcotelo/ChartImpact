@@ -8,7 +8,7 @@ import { DiffExplorer } from '@/components/explorer/DiffExplorer';
 import { ImpactSummaryComponent } from '@/components/ImpactSummary';
 import { CompareResponse, CompareRequest, ImpactSummary } from '@/lib/types';
 import { API_ENDPOINTS } from '@/lib/api-config';
-import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS } from '@/lib/design-tokens';
+import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS, SEMANTIC_COLORS } from '@/lib/design-tokens';
 import { 
   decodeComparisonFromURL, 
   updateBrowserURL, 
@@ -243,38 +243,65 @@ export default function Home() {
             <div style={{ 
               marginTop: SPACING.lg,
               display: 'flex',
-              justifyContent: 'flex-end',
+              justifyContent: 'space-between',
               gap: SPACING.sm
             }}>
-              <button
-                onClick={() => {
-                  if (formData) {
-                    const url = typeof window !== 'undefined' ? window.location.href : '';
-                    navigator.clipboard.writeText(url).then(() => {
-                      // Success - could add a toast notification in the future
-                      console.log('Link copied to clipboard');
-                    }).catch(() => {
-                      // Fallback for older browsers
-                      alert('Link copied to clipboard!');
-                    });
-                  }
-                }}
-                style={{
-                  padding: `${SPACING.sm} ${SPACING.md}`,
-                  background: BRAND_COLORS.primary,
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: BORDER_RADIUS.sm,
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: SPACING.xs
-                }}
-              >
-                🔗 Copy Link
-              </button>
+              {/* Back to Form button - only show when in Explorer view */}
+              {showExplorer && (
+                <button
+                  onClick={() => {
+                    setShowExplorer(false);
+                    setResult(null);
+                    setImpactSummary(null);
+                  }}
+                  style={{
+                    padding: `${SPACING.sm} ${SPACING.md}`,
+                    background: SEMANTIC_COLORS.bgSecondary,
+                    color: SEMANTIC_COLORS.textPrimary,
+                    border: `1px solid ${SEMANTIC_COLORS.borderMedium}`,
+                    borderRadius: BORDER_RADIUS.sm,
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: SPACING.xs
+                  }}
+                >
+                  ← Back to Form
+                </button>
+              )}
+              <div style={{ marginLeft: 'auto' }}>
+                <button
+                  onClick={() => {
+                    if (formData) {
+                      const url = typeof window !== 'undefined' ? window.location.href : '';
+                      navigator.clipboard.writeText(url).then(() => {
+                        // Success - could add a toast notification in the future
+                        console.log('Link copied to clipboard');
+                      }).catch(() => {
+                        // Fallback for older browsers
+                        alert('Link copied to clipboard!');
+                      });
+                    }
+                  }}
+                  style={{
+                    padding: `${SPACING.sm} ${SPACING.md}`,
+                    background: BRAND_COLORS.primary,
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: BORDER_RADIUS.sm,
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: SPACING.xs
+                  }}
+                >
+                  🔗 Copy Link
+                </button>
+              </div>
             </div>
             
             {/* Show Impact Summary first, then Explorer on demand */}

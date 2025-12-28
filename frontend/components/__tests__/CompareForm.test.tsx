@@ -17,8 +17,8 @@ describe('CompareForm', () => {
     expect(screen.getByPlaceholderText('charts/datadog or charts/datadog-operator')).toBeInTheDocument();
     const versionInputs = screen.getAllByPlaceholderText('Enter version manually');
     expect(versionInputs.length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByPlaceholderText('values/prod.yaml')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/replicaCount: 3/i)).toBeInTheDocument();
+    // Optional fields are now hidden by default in a collapsible section
+    expect(screen.getByRole('button', { name: /optional values configuration/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /analyze impact/i })).toBeInTheDocument();
   });
 
@@ -76,6 +76,16 @@ describe('CompareForm', () => {
       const versionInputs3 = screen.getAllByPlaceholderText('Enter version manually');
       await user.type(versionInputs3[0], 'v1.0.0');
       await user.type(versionInputs3[1], 'v1.1.0');
+      // Expand optional fields section
+      await user.click(screen.getByRole('button', { name: /optional values configuration/i }));
+    });
+
+    // Wait for the optional field to appear
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('values/prod.yaml')).toBeInTheDocument();
+    });
+
+    await act(async () => {
       await user.type(screen.getByPlaceholderText('values/prod.yaml'), 'values/prod.yaml');
       await user.click(screen.getByRole('button', { name: /analyze impact/i }));
     });
@@ -97,6 +107,16 @@ describe('CompareForm', () => {
       const versionInputs4 = screen.getAllByPlaceholderText('Enter version manually');
       await user.type(versionInputs4[0], 'v1.0.0');
       await user.type(versionInputs4[1], 'v1.1.0');
+      // Expand optional fields section
+      await user.click(screen.getByRole('button', { name: /optional values configuration/i }));
+    });
+
+    // Wait for the optional field to appear
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/replicaCount: 3/i)).toBeInTheDocument();
+    });
+
+    await act(async () => {
       const textarea = screen.getByPlaceholderText(/replicaCount: 3/i);
       await user.clear(textarea);
       await user.type(textarea, 'replicaCount: 3\nimage:\n  tag: latest');
