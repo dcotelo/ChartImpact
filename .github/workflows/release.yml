@@ -9,10 +9,73 @@ permissions:
   contents: read
   packages: write
 jobs:
+  # Detect which components changed since last release
+  detect-changes:
+    name: Detect Component Changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.check.outputs.backend }}
+      frontend: ${{ steps.check.outputs.frontend }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history to compare with previous tag
+      
+      - name: Detect changes since last release
+        id: check
+        run: |
+          CURRENT_TAG="${{ github.ref_name }}"
+          
+          # Get the previous tag
+          PREVIOUS_TAG=$(git describe --abbrev=0 --tags ${CURRENT_TAG}^ 2>/dev/null || echo "")
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            # First release or no previous tag, build everything
+            echo "No previous tag found, building all components"
+            echo "backend=true" >> $GITHUB_OUTPUT
+            echo "frontend=true" >> $GITHUB_OUTPUT
+          else
+            echo "Comparing $PREVIOUS_TAG to $CURRENT_TAG"
+            
+            # Check for backend changes
+            BACKEND_CHANGES=$(git diff --name-only ${PREVIOUS_TAG}..${CURRENT_TAG} | grep -E "^backend/" || true)
+            if [ -n "$BACKEND_CHANGES" ]; then
+              echo "Backend changes detected:"
+              echo "$BACKEND_CHANGES"
+              echo "backend=true" >> $GITHUB_OUTPUT
+            else
+              echo "No backend changes detected"
+              echo "backend=false" >> $GITHUB_OUTPUT
+            fi
+            
+            # Check for frontend changes
+            FRONTEND_CHANGES=$(git diff --name-only ${PREVIOUS_TAG}..${CURRENT_TAG} | grep -E "^frontend/" || true)
+            if [ -n "$FRONTEND_CHANGES" ]; then
+              echo "Frontend changes detected:"
+              echo "$FRONTEND_CHANGES"
+              echo "frontend=true" >> $GITHUB_OUTPUT
+            else
+              echo "No frontend changes detected"
+              echo "frontend=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+      
+      - name: Summary
+        run: |
+          echo "### Change Detection Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Changed | Action |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ steps.check.outputs.backend }} | ${{ steps.check.outputs.backend == 'true' && '🚀 Will build & release' || '⏭️ Will skip' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ${{ steps.check.outputs.frontend }} | ${{ steps.check.outputs.frontend == 'true' && '🚀 Will build & release' || '⏭️ Will skip' }} |" >> $GITHUB_STEP_SUMMARY
+
   # Test backend before release
   test-backend:
     name: Test Backend
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
     
     steps:
       - name: Checkout code
@@ -36,6 +99,8 @@ jobs:
   test-frontend:
     name: Test Frontend
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
     
     steps:
       - name: Checkout code
@@ -64,7 +129,11 @@ jobs:
   build-backend:
     name: Build Backend Binary
     runs-on: ubuntu-latest
-    needs: test-backend
+    needs: [detect-changes, test-backend]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.backend == 'true' &&
+      (needs.test-backend.result == 'success' || needs.test-backend.result == 'skipped')
     
     steps:
       - name: Checkout code
@@ -101,7 +170,11 @@ jobs:
   build-frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
-    needs: test-frontend
+    needs: [detect-changes, test-frontend]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.frontend == 'true' &&
+      (needs.test-frontend.result == 'success' || needs.test-frontend.result == 'skipped')
     
     steps:
       - name: Checkout code
@@ -134,7 +207,11 @@ jobs:
   docker-release:
     name: Build & Push Docker Images
     runs-on: ubuntu-latest
-    needs: [build-backend, build-frontend]
+    needs: [detect-changes, build-backend, build-frontend]
+    if: |
+      always() &&
+      (needs.build-backend.result == 'success' || needs.build-backend.result == 'skipped') &&
+      (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped')
     
     steps:
       - name: Checkout code
@@ -154,6 +231,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata for backend
+        if: needs.detect-changes.outputs.backend == 'true'
         id: meta-backend
         uses: docker/metadata-action@v5
         with:
@@ -165,6 +243,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push backend image
+        if: needs.detect-changes.outputs.backend == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./backend
@@ -175,7 +254,14 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Skip backend image (no changes)
+        if: needs.detect-changes.outputs.backend == 'false'
+        run: |
+          echo "⏭️ Skipping backend image build - no changes detected since last release"
+          echo "Backend remains at version ${{ github.ref_name }} (unchanged from previous release)"
+
       - name: Extract metadata for frontend
+        if: needs.detect-changes.outputs.frontend == 'true'
         id: meta-frontend
         uses: docker/metadata-action@v5
         with:
@@ -187,6 +273,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push frontend image
+        if: needs.detect-changes.outputs.frontend == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
@@ -197,11 +284,31 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Skip frontend image (no changes)
+        if: needs.detect-changes.outputs.frontend == 'false'
+        run: |
+          echo "⏭️ Skipping frontend image build - no changes detected since last release"
+          echo "Frontend remains at version ${{ github.ref_name }} (unchanged from previous release)"
+      
+      - name: Release Summary
+        run: |
+          echo "### Docker Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ needs.detect-changes.outputs.backend == 'true' && '✅ Built & Released' || '⏭️ Skipped (unchanged)' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ${{ needs.detect-changes.outputs.frontend == 'true' && '✅ Built & Released' || '⏭️ Skipped (unchanged)' }} |" >> $GITHUB_STEP_SUMMARY
+
   # Create GitHub Release
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [build-backend, build-frontend, docker-release]
+    needs: [detect-changes, build-backend, build-frontend, docker-release]
+    if: |
+      always() &&
+      needs.docker-release.result == 'success'
     
     steps:
       - name: Checkout code
@@ -210,10 +317,43 @@ jobs:
           fetch-depth: 0
 
       - name: Download backend binaries
+        if: needs.detect-changes.outputs.backend == 'true'
         uses: actions/download-artifact@v4
         with:
           name: backend-binaries
           path: ./binaries
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          {
+            echo "release_notes<<EOF"
+            echo "## Release ${{ github.ref_name }}"
+            echo ""
+            echo "### Components Released"
+            echo ""
+            if [ "${{ needs.detect-changes.outputs.backend }}" == "true" ]; then
+              echo "- ✅ **Backend**: Updated to ${{ github.ref_name }}"
+            else
+              echo "- ⏭️ **Backend**: No changes (remains at ${{ github.ref_name }})"
+            fi
+            if [ "${{ needs.detect-changes.outputs.frontend }}" == "true" ]; then
+              echo "- ✅ **Frontend**: Updated to ${{ github.ref_name }}"
+            else
+              echo "- ⏭️ **Frontend**: No changes (remains at ${{ github.ref_name }})"
+            fi
+            echo ""
+            echo "### Docker Images"
+            echo ""
+            if [ "${{ needs.detect-changes.outputs.backend }}" == "true" ]; then
+              echo "- \`ghcr.io/${{ github.repository }}/backend:${{ github.ref_name }}\`"
+            fi
+            if [ "${{ needs.detect-changes.outputs.frontend }}" == "true" ]; then
+              echo "- \`ghcr.io/${{ github.repository }}/frontend:${{ github.ref_name }}\`"
+            fi
+            echo ""
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -221,6 +361,7 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          body: ${{ steps.notes.outputs.release_notes }}
           files: |
             binaries/chartimpact-backend-linux-amd64
             binaries/chartimpact-backend-linux-arm64

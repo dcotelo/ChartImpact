@@ -77,15 +77,21 @@ This directory contains GitHub Actions workflows for CI/CD automation and securi
 - Tracks security posture over time
 
 ### 5. `release.yml` - Release Workflow
-**Triggers:** When a tag matching `v*.*.*` is pushed (e.g., `v1.0.0`)
+**Triggers:** When a tag matching `v*.*.*` is pushed (e.g., `v1.0.0`), or manual workflow dispatch
 
 **Jobs:**
-- **test-backend**: Backend tests before release
-- **test-frontend**: Frontend tests before release
-- **build-backend**: Build Linux AMD64 and ARM64 binaries
-- **build-frontend**: Build Next.js application
-- **docker-release**: Build and push multi-platform Docker images to GitHub Container Registry
+- **detect-changes**: Detects which components changed since last release
+- **test-backend**: Backend tests (only if backend changed)
+- **test-frontend**: Frontend tests (only if frontend changed)
+- **build-backend**: Build Linux AMD64/ARM64 binaries (only if backend changed)
+- **build-frontend**: Build Next.js application (only if frontend changed)
+- **docker-release**: Build and push Docker images (conditional on changes)
 - **create-release**: Create GitHub release with binaries
+
+**Change Detection:**
+- Compares current tag with previous tag to detect which components changed
+- Skips building Docker images for unchanged components
+- See [docs/release-workflow-changes.md](../../docs/release-workflow-changes.md) for details
 
 **Usage:**
 ```bash
@@ -128,7 +134,8 @@ To reduce unnecessary CI runs and improve feedback loops, workflows are configur
 - OpenSSF Scorecard runs full assessment
 
 **On Releases:**
-- All tests and builds run (not path-filtered)
+- Change detection identifies which components changed
+- Only changed components are built and have Docker images published
 
 ### Benefits
 
