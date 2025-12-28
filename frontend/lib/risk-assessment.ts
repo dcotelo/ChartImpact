@@ -24,6 +24,11 @@ export function assessRisk(resources: ResourceDiffV2[]): ImpactSummary {
   const securitySignals: RiskSignal[] = [];
   const otherSignals: RiskSignal[] = [];
 
+  // Count total changed resources
+  const totalChangedResources = resources.filter(r => 
+    r.changeType === 'added' || r.changeType === 'removed' || r.changeType === 'modified'
+  ).length;
+
   for (const resource of resources) {
     const signals = analyzeResource(resource);
     
@@ -50,7 +55,7 @@ export function assessRisk(resources: ResourceDiffV2[]): ImpactSummary {
 
   // Determine overall verdict
   let verdict: ImpactSummary['verdict'];
-  if (allSignals.length === 0) {
+  if (totalChangedResources === 0) {
     verdict = 'no-changes';
   } else if (totalHighRisk > 0) {
     verdict = 'high-risk';
@@ -68,6 +73,7 @@ export function assessRisk(resources: ResourceDiffV2[]): ImpactSummary {
     totalHighRisk,
     totalMediumRisk,
     totalLowRisk,
+    totalChangedResources,
   };
 }
 

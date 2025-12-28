@@ -245,6 +245,7 @@ export interface ImpactSummary {
   totalHighRisk: number;
   totalMediumRisk: number;
   totalLowRisk: number;
+  totalChangedResources: number;
 }
 
 

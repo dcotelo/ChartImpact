@@ -52,7 +52,7 @@ export function ImpactSummaryComponent({ summary, onViewExplorer }: ImpactSummar
       border: getRiskColors('low').border,
       icon: '✓',
       message: 'Low risk upgrade',
-      description: 'This upgrade contains only low-risk changes.',
+      description: `This upgrade contains ${summary.totalChangedResources} change${summary.totalChangedResources !== 1 ? 's' : ''}, all low-risk. ${summary.totalLowRisk > 0 ? `${summary.totalLowRisk} flagged for minor review.` : 'No significant impacts detected.'}`,
     },
     'no-changes': {
       color: SEMANTIC_COLORS.success,
@@ -60,7 +60,7 @@ export function ImpactSummaryComponent({ summary, onViewExplorer }: ImpactSummar
       border: SEMANTIC_COLORS.successBg,
       icon: '✓',
       message: 'No changes detected',
-      description: 'The two versions are identical.',
+      description: 'The two versions are identical. No differences found in the rendered Helm templates.',
     },
   };
 
