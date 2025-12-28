@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CompareForm } from '@/components/CompareForm';
 import { DemoExamples } from '@/components/DemoExamples';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
@@ -8,6 +8,11 @@ import { DiffExplorer } from '@/components/explorer/DiffExplorer';
 import { CompareResponse, CompareRequest, DiffResultV2 } from '@/lib/types';
 import { API_ENDPOINTS } from '@/lib/api-config';
 import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS } from '@/lib/design-tokens';
+import { 
+  decodeComparisonFromURL, 
+  updateBrowserURL, 
+  getCurrentURLParams 
+} from '@/lib/url-state';
 
 export default function Home() {
   const [result, setResult] = useState<CompareResponse | null>(null);
@@ -18,11 +23,27 @@ export default function Home() {
   const [progressStep, setProgressStep] = useState<number>(0);
   const [progressTotal] = useState<number>(7);
 
+  // Load comparison from URL on mount
+  useEffect(() => {
+    const urlParams = getCurrentURLParams();
+    const urlComparison = decodeComparisonFromURL(urlParams);
+    
+    if (urlComparison) {
+      // Auto-load comparison from URL
+      setFormData(urlComparison as CompareRequest);
+      // Optionally auto-run the comparison
+      // handleCompare(urlComparison as CompareRequest);
+    }
+  }, []);
+
   const handleCompare = async (formData: CompareRequest) => {
     setLoading(true);
     setError(null);
     setResult(null);
     setProgressStep(0);
+    
+    // Update URL with comparison parameters
+    updateBrowserURL(formData);
     
     // Progress steps: 1-Initializing, 2-Cloning, 3-Extracting v1, 4-Extracting v2, 
     // 5-Building dependencies, 6-Rendering templates, 7-Comparing
@@ -204,11 +225,45 @@ export default function Home() {
         )}
 
         {result && (
-          <div style={{ marginTop: SPACING.xl }}>
-            <DiffExplorer 
-              result={result}
-            />
-          </div>
+          <>
+            <div style={{ 
+              marginTop: SPACING.lg,
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: SPACING.sm
+            }}>
+              <button
+                onClick={() => {
+                  if (formData) {
+                    const url = typeof window !== 'undefined' ? window.location.href : '';
+                    navigator.clipboard.writeText(url);
+                    // Could add a toast notification here
+                    alert('Link copied to clipboard!');
+                  }
+                }}
+                style={{
+                  padding: `${SPACING.sm} ${SPACING.md}`,
+                  background: BRAND_COLORS.primary,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: BORDER_RADIUS.sm,
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: SPACING.xs
+                }}
+              >
+                🔗 Copy Link
+              </button>
+            </div>
+            <div style={{ marginTop: SPACING.md }}>
+              <DiffExplorer 
+                result={result}
+              />
+            </div>
+          </>
         )}
       </div>
     </main>
