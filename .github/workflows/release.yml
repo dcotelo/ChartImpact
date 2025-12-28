@@ -5,7 +5,9 @@ on:
     tags:
       - 'v*.*.*'
   workflow_dispatch:
-
+permissions:
+  contents: read
+  packages: write
 jobs:
   # Test backend before release
   test-backend:
