@@ -34,7 +34,6 @@ ChartImpact provides visibility into Helm chart changes, helping teams understan
 
 - [Mission](#-mission)
 - [Current Features](#-current-features)
-- [UX Redesign](#-ux-redesign)
 - [Roadmap](#-roadmap)
 - [Architecture](#-architecture)
 - [Getting Started](#-getting-started)
@@ -45,56 +44,7 @@ ChartImpact provides visibility into Helm chart changes, helping teams understan
 - [Contributing](#-contributing)
 - [License](#-license)
 
-## 🎨 UX Redesign - IMPLEMENTED ✅
 
-ChartImpact has completed a comprehensive UX redesign (Phases 1-4) that transformed the user experience to better align with our mission of helping teams understand deployment risk.
-
-### ✅ Implemented Features
-
-- **🎯 Impact Summary View** - NEW risk-first results view surfaces availability and security risks immediately  
-- **⚡ Simplified Entry** - Collapsible optional fields reduce visual clutter
-- **🔗 Shareable Results** - URL-based sharing for team collaboration
-- **📝 Mission-Aligned Language** - Clear, consistent terminology throughout ("ChartImpact", "Analyze Impact", "Impact Explorer")
-- **🎨 Design System** - Comprehensive design tokens with 8px spacing scale and WCAG AA risk colors
-- **↔️ Smart Navigation** - Toggle between Summary and detailed Explorer without losing results
-
-### Key Improvements
-
-**Time to Value:**
-- ⚡ **Risk assessment:** 1-2 minutes (vs 4-7 min before, 3-5x improvement)
-- 🎯 **Understanding:** <30 seconds (with clear mission and terminology)
-
-**User Experience:**
-- **Risk-First Presentation** - Impact Summary shows what matters before technical details
-- **Contextual Explanations** - Every risk signal explains why it matters
-- **Progressive Disclosure** - Summary → "View Detailed Analysis" → Explorer
-- **Accurate Feedback** - Distinguishes between "no changes" and "low-risk changes"
-
-### 📋 Remaining Work (Phases 5-6)
-
-The following enhancements are planned for future releases:
-
-#### Phase 5: Explorer Enhancements
-- Default filters (show high+medium, hide low)
-- Enhanced resource list with prominent risk indicators
-- Improved details panel with risk explanations
-- Better search & navigation
-
-#### Phase 6: Polish & Accessibility
-- Enhanced empty/error states
-- Full accessibility audit (WCAG AA)
-- Performance optimization
-- Mobile optimization
-
-### Documentation
-
-For reference, complete UX documentation is available in the `ux-revamp/` directory:
-
-- **[UX Documentation Guide](ux-revamp/UX_DOCUMENTATION_GUIDE.md)** - Navigate all UX docs
-- **[UX Redesign Summary](ux-revamp/UX_REDESIGN_SUMMARY.md)** - Executive overview
-- **[UX Principles](ux-revamp/UX_PRINCIPLES.md)** - Mission-driven design principles
-- **[Terminology Guide](ux-revamp/TERMINOLOGY.md)** - Canonical language and copy
-- **[Implementation Roadmap](ux-revamp/IMPLEMENTATION_ROADMAP.md)** - Original 6-phase execution plan
 
 ## 🗺️ Roadmap
 
@@ -288,12 +238,9 @@ Health check endpoint.
   "status": "ok",
   "version": "1.0.0",
   "helmOk": true,
-  "gitOk": true,
-  "dyffOk": false
+  "gitOk": true
 }
 ```
-
-**Note:** The `dyffOk` field is deprecated. ChartImpact uses an internal diff engine by default and does not require dyff.
 
 For detailed API documentation, see [backend/README.md](backend/README.md).
 

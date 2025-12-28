@@ -189,13 +189,9 @@ Health check endpoint.
   "status": "ok",
   "version": "1.0.0",
   "helmOk": true,
-  "gitOk": true,
-  "dyffOk": false
+  "gitOk": true
 }
 ```
-
-**Note:** `dyffOk` is a deprecated field and will always be `false` when using the internal diff engine (default). 
-The status will still be "ok" as the internal diff engine does not require external dependencies.
 
 ## Configuration
 
@@ -231,7 +227,6 @@ All configuration is done via environment variables. Copy `.env.example` to `.en
 ### Features
 - `INTERNAL_DIFF_ENABLED` - Use internal diff engine (default: true, recommended)
   - The internal diff engine provides fast, deterministic, Kubernetes-aware diffing without external dependencies
-  - **DEPRECATED**: Disabling this option is not recommended and fallback options will be removed in a future version
 
 ## Development
 
