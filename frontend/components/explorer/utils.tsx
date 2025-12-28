@@ -1,5 +1,5 @@
 import { ResourceDiff } from '@/lib/types';
-import { RISK_COLORS, SPACING } from '@/lib/design-tokens';
+import { RISK_COLORS } from '@/lib/design-tokens';
 
 /**
  * Common style constants - Dark theme to match Classic view
