@@ -7,6 +7,7 @@ import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { DiffExplorer } from '@/components/explorer/DiffExplorer';
 import { CompareResponse, CompareRequest, DiffResultV2 } from '@/lib/types';
 import { API_ENDPOINTS } from '@/lib/api-config';
+import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS } from '@/lib/design-tokens';
 
 export default function Home() {
   const [result, setResult] = useState<CompareResponse | null>(null);
@@ -129,18 +130,18 @@ export default function Home() {
       maxWidth: '1200px',
       margin: '0 auto',
       background: 'white',
-      borderRadius: '12px',
-      boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+      borderRadius: BORDER_RADIUS.xl,
+      boxShadow: SHADOWS['2xl'],
       overflow: 'hidden'
     }}>
       <div style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '2rem',
+        background: `linear-gradient(135deg, ${BRAND_COLORS.primary} 0%, ${BRAND_COLORS.primaryDark} 100%)`,
+        padding: SPACING.xl,
         color: 'white'
       }}>
         <h1 style={{
           fontSize: '2.5rem',
-          marginBottom: '0.5rem',
+          marginBottom: SPACING.sm,
           fontWeight: 'bold'
         }}>
           🔍 ChartImpact
@@ -153,7 +154,7 @@ export default function Home() {
         </p>
       </div>
 
-      <div style={{ padding: '2rem' }}>
+      <div style={{ padding: SPACING.xl }}>
         <DemoExamples onSelectExample={(data) => {
           setFormData(data);
         }} />
@@ -174,18 +175,18 @@ export default function Home() {
 
         {error && (
           <div style={{
-            marginTop: '1.5rem',
-            padding: '1.5rem',
+            marginTop: SPACING.lg,
+            padding: SPACING.lg,
             background: '#fee',
             border: '1px solid #fcc',
-            borderRadius: '8px',
+            borderRadius: BORDER_RADIUS.md,
             color: '#c33'
           }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '0.5rem'
+              gap: SPACING.sm,
+              marginBottom: SPACING.sm
             }}>
               <span style={{ fontSize: '1.25rem' }}>⚠️</span>
               <strong style={{ fontSize: '1.1rem' }}>Error</strong>
@@ -203,7 +204,7 @@ export default function Home() {
         )}
 
         {result && (
-          <div style={{ marginTop: '2rem' }}>
+          <div style={{ marginTop: SPACING.xl }}>
             <DiffExplorer 
               result={result}
             />
