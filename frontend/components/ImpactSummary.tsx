@@ -110,6 +110,7 @@ export function ImpactSummaryComponent({ summary, onViewExplorer }: ImpactSummar
             gap: SPACING.lg,
             marginTop: SPACING.md,
             fontSize: '0.9rem',
+            color: SEMANTIC_COLORS.textPrimary, // Ensure good contrast on light backgrounds
           }}>
             {summary.totalHighRisk > 0 && (
               <div>
@@ -215,6 +216,7 @@ function Section({ title, signals, defaultExpanded }: SectionProps) {
           alignItems: 'center',
           fontSize: '1.1rem',
           fontWeight: FONT_WEIGHTS.semibold,
+          color: SEMANTIC_COLORS.textPrimary,
         }}
       >
         <span>{title} ({signals.length})</span>
