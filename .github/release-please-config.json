@@ -1,22 +1,16 @@
 {
   "packages": {
-    "backend": {
-      "release-type": "go",
-      "package-name": "chartimpact-backend",
+    ".": {
+      "release-type": "simple",
+      "package-name": "chartimpact",
       "changelog-path": "CHANGELOG.md",
       "bump-minor-pre-major": true,
-      "bump-patch-for-minor-pre-major": true
-    },
-    "frontend": {
-      "release-type": "node",
-      "package-name": "chartimpact-frontend",
-      "changelog-path": "CHANGELOG.md",
-      "bump-minor-pre-major": true,
-      "bump-patch-for-minor-pre-major": true
+      "bump-patch-for-minor-pre-major": true,
+      "extra-files": [
+        "frontend/package.json"
+      ]
     }
   },
-  "separate-pull-requests": true,
-  "group-pull-request-title-pattern": "chore: release ${version}",
   "changelog-sections": [
     { "type": "feat", "section": "Features" },
     { "type": "fix", "section": "Bug Fixes" },
