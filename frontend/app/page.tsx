@@ -8,7 +8,7 @@ import { DiffExplorer } from '@/components/explorer/DiffExplorer';
 import { ImpactSummaryComponent } from '@/components/ImpactSummary';
 import { CompareResponse, CompareRequest, ImpactSummary } from '@/lib/types';
 import { API_ENDPOINTS } from '@/lib/api-config';
-import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS, SEMANTIC_COLORS } from '@/lib/design-tokens';
+import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS } from '@/lib/design-tokens';
 import { 
   decodeComparisonFromURL, 
   updateBrowserURL, 
