@@ -1,6 +1,6 @@
 {
   "name": "chartimpact-frontend",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Modern web frontend for comparing Helm chart versions",
   "private": true,
   "scripts": {
