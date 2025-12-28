@@ -80,28 +80,24 @@ This directory contains GitHub Actions workflows for CI/CD automation and securi
 **Triggers:** When a tag matching `v*.*.*` is pushed (e.g., `v1.0.0`), or manual workflow dispatch
 
 **Jobs:**
-- **detect-changes**: Detects which components (backend/frontend) changed since last release
-- **test-backend**: Backend tests before release (only if backend changed)
-- **test-frontend**: Frontend tests before release (only if frontend changed)
-- **build-backend**: Build Linux AMD64 and ARM64 binaries (only if backend changed)
+- **detect-changes**: Detects which components changed since last release
+- **test-backend**: Backend tests (only if backend changed)
+- **test-frontend**: Frontend tests (only if frontend changed)
+- **build-backend**: Build Linux AMD64/ARM64 binaries (only if backend changed)
 - **build-frontend**: Build Next.js application (only if frontend changed)
-- **docker-release**: Build and push multi-platform Docker images to GitHub Container Registry (conditional based on changes)
-- **create-release**: Create GitHub release with binaries and enhanced release notes
+- **docker-release**: Build and push Docker images (conditional on changes)
+- **create-release**: Create GitHub release with binaries
 
-**Features:**
-- **Intelligent Change Detection**: Only builds Docker images for components that changed
-- **Workflow Summaries**: Clear visibility into which components were released
-- **Enhanced Release Notes**: Shows which components were updated in each release
-- **Resource Optimization**: Skips unnecessary builds to save CI time and registry storage
-- **Unified Versioning**: Maintains single version number (v1.x.x) for project releases
+**Change Detection:**
+- Compares current tag with previous tag to detect which components changed
+- Skips building Docker images for unchanged components
+- See [docs/release-workflow-changes.md](../../docs/release-workflow-changes.md) for details
 
 **Usage:**
 ```bash
 git tag v1.0.0
 git push origin v1.0.0
 ```
-
-**Documentation:** See [docs/WORKFLOW_RELEASE_REVIEW.md](../../docs/WORKFLOW_RELEASE_REVIEW.md) for detailed analysis and [docs/RELEASE_WORKFLOW_RECOMMENDATIONS.md](../../docs/RELEASE_WORKFLOW_RECOMMENDATIONS.md) for implementation details.
 
 ## Workflow Status Badges
 
@@ -138,19 +134,15 @@ To reduce unnecessary CI runs and improve feedback loops, workflows are configur
 - OpenSSF Scorecard runs full assessment
 
 **On Releases:**
-- Change detection determines which components changed since last release
-- Only changed components are tested, built, and have Docker images published
-- Release notes clearly indicate which components were updated
-- Unchanged components skip build steps to optimize CI time
+- Change detection identifies which components changed
+- Only changed components are built and have Docker images published
 
 ### Benefits
 
 ✅ **Faster Feedback**: Only relevant checks run, reducing wait time  
 ✅ **Clearer Signal**: PR checks directly relate to changes made  
 ✅ **Reduced Costs**: Fewer compute minutes used  
-✅ **Better DX**: Contributors see only relevant test results  
-✅ **Efficient Releases**: Release workflow skips unchanged components, saving 5-10 minutes per release  
-✅ **Clear Release Audit Trail**: Workflow summaries and release notes show exactly what changed
+✅ **Better DX**: Contributors see only relevant test results
 
 ### Edge Cases Handled
 
