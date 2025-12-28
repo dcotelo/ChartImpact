@@ -48,7 +48,8 @@ export function encodeComparisonToURL(request: CompareRequest): string {
   }
   
   if (request.valuesContent) {
-    // Encode values content (can be large, but URL should handle it)
+    // Note: Large values content may exceed URL length limits (2KB-8KB typically)
+    // For production, consider alternative storage for large content
     params.set(URL_PARAMS.valuesContent, request.valuesContent);
   }
   
@@ -57,6 +58,7 @@ export function encodeComparisonToURL(request: CompareRequest): string {
 
 /**
  * Decode URL search params into comparison request
+ * Returns null if required parameters are missing or invalid
  */
 export function decodeComparisonFromURL(searchParams: URLSearchParams): Partial<CompareRequest> | null {
   const repo = searchParams.get(URL_PARAMS.repository);
@@ -64,8 +66,10 @@ export function decodeComparisonFromURL(searchParams: URLSearchParams): Partial<
   const v1 = searchParams.get(URL_PARAMS.version1);
   const v2 = searchParams.get(URL_PARAMS.version2);
   
-  // Need at least repo, path, and both versions for a valid comparison
-  if (!repo || !path || !v1 || !v2) {
+  // Validate required parameters exist and are not empty strings
+  if (!repo || !path || !v1 || !v2 || 
+      repo.trim() === '' || path.trim() === '' || 
+      v1.trim() === '' || v2.trim() === '') {
     return null;
   }
   

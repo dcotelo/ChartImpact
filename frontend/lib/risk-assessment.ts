@@ -73,19 +73,35 @@ export function assessRisk(resources: ResourceDiffV2[]): ImpactSummary {
 
 /**
  * Analyze a single resource for risk signals
+ * 
+ * Risk Categorization Logic:
+ * - Availability-critical: Deployment, StatefulSet, DaemonSet, Service
+ *   These directly affect application uptime and accessibility
+ * - Security-sensitive: NetworkPolicy, ServiceAccount, RBAC resources, Secret
+ *   These control access and network security
  */
+
+// Resource types that affect availability
+const AVAILABILITY_CRITICAL_KINDS = ['Deployment', 'StatefulSet', 'DaemonSet', 'Service'];
+
+// Resource types that affect security
+const SECURITY_SENSITIVE_KINDS = [
+  'NetworkPolicy', 
+  'ServiceAccount', 
+  'Role', 
+  'RoleBinding', 
+  'ClusterRole', 
+  'ClusterRoleBinding', 
+  'Secret'
+];
+
 function analyzeResource(resource: ResourceDiffV2): RiskSignal[] {
   const signals: RiskSignal[] = [];
   const { identity, changeType, changes } = resource;
   const resourceName = `${identity.kind}/${identity.name}`;
 
-  // High-priority resources that affect availability
-  const availabilityKinds = ['Deployment', 'StatefulSet', 'DaemonSet', 'Service'];
-  const isAvailabilityCritical = availabilityKinds.includes(identity.kind);
-
-  // Security-sensitive resources
-  const securityKinds = ['NetworkPolicy', 'ServiceAccount', 'Role', 'RoleBinding', 'ClusterRole', 'ClusterRoleBinding', 'Secret'];
-  const isSecuritySensitive = securityKinds.includes(identity.kind);
+  const isAvailabilityCritical = AVAILABILITY_CRITICAL_KINDS.includes(identity.kind);
+  const isSecuritySensitive = SECURITY_SENSITIVE_KINDS.includes(identity.kind);
 
   // Resource added or removed
   if (changeType === 'added') {

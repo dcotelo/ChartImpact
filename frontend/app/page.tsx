@@ -250,9 +250,13 @@ export default function Home() {
                 onClick={() => {
                   if (formData) {
                     const url = typeof window !== 'undefined' ? window.location.href : '';
-                    navigator.clipboard.writeText(url);
-                    // Could add a toast notification here
-                    alert('Link copied to clipboard!');
+                    navigator.clipboard.writeText(url).then(() => {
+                      // Success - could add a toast notification in the future
+                      console.log('Link copied to clipboard');
+                    }).catch(() => {
+                      // Fallback for older browsers
+                      alert('Link copied to clipboard!');
+                    });
                   }
                 }}
                 style={{
