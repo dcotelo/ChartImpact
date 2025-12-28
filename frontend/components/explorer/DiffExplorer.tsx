@@ -60,7 +60,7 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
         borderRadius: '8px',
         textAlign: 'center'
       }}>
-        <h3 style={{ marginBottom: '1rem', color: COLORS.text }}>Diff Explorer</h3>
+        <h3 style={{ marginBottom: '1rem', color: COLORS.text }}>Impact Explorer</h3>
         <p style={{ color: COLORS.textLight, marginBottom: '1rem' }}>
           No comparison data available.
           <br />
@@ -79,7 +79,7 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
         borderRadius: '8px',
         textAlign: 'center'
       }}>
-        <h3 style={{ marginBottom: '1rem', color: COLORS.text }}>Diff Explorer</h3>
+        <h3 style={{ marginBottom: '1rem', color: COLORS.text }}>Impact Explorer</h3>
         <p style={{ color: COLORS.textLight }}>
           No resource changes detected between the two versions.
           <br />
@@ -113,7 +113,7 @@ export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <h2 style={{ fontSize: '1.5rem', margin: 0 }}>
-              🔍 Diff Explorer
+              🔍 Impact Explorer
             </h2>
             {isDemoMode && (
               <span style={{

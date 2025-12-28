@@ -50,14 +50,14 @@ export function DemoExamples({ onSelectExample }: DemoExamplesProps) {
         color: '#333',
         fontWeight: '600'
       }}>
-        📚 Demo Examples
+        🚀 Quick Start
       </h3>
       <p style={{
         fontSize: '0.9rem',
         color: '#666',
         marginBottom: '1rem'
       }}>
-        Try these pre-configured examples to see how the diff viewer works:
+        See how ChartImpact surfaces deployment risks in real chart upgrades:
       </p>
       <div style={{
         display: 'flex',

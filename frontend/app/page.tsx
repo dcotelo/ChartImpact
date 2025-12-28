@@ -27,7 +27,7 @@ export default function Home() {
     // 5-Building dependencies, 6-Rendering templates, 7-Comparing
     
     try {
-      setProgressMessage('Initializing comparison...');
+      setProgressMessage('Initializing analysis...');
       setProgressStep(1);
       await new Promise(resolve => setTimeout(resolve, 100));
       
@@ -40,7 +40,7 @@ export default function Home() {
         'Extracting version 2...',
         'Building chart dependencies...',
         'Rendering Helm templates...',
-        'Comparing YAML differences...'
+        'Analyzing changes...'
       ];
 
       let progressInterval: NodeJS.Timeout | null = null;
@@ -90,7 +90,7 @@ export default function Home() {
           throw new Error(errorMsg);
         }
 
-        setProgressMessage('Comparison complete!');
+        setProgressMessage('Analysis complete!');
         setProgressStep(7);
         setResult(data);
         
@@ -143,13 +143,13 @@ export default function Home() {
           marginBottom: '0.5rem',
           fontWeight: 'bold'
         }}>
-          🔍 Chart Impact
+          🔍 ChartImpact
         </h1>
         <p style={{
           fontSize: '1.1rem',
           opacity: 0.9
         }}>
-          Compare differences between two Helm chart versions
+          Understand deployment risk before upgrading Helm charts
         </p>
       </div>
 

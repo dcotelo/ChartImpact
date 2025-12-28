@@ -19,7 +19,7 @@ describe('CompareForm', () => {
     expect(versionInputs.length).toBeGreaterThanOrEqual(2);
     expect(screen.getByPlaceholderText('values/prod.yaml')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/replicaCount: 3/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /compare versions/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /analyze impact/i })).toBeInTheDocument();
   });
 
   it('should have default value for chart path', () => {
@@ -40,7 +40,7 @@ describe('CompareForm', () => {
       const versionInputs2 = screen.getAllByPlaceholderText('Enter version manually');
       await user.type(versionInputs2[0], 'v1.0.0');
       await user.type(versionInputs2[1], 'v1.1.0');
-      await user.click(screen.getByRole('button', { name: /compare versions/i }));
+      await user.click(screen.getByRole('button', { name: /analyze impact/i }));
     });
 
     await waitFor(() => {
@@ -58,14 +58,14 @@ describe('CompareForm', () => {
   it('should disable submit button when loading', () => {
     render(<CompareForm onSubmit={mockOnSubmit} loading={true} />);
 
-    const submitButton = screen.getByRole('button', { name: /comparing/i });
+    const submitButton = screen.getByRole('button', { name: /analyzing/i });
     expect(submitButton).toBeDisabled();
   });
 
   it('should show loading text on button when loading', () => {
     render(<CompareForm onSubmit={mockOnSubmit} loading={true} />);
 
-    expect(screen.getByRole('button', { name: /comparing/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /analyzing/i })).toBeInTheDocument();
   });
 
   it('should allow optional values file input', async () => {
@@ -77,7 +77,7 @@ describe('CompareForm', () => {
       await user.type(versionInputs3[0], 'v1.0.0');
       await user.type(versionInputs3[1], 'v1.1.0');
       await user.type(screen.getByPlaceholderText('values/prod.yaml'), 'values/prod.yaml');
-      await user.click(screen.getByRole('button', { name: /compare versions/i }));
+      await user.click(screen.getByRole('button', { name: /analyze impact/i }));
     });
 
     await waitFor(() => {
@@ -100,7 +100,7 @@ describe('CompareForm', () => {
       const textarea = screen.getByPlaceholderText(/replicaCount: 3/i);
       await user.clear(textarea);
       await user.type(textarea, 'replicaCount: 3\nimage:\n  tag: latest');
-      await user.click(screen.getByRole('button', { name: /compare versions/i }));
+      await user.click(screen.getByRole('button', { name: /analyze impact/i }));
     });
 
     await waitFor(() => {

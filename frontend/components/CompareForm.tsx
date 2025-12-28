@@ -441,7 +441,7 @@ export function CompareForm({ onSubmit, loading, initialData }: CompareFormProps
           transition: 'opacity 0.2s'
         }}
       >
-        {loading ? 'Comparing...' : 'Compare Versions'}
+        {loading ? 'Analyzing...' : 'Analyze Impact'}
       </button>
     </form>
   );

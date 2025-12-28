@@ -11,8 +11,8 @@ describe('DemoExamples', () => {
   it('renders demo examples section', () => {
     render(<DemoExamples onSelectExample={mockOnSelectExample} />);
     
-    expect(screen.getByText('📚 Demo Examples')).toBeInTheDocument();
-    expect(screen.getByText(/Try these pre-configured examples/i)).toBeInTheDocument();
+    expect(screen.getByText('🚀 Quick Start')).toBeInTheDocument();
+    expect(screen.getByText(/See how ChartImpact surfaces deployment risks/i)).toBeInTheDocument();
   });
 
   it('displays all example buttons', () => {
