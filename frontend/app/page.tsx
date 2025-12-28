@@ -244,31 +244,35 @@ export default function Home() {
               marginTop: SPACING.lg,
               display: 'flex',
               justifyContent: 'space-between',
+              alignItems: 'center',
               gap: SPACING.sm
             }}>
-              {/* Back to Form button - only show when in Explorer view */}
+              {/* Back to Summary/Form button - show when in Explorer view */}
               {showExplorer && (
                 <button
                   onClick={() => {
+                    // Go back to Impact Summary without clearing results
                     setShowExplorer(false);
-                    setResult(null);
-                    setImpactSummary(null);
                   }}
                   style={{
-                    padding: `${SPACING.sm} ${SPACING.md}`,
-                    background: SEMANTIC_COLORS.bgSecondary,
-                    color: SEMANTIC_COLORS.textPrimary,
-                    border: `1px solid ${SEMANTIC_COLORS.borderMedium}`,
+                    padding: `${SPACING.md} ${SPACING.lg}`,
+                    background: BRAND_COLORS.primary,
+                    color: 'white',
+                    border: 'none',
                     borderRadius: BORDER_RADIUS.sm,
                     cursor: 'pointer',
-                    fontSize: '0.9rem',
+                    fontSize: '1rem',
                     fontWeight: '600',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: SPACING.xs
+                    gap: SPACING.sm,
+                    transition: 'opacity 0.2s',
+                    boxShadow: SHADOWS.sm
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 >
-                  ← Back to Form
+                  ← Back to Summary
                 </button>
               )}
               <div style={{ marginLeft: 'auto' }}>

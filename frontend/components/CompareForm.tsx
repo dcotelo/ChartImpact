@@ -429,7 +429,8 @@ export function CompareForm({ onSubmit, loading, initialData }: CompareFormProps
                   padding: '0.75rem',
                   border: '1px solid #ddd',
                   borderRadius: '6px',
-                  fontSize: '1rem'
+                  fontSize: '1rem',
+                  backgroundColor: '#fff'
                 }}
               />
               <small style={{ color: '#666', fontSize: '0.875rem' }}>
@@ -457,7 +458,8 @@ export function CompareForm({ onSubmit, loading, initialData }: CompareFormProps
                   border: '1px solid #ddd',
                   borderRadius: '6px',
                   fontSize: '1rem',
-                  fontFamily: 'monospace'
+                  fontFamily: 'monospace',
+                  backgroundColor: '#fff'
                 }}
               />
               <small style={{ color: '#666', fontSize: '0.875rem' }}>
