@@ -8,7 +8,6 @@
  */
 
 import { 
-  RiskLevel, 
   ImpactCategory, 
   RiskSignal, 
   ImpactSummary,
