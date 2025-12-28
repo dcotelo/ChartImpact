@@ -26,7 +26,7 @@ interface ImpactSummaryProps {
 }
 
 export function ImpactSummaryComponent({ summary, onViewExplorer }: ImpactSummaryProps) {
-  const [expandedOther, setExpandedOther] = useState(false);
+  const [expandedOther] = useState(false);
 
   // Verdict styling
   const verdictConfig = {
