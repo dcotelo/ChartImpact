@@ -5,7 +5,8 @@ import { CompareForm } from '@/components/CompareForm';
 import { DemoExamples } from '@/components/DemoExamples';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { DiffExplorer } from '@/components/explorer/DiffExplorer';
-import { CompareResponse, CompareRequest, DiffResultV2 } from '@/lib/types';
+import { ImpactSummaryComponent } from '@/components/ImpactSummary';
+import { CompareResponse, CompareRequest, ImpactSummary } from '@/lib/types';
 import { API_ENDPOINTS } from '@/lib/api-config';
 import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS } from '@/lib/design-tokens';
 import { 
@@ -13,6 +14,7 @@ import {
   updateBrowserURL, 
   getCurrentURLParams 
 } from '@/lib/url-state';
+import { assessRisk } from '@/lib/risk-assessment';
 
 export default function Home() {
   const [result, setResult] = useState<CompareResponse | null>(null);
@@ -22,6 +24,8 @@ export default function Home() {
   const [progressMessage, setProgressMessage] = useState<string>('');
   const [progressStep, setProgressStep] = useState<number>(0);
   const [progressTotal] = useState<number>(7);
+  const [impactSummary, setImpactSummary] = useState<ImpactSummary | null>(null);
+  const [showExplorer, setShowExplorer] = useState(false);
 
   // Load comparison from URL on mount
   useEffect(() => {
@@ -115,6 +119,16 @@ export default function Home() {
         setProgressMessage('Analysis complete!');
         setProgressStep(7);
         setResult(data);
+        
+        // Generate impact summary if we have structured diff data
+        if (data.structuredDiff && data.structuredDiff.resources) {
+          const summary = assessRisk(data.structuredDiff.resources);
+          setImpactSummary(summary);
+          setShowExplorer(false); // Start with summary view
+        } else {
+          setImpactSummary(null);
+          setShowExplorer(true); // Go straight to explorer if no structured data
+        }
         
         setTimeout(() => {
           setProgressMessage('');
@@ -258,11 +272,20 @@ export default function Home() {
                 🔗 Copy Link
               </button>
             </div>
-            <div style={{ marginTop: SPACING.md }}>
-              <DiffExplorer 
-                result={result}
+            
+            {/* Show Impact Summary first, then Explorer on demand */}
+            {impactSummary && !showExplorer ? (
+              <ImpactSummaryComponent 
+                summary={impactSummary}
+                onViewExplorer={() => setShowExplorer(true)}
               />
-            </div>
+            ) : (
+              <div style={{ marginTop: SPACING.md }}>
+                <DiffExplorer 
+                  result={result}
+                />
+              </div>
+            )}
           </>
         )}
       </div>
