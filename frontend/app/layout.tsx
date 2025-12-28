@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Chart Impact',
-  description: 'Compare differences between two Helm chart versions',
+  title: 'ChartImpact',
+  description: 'Understand deployment risk before upgrading Helm charts',
 }
 
 export default function RootLayout({

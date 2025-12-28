@@ -80,7 +80,7 @@ describe('DiffExplorer - Backend API Integration', () => {
       render(<DiffExplorer result={mockResult} />);
 
       // Explorer should render
-      expect(screen.getByText(/Diff Explorer/i)).toBeInTheDocument();
+      expect(screen.getByText(/Impact Explorer/i)).toBeInTheDocument();
       
       // Should NOT show demo mode badge (using real backend data)
       expect(screen.queryByText(/DEMO MODE/i)).not.toBeInTheDocument();
@@ -185,7 +185,7 @@ describe('DiffExplorer - Backend API Integration', () => {
       render(<DiffExplorer result={mockResult} />);
 
       // Should still render (not blocked)
-      expect(screen.getByText(/Diff Explorer/i)).toBeInTheDocument();
+      expect(screen.getByText(/Impact Explorer/i)).toBeInTheDocument();
       
       // Should show adapted badge
       expect(screen.getByText(/ADAPTED FROM PLAIN DIFF/i)).toBeInTheDocument();
@@ -206,7 +206,7 @@ describe('DiffExplorer - Backend API Integration', () => {
       render(<DiffExplorer result={mockResult} />);
 
       // Explorer should still work with plain diff fallback
-      expect(screen.getByText(/Diff Explorer/i)).toBeInTheDocument();
+      expect(screen.getByText(/Impact Explorer/i)).toBeInTheDocument();
       expect(screen.queryByText(/No comparison data available/i)).not.toBeInTheDocument();
     });
   });
@@ -314,7 +314,7 @@ describe('DiffExplorer - Backend API Integration', () => {
       expect(screen.queryByText(/DEMO MODE/i)).not.toBeInTheDocument();
       
       // Should render with backend data
-      expect(screen.getByText(/Diff Explorer/i)).toBeInTheDocument();
+      expect(screen.getByText(/Impact Explorer/i)).toBeInTheDocument();
     });
 
     it('should fallback to plain diff conversion as last resort', () => {
@@ -349,7 +349,7 @@ describe('DiffExplorer - Backend API Integration', () => {
       render(<DiffExplorer result={mockResult} />);
 
       // Stats should be accessible in the UI
-      expect(screen.getByText(/Diff Explorer/i)).toBeInTheDocument();
+      expect(screen.getByText(/Impact Explorer/i)).toBeInTheDocument();
     });
   });
 
@@ -425,7 +425,7 @@ describe('DiffExplorer - Backend API Integration', () => {
       expect(() => render(<DiffExplorer result={mockResult} />)).not.toThrow();
       
       // Should still render
-      expect(screen.getByText(/Diff Explorer/i)).toBeInTheDocument();
+      expect(screen.getByText(/Impact Explorer/i)).toBeInTheDocument();
     });
   });
 });

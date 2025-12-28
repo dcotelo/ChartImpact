@@ -1,7 +1,9 @@
 import { ResourceDiff } from '@/lib/types';
+import { RISK_COLORS } from '@/lib/design-tokens';
 
 /**
  * Common style constants - Dark theme to match Classic view
+ * Note: Risk colors now use design tokens for consistency
  */
 export const COLORS = {
   // Change type colors (keep semantic colors consistent)
@@ -22,11 +24,11 @@ export const COLORS = {
   modifiedText: '#ffb74d',
   unchangedText: '#999',
   
-  // Importance colors
-  critical: '#f44336',
-  high: '#ff9800',
-  medium: '#fbc02d',
-  low: '#4caf50',
+  // Importance/Risk colors - using design tokens
+  critical: RISK_COLORS.high,
+  high: RISK_COLORS.high,
+  medium: RISK_COLORS.medium,
+  low: RISK_COLORS.low,
   defaultImportance: '#999',
   
   // UI colors - Dark theme

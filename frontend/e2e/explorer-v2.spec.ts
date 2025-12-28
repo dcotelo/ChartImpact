@@ -155,7 +155,7 @@ test.describe('Explorer - End-to-End Tests', () => {
       await page.click('button:has-text("Explorer")');
       
       // CRITICAL: Explorer must render
-      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
+      await expect(page.locator('text=/Impact Explorer/i')).toBeVisible();
       
       // CRITICAL: Blocking message must NOT appear
       await expect(page.locator('text=/No comparison data available/i')).not.toBeVisible();
@@ -205,7 +205,7 @@ test.describe('Explorer - End-to-End Tests', () => {
       
       // Switch to Explorer
       await page.click('button:has-text("Explorer")');
-      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
+      await expect(page.locator('text=/Impact Explorer/i')).toBeVisible();
       await expect(page.locator('text=/Deployment/i').first()).toBeVisible();
       
       // Switch back to Classic
@@ -214,7 +214,7 @@ test.describe('Explorer - End-to-End Tests', () => {
       
       // Switch to Explorer again - should still work
       await page.click('button:has-text("Explorer")');
-      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
+      await expect(page.locator('text=/Impact Explorer/i')).toBeVisible();
       await expect(page.locator('text=/No comparison data available/i')).not.toBeVisible();
     });
   });
@@ -230,7 +230,7 @@ test.describe('Explorer - End-to-End Tests', () => {
       await page.click('button:has-text("Explorer")');
       
       // CRITICAL: Explorer must still render (fallback to plain diff converter)
-      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
+      await expect(page.locator('text=/Impact Explorer/i')).toBeVisible();
       
       // CRITICAL: Blocking message must NOT appear
       await expect(page.locator('text=/No comparison data available/i')).not.toBeVisible();
@@ -311,7 +311,7 @@ test.describe('Explorer - End-to-End Tests', () => {
       }
       
       // Must render successfully
-      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
+      await expect(page.locator('text=/Impact Explorer/i')).toBeVisible();
     });
     
     test('CRITICAL: Explorer must NEVER block when plain diff exists', async ({ page }) => {
@@ -323,7 +323,7 @@ test.describe('Explorer - End-to-End Tests', () => {
       
       // Must not block with plain diff
       await expect(page.locator('text=/No comparison data available/i')).not.toBeVisible();
-      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
+      await expect(page.locator('text=/Impact Explorer/i')).toBeVisible();
     });
     
     test('CRITICAL: Both Classic and Explorer must use the same comparison data', async ({ page }) => {
@@ -342,7 +342,7 @@ test.describe('Explorer - End-to-End Tests', () => {
       // Explorer must show the same versions (same data source)
       await expect(page.locator('text=/1.0.0/')).toBeVisible();
       await expect(page.locator('text=/1.1.0/')).toBeVisible();
-      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
+      await expect(page.locator('text=/Impact Explorer/i')).toBeVisible();
     });
   });
   
@@ -363,7 +363,7 @@ test.describe('Explorer - End-to-End Tests', () => {
       
       // Demo route should show DEMO MODE badge
       await expect(page.locator('text=/DEMO MODE/i')).toBeVisible();
-      await expect(page.locator('text=/Diff Explorer/i')).toBeVisible();
+      await expect(page.locator('text=/Impact Explorer/i')).toBeVisible();
     });
   });
 });

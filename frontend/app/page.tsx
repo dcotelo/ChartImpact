@@ -1,12 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CompareForm } from '@/components/CompareForm';
 import { DemoExamples } from '@/components/DemoExamples';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { DiffExplorer } from '@/components/explorer/DiffExplorer';
-import { CompareResponse, CompareRequest, DiffResultV2 } from '@/lib/types';
+import { ImpactSummaryComponent } from '@/components/ImpactSummary';
+import { CompareResponse, CompareRequest, ImpactSummary } from '@/lib/types';
 import { API_ENDPOINTS } from '@/lib/api-config';
+import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS } from '@/lib/design-tokens';
+import { 
+  decodeComparisonFromURL, 
+  updateBrowserURL, 
+  getCurrentURLParams 
+} from '@/lib/url-state';
+import { assessRisk } from '@/lib/risk-assessment';
 
 export default function Home() {
   const [result, setResult] = useState<CompareResponse | null>(null);
@@ -16,6 +24,21 @@ export default function Home() {
   const [progressMessage, setProgressMessage] = useState<string>('');
   const [progressStep, setProgressStep] = useState<number>(0);
   const [progressTotal] = useState<number>(7);
+  const [impactSummary, setImpactSummary] = useState<ImpactSummary | null>(null);
+  const [showExplorer, setShowExplorer] = useState(false);
+
+  // Load comparison from URL on mount
+  useEffect(() => {
+    const urlParams = getCurrentURLParams();
+    const urlComparison = decodeComparisonFromURL(urlParams);
+    
+    if (urlComparison) {
+      // Auto-load comparison from URL
+      setFormData(urlComparison as CompareRequest);
+      // Optionally auto-run the comparison
+      // handleCompare(urlComparison as CompareRequest);
+    }
+  }, []);
 
   const handleCompare = async (formData: CompareRequest) => {
     setLoading(true);
@@ -23,11 +46,14 @@ export default function Home() {
     setResult(null);
     setProgressStep(0);
     
+    // Update URL with comparison parameters
+    updateBrowserURL(formData);
+    
     // Progress steps: 1-Initializing, 2-Cloning, 3-Extracting v1, 4-Extracting v2, 
     // 5-Building dependencies, 6-Rendering templates, 7-Comparing
     
     try {
-      setProgressMessage('Initializing comparison...');
+      setProgressMessage('Initializing analysis...');
       setProgressStep(1);
       await new Promise(resolve => setTimeout(resolve, 100));
       
@@ -40,7 +66,7 @@ export default function Home() {
         'Extracting version 2...',
         'Building chart dependencies...',
         'Rendering Helm templates...',
-        'Comparing YAML differences...'
+        'Analyzing changes...'
       ];
 
       let progressInterval: NodeJS.Timeout | null = null;
@@ -90,9 +116,19 @@ export default function Home() {
           throw new Error(errorMsg);
         }
 
-        setProgressMessage('Comparison complete!');
+        setProgressMessage('Analysis complete!');
         setProgressStep(7);
         setResult(data);
+        
+        // Generate impact summary if we have structured diff data
+        if (data.structuredDiff && data.structuredDiff.resources) {
+          const summary = assessRisk(data.structuredDiff.resources);
+          setImpactSummary(summary);
+          setShowExplorer(false); // Start with summary view
+        } else {
+          setImpactSummary(null);
+          setShowExplorer(true); // Go straight to explorer if no structured data
+        }
         
         setTimeout(() => {
           setProgressMessage('');
@@ -129,31 +165,31 @@ export default function Home() {
       maxWidth: '1200px',
       margin: '0 auto',
       background: 'white',
-      borderRadius: '12px',
-      boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+      borderRadius: BORDER_RADIUS.xl,
+      boxShadow: SHADOWS['2xl'],
       overflow: 'hidden'
     }}>
       <div style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '2rem',
+        background: `linear-gradient(135deg, ${BRAND_COLORS.primary} 0%, ${BRAND_COLORS.primaryDark} 100%)`,
+        padding: SPACING.xl,
         color: 'white'
       }}>
         <h1 style={{
           fontSize: '2.5rem',
-          marginBottom: '0.5rem',
+          marginBottom: SPACING.sm,
           fontWeight: 'bold'
         }}>
-          🔍 Chart Impact
+          🔍 ChartImpact
         </h1>
         <p style={{
           fontSize: '1.1rem',
           opacity: 0.9
         }}>
-          Compare differences between two Helm chart versions
+          Understand deployment risk before upgrading Helm charts
         </p>
       </div>
 
-      <div style={{ padding: '2rem' }}>
+      <div style={{ padding: SPACING.xl }}>
         <DemoExamples onSelectExample={(data) => {
           setFormData(data);
         }} />
@@ -174,18 +210,18 @@ export default function Home() {
 
         {error && (
           <div style={{
-            marginTop: '1.5rem',
-            padding: '1.5rem',
+            marginTop: SPACING.lg,
+            padding: SPACING.lg,
             background: '#fee',
             border: '1px solid #fcc',
-            borderRadius: '8px',
+            borderRadius: BORDER_RADIUS.md,
             color: '#c33'
           }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '0.5rem'
+              gap: SPACING.sm,
+              marginBottom: SPACING.sm
             }}>
               <span style={{ fontSize: '1.25rem' }}>⚠️</span>
               <strong style={{ fontSize: '1.1rem' }}>Error</strong>
@@ -203,11 +239,89 @@ export default function Home() {
         )}
 
         {result && (
-          <div style={{ marginTop: '2rem' }}>
-            <DiffExplorer 
-              result={result}
-            />
-          </div>
+          <>
+            <div style={{ 
+              marginTop: SPACING.lg,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: SPACING.sm
+            }}>
+              {/* Back to Summary/Form button - show when in Explorer view */}
+              {showExplorer && (
+                <button
+                  onClick={() => {
+                    // Go back to Impact Summary without clearing results
+                    setShowExplorer(false);
+                  }}
+                  style={{
+                    padding: `${SPACING.md} ${SPACING.lg}`,
+                    background: BRAND_COLORS.primary,
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: BORDER_RADIUS.sm,
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: SPACING.sm,
+                    transition: 'opacity 0.2s',
+                    boxShadow: SHADOWS.sm
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                >
+                  ← Back to Summary
+                </button>
+              )}
+              <div style={{ marginLeft: 'auto' }}>
+                <button
+                  onClick={() => {
+                    if (formData) {
+                      const url = typeof window !== 'undefined' ? window.location.href : '';
+                      navigator.clipboard.writeText(url).then(() => {
+                        // Success - could add a toast notification in the future
+                        console.log('Link copied to clipboard');
+                      }).catch(() => {
+                        // Fallback for older browsers
+                        alert('Link copied to clipboard!');
+                      });
+                    }
+                  }}
+                  style={{
+                    padding: `${SPACING.sm} ${SPACING.md}`,
+                    background: BRAND_COLORS.primary,
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: BORDER_RADIUS.sm,
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: SPACING.xs
+                  }}
+                >
+                  🔗 Copy Link
+                </button>
+              </div>
+            </div>
+            
+            {/* Show Impact Summary first, then Explorer on demand */}
+            {impactSummary && !showExplorer ? (
+              <ImpactSummaryComponent 
+                summary={impactSummary}
+                onViewExplorer={() => setShowExplorer(true)}
+              />
+            ) : (
+              <div style={{ marginTop: SPACING.md }}>
+                <DiffExplorer 
+                  result={result}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
     </main>
