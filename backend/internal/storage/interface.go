@@ -123,12 +123,12 @@ type AnalyticsResult struct {
 
 // ChartPopularity represents popularity statistics for a chart
 type ChartPopularity struct {
-	Repository       string
-	ChartPath        string
-	ComparisonCount  int
-	WithChanges      int
-	AvgModified      float64
-	LastComparisonAt time.Time
+	Repository       string    `json:"repository" db:"repository"`
+	ChartPath        string    `json:"chartPath" db:"chart_path"`
+	ComparisonCount  int       `json:"comparisonCount" db:"comparison_count"`
+	WithChanges      int       `json:"withChanges" db:"with_changes"`
+	AvgModified      float64   `json:"avgModified" db:"avg_modified_resources"`
+	LastComparisonAt time.Time `json:"lastComparisonAt" db:"last_comparison_at"`
 }
 
 // BreakingChangeStats represents statistics for charts with breaking changes

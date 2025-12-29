@@ -9,7 +9,7 @@ interface ChartPopularity {
   chartPath: string;
   comparisonCount: number;
   withChanges: number;
-  avgModifiedResources: number;
+  avgModified: number;
   lastComparisonAt: string;
 }
 
@@ -388,7 +388,7 @@ export default function AnalyticsPage() {
                           fontWeight: 700,
                           color: '#374151',
                         }}>
-                          {chart.avgModifiedResources.toFixed(1)}
+                          {chart.avgModified.toFixed(1)}
                         </div>
                       </div>
                     </div>
