@@ -160,52 +160,48 @@ function AnalysisContent() {
   if (loading) {
     return (
       <div style={{
-        minHeight: '100vh',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: SPACING.xl,
         background: '#f8f9fa',
+        overflow: 'hidden',
       }}>
         <div style={{
-          background: 'white',
-          borderRadius: BORDER_RADIUS.xl,
-          padding: `${SPACING['2xl']} ${SPACING.xl}`,
-          boxShadow: SHADOWS.lg,
-          maxWidth: '600px',
-          width: '100%',
+          textAlign: 'center',
+          marginBottom: SPACING.xl,
         }}>
           <div style={{
-            textAlign: 'center',
-            marginBottom: SPACING.xl,
+            fontSize: '48px',
+            marginBottom: SPACING.md,
+          }}>🔍</div>
+          <h1 style={{
+            fontSize: '28px',
+            fontWeight: 700,
+            color: BRAND_COLORS.primary,
+            marginBottom: SPACING.sm,
+            margin: 0,
           }}>
-            <div style={{
-              fontSize: '48px',
-              marginBottom: SPACING.md,
-            }}>🔍</div>
-            <h1 style={{
-              fontSize: '28px',
-              fontWeight: 700,
-              color: BRAND_COLORS.primary,
-              marginBottom: SPACING.sm,
-              margin: 0,
-            }}>
-              Analyzing Changes
-            </h1>
-            <p style={{
-              fontSize: '14px',
-              color: '#64748b',
-              margin: 0,
-            }}>
-              This may take a moment...
-            </p>
-          </div>
-          <ProgressIndicator
-            message={progressMessage}
-            step={progressStep}
-            totalSteps={progressTotal}
-          />
+            Analyzing Changes
+          </h1>
+          <p style={{
+            fontSize: '14px',
+            color: '#64748b',
+            margin: 0,
+          }}>
+            This may take a moment...
+          </p>
         </div>
+        <ProgressIndicator
+          message={progressMessage}
+          step={progressStep}
+          totalSteps={progressTotal}
+        />
       </div>
     );
   }
