@@ -24,6 +24,8 @@ ChartImpact provides visibility into Helm chart changes, helping teams understan
 - ⚡ **Risk Signal Visibility** - Understand changes to availability-critical resources (Deployments, StatefulSets, Services)
 - 🔐 **Security Impact Awareness** - Surface changes to security-sensitive configurations (RBAC, NetworkPolicies, ServiceAccounts)
 - 🔗 **Shareable Links** - URL-based sharing enables team collaboration on comparison results
+- 💾 **Result Storage & Replay** - Persistent storage of analysis results with 30-day retention, gzip compression, and hash-based deduplication
+- 📈 **Analytics Dashboard** - Insights into most compared charts, change rates, and deployment risk trends
 - 🎨 **Modern UI** - Clean, responsive interface with mission-aligned design and consistent terminology
 - 🚀 **Fast & Efficient** - Go backend with Helm Go SDK for optimal performance
 - 🔧 **Flexible** - Support for custom values files or inline values content
@@ -95,18 +97,24 @@ ChartImpact uses a modern separated architecture:
 The easiest way to run both backend and frontend:
 
 ```bash
-# Clone the repository
-git clone https://github.com/dcotelo/ChartImpact.git
 cd ChartImpact
 
-# Start both services
+# Start all services (frontend, backend, and PostgreSQL)
 docker-compose up
 
 # Access the application
 # Frontend: http://localhost:3000
 # Backend API: http://localhost:8080
 # Health Check: http://localhost:8080/api/health
+# Analytics: http://localhost:3000/analytics
 ```
+
+The Docker Compose setup includes:
+- **Frontend** (Next.js) on port 3000
+- **Backend** (Go) on port 8080
+- **PostgreSQL** database for result storage and analytics
+- Automatic database migrations on startup
+- Persistent storage for comparison results
 
 ### Option 2: Local Development
 
@@ -121,9 +129,33 @@ docker-compose up
 cd backend
 cp .env.example .env
 # Edit .env with your settings
+# Required for storage:
+#   DATABASE_URL=postgres://chartimpact:chartimpact@localhost:5432/chartimpact?sslmode=disable
+#   STORAGE_ENABLED=true
+#   RESULT_TTL_DAYS=30
 go mod download
 go run cmd/server/main.go
 # Server runs on http://localhost:8080
+```
+
+**Database (PostgreSQL):**
+```bash
+# Start PostgreSQL using Docker
+docker run -d \
+  --name chartimpact-postgres \
+  -e POSTGRES_USER=chartimpact \
+  -e POSTGRES_PASSWORD=chartimpact \
+  -e POSTGRES_DB=chartimpact \
+  -p 5432:5432 \
+  -v chartimpact_pgdata:/var/lib/postgresql/data \
+  postgres:15-alpine
+
+# Run migrations
+cd backend/migrations
+# Apply migrations in order (001, 002, 003)
+psql -h localhost -U chartimpact -d chartimpact -f 001_create_comparisons_table.up.sql
+psql -h localhost -U chartimpact -d chartimpact -f 002_create_analytics_view.up.sql
+psql -h localhost -U chartimpact -d chartimpact -f 003_create_cleanup_function.up.sql
 ```
 
 **Frontend:**
@@ -145,7 +177,27 @@ ChartImpact provides an **interactive web interface** for manually inspecting He
 1. **Compare Versions** - Enter repository details and select two versions to compare
 2. **Review Changes** - Examine differences through the visual diff or Explorer view
 3. **Understand Impact** - Identify changes to availability-critical and security-sensitive resources
-4. **Make Informed Decisions** - Use the insights to guide your deployment choices
+4. **Share Results** - Results are automatically stored with unique URLs for easy sharing
+5. **Access Analytics** - View insights about most compared charts and deployment trends
+6. **Make Informed Decisions** - Use the insights to guide your deployment choices
+
+### Result Storage & Replay
+
+ChartImpact automatically stores comparison results for 30 days with the following features:
+
+- **Automatic Deduplication** - Identical comparisons (same repo, chart, versions, values) are stored once
+- **Compression** - Results are gzip-compressed to save storage space (~75% reduction)
+- **Permalink Access** - Each result gets a unique URL (`/analysis/{uuid}`) for easy sharing
+- **Expiration Warnings** - Visual indicators when results are nearing expiration
+- **Fresh Re-runs** - Option to execute a new comparison with the same parameters
+
+### Analytics Dashboard
+
+Visit `/analytics` to view:
+- Most compared charts across your organization
+- Change rate statistics (percentage of comparisons with changes)
+- Average modified resources per comparison
+- Deployment risk trends over time
 
 ### Basic Comparison
 
@@ -238,7 +290,92 @@ Health check endpoint.
   "status": "ok",
   "version": "1.0.0",
   "helmOk": true,
-  "gitOk": true
+  "gitOk": true,
+  "dbOk": true
+}
+```
+
+### GET `/api/analysis/{id}`
+
+Retrieve a stored analysis result by its UUID.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "comparison": {
+    "success": true,
+    "diff": "...",
+    "structuredDiff": {...}
+  },
+  "metadata": {
+    "storedAt": "2024-01-15T10:30:00Z",
+    "expiresAt": "2024-02-14T10:30:00Z",
+    "isExpired": false,
+    "isDeduplicated": true,
+    "compressionRatio": 0.78
+  }
+}
+```
+
+### GET `/api/analysis`
+
+List stored analysis results with optional filtering.
+
+**Query Parameters:**
+- `repository` - Filter by repository URL
+- `chartPath` - Filter by chart path
+- `since` - ISO 8601 timestamp for start date
+- `until` - ISO 8601 timestamp for end date
+- `limit` - Maximum results to return (default: 50)
+- `offset` - Pagination offset (default: 0)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "comparisons": [
+    {
+      "compareId": "uuid",
+      "repository": "https://github.com/...",
+      "chartPath": "charts/app",
+      "version1": "1.0.0",
+      "version2": "1.1.0",
+      "createdAt": "2024-01-15T10:30:00Z",
+      "hasChanges": true,
+      "modifiedResourcesCount": 5
+    }
+  ]
+}
+```
+
+### GET `/api/analytics/charts/popular`
+
+Get analytics about most compared charts.
+
+**Query Parameters:**
+- `limit` - Maximum results to return (default: 10)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "popularCharts": [
+    {
+      "repository": "https://github.com/...",
+      "chartPath": "charts/app",
+      "comparisonCount": 42,
+      "withChanges": 35,
+      "avgModifiedResources": 8.5,
+      "lastComparisonAt": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "totalComparisons": 150,
+  "periodStart": "2023-10-17T00:00:00Z",
+  "periodEnd": "2024-01-15T10:30:00Z"
 }
 ```
 
@@ -372,12 +509,70 @@ ChartImpact/
 
 ### Environment Variables
 
+**Backend Environment Variables:**
+
+```env
+# Storage Configuration (optional, disabled by default)
+STORAGE_ENABLED=true                    # Enable result storage and replay
+DATABASE_URL=postgres://user:pass@host:port/dbname?sslmode=disable
+DB_MAX_CONNECTIONS=25                   # Maximum database connections
+RESULT_TTL_DAYS=30                      # Days to retain stored results
+
+# Other Configuration
+HELM_TIMEOUT=30000                      # Helm operation timeout (milliseconds)
+LOG_LEVEL=info                          # Log level (debug, info, warn, error)
+```
+
+**Frontend Environment Variables:**
+
 Create a `.env.local` file for local development:
 
 ```env
-# Optional: Custom timeout for operations (in milliseconds)
-HELM_TIMEOUT=30000
+# Backend API URL
+NEXT_PUBLIC_API_URL=http://localhost:8080
 ```
+
+### Storage Configuration
+
+ChartImpact includes an optional PostgreSQL-based storage system for persisting analysis results:
+
+**Features:**
+- 30-day retention with automatic cleanup
+- Gzip compression (~75% size reduction)
+- Hash-based deduplication (identical comparisons stored once)
+- Async storage (doesn't slow down comparisons)
+- Analytics for popular charts and trends
+
+**To Enable Storage:**
+
+1. Set environment variables:
+   ```bash
+   STORAGE_ENABLED=true
+   DATABASE_URL=postgres://chartimpact:chartimpact@localhost:5432/chartimpact?sslmode=disable
+   RESULT_TTL_DAYS=30
+   ```
+
+2. Run database migrations (automatically applied with Docker Compose):
+   ```bash
+   cd backend/migrations
+   psql -h localhost -U chartimpact -d chartimpact -f 001_create_comparisons_table.up.sql
+   psql -h localhost -U chartimpact -d chartimpact -f 002_create_analytics_view.up.sql
+   psql -h localhost -U chartimpact -d chartimpact -f 003_create_cleanup_function.up.sql
+   ```
+
+3. (Optional) Schedule cleanup job:
+   ```sql
+   -- Manual cleanup
+   SELECT delete_expired_comparisons();
+   
+   -- Or use pg_cron for automatic cleanup
+   SELECT cron.schedule('cleanup-expired', '0 2 * * *', 
+     'SELECT delete_expired_comparisons()');
+   ```
+
+**Storage is optional** - ChartImpact works perfectly without it, but you'll miss out on result replay and analytics features.
+
+For more details, see [STORAGE_SPEC.md](STORAGE_SPEC.md).
 
 ## 🐛 Troubleshooting
 

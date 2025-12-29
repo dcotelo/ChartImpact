@@ -1,18 +1,21 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"os/exec"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dcotelo/chartimpact/backend/internal/models"
+	"github.com/dcotelo/chartimpact/backend/internal/storage"
 	"github.com/dcotelo/chartimpact/backend/internal/util"
 )
 
 // HealthHandler handles GET /api/health requests
 // Checks if the API is running and if required tools are available
-func HealthHandler() http.HandlerFunc {
+func HealthHandler(store storage.ComparisonStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Check if Helm is available
 		helmOK := false
@@ -33,6 +36,20 @@ func HealthHandler() http.HandlerFunc {
 			dyffOK = true
 		}
 
+		// Check database health if storage is enabled
+		dbOK := true // Default to true if storage is disabled
+		if store != nil {
+			ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+			defer cancel()
+			
+			// Try a simple query to check DB connectivity
+			_, err := store.DeleteExpired(ctx) // This is read-only operation that returns 0 if no expired rows
+			if err != nil {
+				dbOK = false
+				log.Warnf("Database health check failed: %v", err)
+			}
+		}
+
 		// Status is ok if required tools are available
 		// DEPRECATED: dyff is optional and deprecated - internal diff engine is the recommended approach
 		status := "ok"
@@ -43,14 +60,33 @@ func HealthHandler() http.HandlerFunc {
 			// DEPRECATED: Internal diff should always be enabled. Disabling it is not recommended.
 			status = "degraded"
 			log.Warn("Health check: DEPRECATED configuration detected - internal diff is disabled. This configuration is deprecated and will not be supported in future versions.")
+		} else if store != nil && !dbOK {
+			status = "degraded"
+			log.Warn("Health check: Database connection failed")
 		}
 
-		respondJSON(w, http.StatusOK, models.HealthResponse{
+		response := models.HealthResponse{
 			Status:  status,
 			Version: "1.0.0",
 			HelmOK:  helmOK,
 			GitOK:   gitOK,
 			DyffOK:  dyffOK,
-		})
+		}
+
+		// Add database status if storage is enabled
+		if store != nil {
+			responseMap := map[string]interface{}{
+				"status":  response.Status,
+				"version": response.Version,
+				"helmOK":  response.HelmOK,
+				"gitOK":   response.GitOK,
+				"dyffOK":  response.DyffOK,
+				"dbOK":    dbOK,
+			}
+			respondJSON(w, http.StatusOK, responseMap)
+			return
+		}
+
+		respondJSON(w, http.StatusOK, response)
 	}
 }

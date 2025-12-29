@@ -128,10 +128,19 @@ function AnalysisContent() {
   }, [searchParams]);
 
   const handleCopyLink = async () => {
-    const params = decodeComparisonFromURL(searchParams);
-    if (!params) return;
-
-    const shareableURL = createShareableURL(params as CompareRequest);
+    // If we have a stored compareId from the result, use that for a permanent link
+    const compareId = result?.structuredDiff?.metadata?.compareId;
+    
+    let shareableURL: string;
+    if (compareId) {
+      // Permanent link to stored result
+      shareableURL = `${window.location.origin}/analysis/${compareId}`;
+    } else {
+      // Fallback to URL-encoded parameters
+      const params = decodeComparisonFromURL(searchParams);
+      if (!params) return;
+      shareableURL = createShareableURL(params as CompareRequest);
+    }
     
     try {
       await navigator.clipboard.writeText(shareableURL);
@@ -372,6 +381,53 @@ function AnalysisContent() {
             </div>
           </div>
         </div>
+
+        {/* Stored Result Info Banner */}
+        {result?.structuredDiff?.metadata?.compareId && (
+          <div style={{
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            borderRadius: BORDER_RADIUS.lg,
+            padding: SPACING.lg,
+            marginBottom: SPACING.xl,
+            color: 'white',
+            boxShadow: SHADOWS.md,
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: SPACING.md,
+            }}>
+              <div style={{ fontSize: '24px', flexShrink: 0 }}>💾</div>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  marginBottom: SPACING.xs,
+                }}>
+                  Result Saved
+                </div>
+                <div style={{
+                  fontSize: '14px',
+                  opacity: 0.95,
+                  marginBottom: SPACING.sm,
+                }}>
+                  This analysis has been stored and can be shared via a permanent link.
+                </div>
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  borderRadius: BORDER_RADIUS.md,
+                  padding: `${SPACING.sm} ${SPACING.md}`,
+                  fontFamily: 'monospace',
+                  fontSize: '13px',
+                  wordBreak: 'break-all',
+                  backdropFilter: 'blur(10px)',
+                }}>
+                  {window.location.origin}/analysis/{result.structuredDiff.metadata.compareId}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Analysis Context Section */}
         {params && (

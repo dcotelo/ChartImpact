@@ -2,6 +2,7 @@ package util
 
 import (
 	"os"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -32,4 +33,29 @@ func GetBoolEnv(key string, defaultValue bool) bool {
 	// If unrecognized, use default
 	log.Warnf("Unrecognized boolean value '%s' for %s, using default: %v", val, key, defaultValue)
 	return defaultValue
+}
+
+// GetIntEnv retrieves an integer environment variable with a default value
+func GetIntEnv(key string, defaultValue int) int {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultValue
+	}
+
+	intVal, err := strconv.Atoi(val)
+	if err != nil {
+		log.Warnf("Invalid integer value '%s' for %s, using default: %d", val, key, defaultValue)
+		return defaultValue
+	}
+
+	return intVal
+}
+
+// GetStringEnv retrieves a string environment variable with a default value
+func GetStringEnv(key string, defaultValue string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultValue
+	}
+	return val
 }

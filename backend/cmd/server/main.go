@@ -16,6 +16,8 @@ import (
 	apiHandlers "github.com/dcotelo/chartimpact/backend/internal/api/handlers"
 	"github.com/dcotelo/chartimpact/backend/internal/api/middleware"
 	"github.com/dcotelo/chartimpact/backend/internal/service"
+	"github.com/dcotelo/chartimpact/backend/internal/storage"
+	"github.com/dcotelo/chartimpact/backend/internal/util"
 )
 
 // version is set via ldflags at build time
@@ -36,6 +38,29 @@ func main() {
 	port := getEnv("PORT", "8080")
 	host := getEnv("HOST", "0.0.0.0")
 
+	// Initialize storage (optional, based on feature flag)
+	var store storage.ComparisonStore
+	storageEnabled := util.GetBoolEnv("STORAGE_ENABLED", false)
+	
+	if storageEnabled {
+		databaseURL := util.GetStringEnv("DATABASE_URL", "")
+		if databaseURL == "" {
+			log.Warn("STORAGE_ENABLED=true but DATABASE_URL not set, storage will be disabled")
+		} else {
+			var err error
+			store, err = storage.NewPostgresStore(databaseURL, log.StandardLogger())
+			if err != nil {
+				log.Errorf("Failed to initialize storage: %v", err)
+				log.Warn("Continuing without storage")
+			} else {
+				log.Info("Storage layer initialized successfully")
+				defer store.Close()
+			}
+		}
+	} else {
+		log.Info("Storage is disabled (set STORAGE_ENABLED=true to enable)")
+	}
+
 	// Initialize services
 	helmService := service.NewHelmService()
 
@@ -49,9 +74,20 @@ func main() {
 
 	// API routes
 	api := router.PathPrefix("/api").Subrouter()
-	api.HandleFunc("/compare", apiHandlers.CompareHandler(helmService)).Methods("POST", "OPTIONS")
+	api.HandleFunc("/compare", apiHandlers.CompareHandler(helmService, store)).Methods("POST", "OPTIONS")
 	api.HandleFunc("/versions", apiHandlers.VersionsHandler()).Methods("POST", "OPTIONS")
-	api.HandleFunc("/health", apiHandlers.HealthHandler()).Methods("GET")
+	api.HandleFunc("/health", apiHandlers.HealthHandler(store)).Methods("GET")
+	
+	// Storage-enabled routes
+	if store != nil {
+		api.HandleFunc("/analysis/{id}", apiHandlers.GetAnalysisHandler(store)).Methods("GET", "OPTIONS")
+		api.HandleFunc("/analysis", apiHandlers.ListAnalysisHandler(store)).Methods("GET", "OPTIONS")
+		api.HandleFunc("/analytics/charts/popular", apiHandlers.PopularChartsHandler(store)).Methods("GET", "OPTIONS")
+		log.Info("Storage endpoints enabled:")
+		log.Info("  GET  /api/analysis/{id}            - Retrieve stored comparison")
+		log.Info("  GET  /api/analysis                 - List recent comparisons")
+		log.Info("  GET  /api/analytics/charts/popular - Popular charts statistics")
+	}
 
 	// Setup server
 	addr := fmt.Sprintf("%s:%s", host, port)
