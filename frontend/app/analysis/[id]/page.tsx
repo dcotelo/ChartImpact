@@ -6,6 +6,8 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { ImpactSummaryComponent } from '@/components/ImpactSummary';
 import { DiffExplorer } from '@/components/explorer/DiffExplorer';
+import { LoadingScreen } from '@/components/LoadingScreen';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { assessRisk } from '@/lib/risk-assessment';
 import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS } from '@/lib/design-tokens';
@@ -130,102 +132,18 @@ function StoredAnalysisContent({ id }: StoredAnalysisContentProps) {
 
   // Loading state
   if (loading) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: '#1f2937',
-        padding: `${SPACING.xl} ${SPACING.md}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: BORDER_RADIUS.lg,
-          padding: `${SPACING.lg} ${SPACING.xl}`,
-          boxShadow: SHADOWS.xl,
-          maxWidth: '500px',
-          width: '100%',
-        }}>
-          <ProgressIndicator
-            message="Loading stored analysis..."
-            step={1}
-            totalSteps={1}
-          />
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Loading stored analysis..." />;
   }
 
   // Error state
   if (error) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: `${SPACING['2xl']} ${SPACING.xl}`,
-        background: '#f8f9fa',
-      }}>
-        <div style={{
-          background: 'white',
-          borderRadius: BORDER_RADIUS.xl,
-          padding: `${SPACING['2xl']} ${SPACING.xl}`,
-          boxShadow: SHADOWS.lg,
-          maxWidth: '600px',
-          width: '100%',
-          textAlign: 'center',
-        }}>
-          <div style={{
-            fontSize: '56px',
-            marginBottom: SPACING.lg,
-          }}>⚠️</div>
-          <h1 style={{
-            fontSize: '28px',
-            fontWeight: 700,
-            color: '#dc2626',
-            marginBottom: SPACING.md,
-            margin: 0,
-          }}>
-            Failed to Load Analysis
-          </h1>
-          <p style={{
-            fontSize: '16px',
-            color: '#6b7280',
-            marginBottom: SPACING.xl,
-            lineHeight: 1.6,
-          }}>
-            {error}
-          </p>
-          <button
-            onClick={handleNewComparison}
-            style={{
-              background: BRAND_COLORS.primary,
-              color: 'white',
-              border: 'none',
-              borderRadius: BORDER_RADIUS.md,
-              padding: `${SPACING.sm} ${SPACING.lg}`,
-              fontSize: '16px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: SHADOWS.sm,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = SHADOWS.md;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = SHADOWS.sm;
-            }}
-          >
-            Start New Comparison
-          </button>
-        </div>
-      </div>
+      <ErrorScreen
+        title="Failed to Load Analysis"
+        message={error}
+        onAction={handleNewComparison}
+        actionLabel="Start New Comparison"
+      />
     );
   }
 

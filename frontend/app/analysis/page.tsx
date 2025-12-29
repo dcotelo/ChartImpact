@@ -9,6 +9,7 @@ import { assessRisk } from '@/lib/risk-assessment';
 import { ImpactSummaryComponent } from '@/components/ImpactSummary';
 import { DiffExplorer } from '@/components/explorer/DiffExplorer';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS } from '@/lib/design-tokens';
 
 function AnalysisContent() {
@@ -198,70 +199,12 @@ function AnalysisContent() {
   // Error state
   if (error) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: SPACING.xl,
-        background: '#f8f9fa',
-      }}>
-        <div style={{
-          background: 'white',
-          borderRadius: BORDER_RADIUS.xl,
-          padding: `${SPACING['2xl']} ${SPACING.xl}`,
-          boxShadow: SHADOWS.lg,
-          maxWidth: '600px',
-          width: '100%',
-          textAlign: 'center',
-        }}>
-          <div style={{
-            fontSize: '56px',
-            marginBottom: SPACING.lg,
-          }}>⚠️</div>
-          <h1 style={{
-            fontSize: '24px',
-            fontWeight: 700,
-            color: '#dc2626',
-            marginBottom: SPACING.md,
-          }}>
-            Analysis Failed
-          </h1>
-          <p style={{
-            color: '#64748b',
-            marginBottom: SPACING.xl,
-            lineHeight: '1.6',
-            fontSize: '15px',
-          }}>
-            {error}
-          </p>
-          <button
-            onClick={handleNewComparison}
-            style={{
-              background: BRAND_COLORS.primary,
-              color: 'white',
-              border: 'none',
-              borderRadius: BORDER_RADIUS.md,
-              padding: `${SPACING.md} ${SPACING.xl}`,
-              fontSize: '15px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: SHADOWS.sm,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = SHADOWS.md;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = SHADOWS.sm;
-            }}
-          >
-            Start New Comparison
-          </button>
-        </div>
-      </div>
+      <ErrorScreen
+        title="Analysis Failed"
+        message={error}
+        onAction={handleNewComparison}
+        actionLabel="Start New Comparison"
+      />
     );
   }
 
