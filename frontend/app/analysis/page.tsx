@@ -60,9 +60,9 @@ export default function AnalysisPage() {
 
         setResult(data);
         
-        // Generate risk assessment
-        if (data.diff) {
-          const assessment = assessRisk(data.diff);
+        // Generate risk assessment if we have structured diff data
+        if (data.structuredDiff && data.structuredDiff.resources) {
+          const assessment = assessRisk(data.structuredDiff.resources);
           setSummary(assessment);
         }
       } catch (err) {
@@ -124,9 +124,9 @@ export default function AnalysisPage() {
             Loading Analysis
           </h1>
           <ProgressIndicator
-            currentStep={3}
+            message="Analyzing differences..."
+            step={3}
             totalSteps={7}
-            stepLabel="Analyzing differences..."
           />
         </div>
       </div>
