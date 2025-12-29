@@ -146,35 +146,60 @@ function AnalysisContent() {
     router.push('/');
   };
 
+  // Helper to extract org/repo from URL
+  const getRepoShortName = (url: string) => {
+    try {
+      const match = url.match(/github\.com[/:]([^/]+\/[^/]+?)(\.git)?$/);
+      return match ? match[1] : url;
+    } catch {
+      return url;
+    }
+  };
+
   // Loading state
   if (loading) {
     return (
       <div style={{
         minHeight: '100vh',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: SPACING.xl,
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: '#f8f9fa',
       }}>
         <div style={{
           background: 'white',
-          borderRadius: BORDER_RADIUS.lg,
-          padding: SPACING.xl,
-          boxShadow: SHADOWS.xl,
+          borderRadius: BORDER_RADIUS.xl,
+          padding: `${SPACING['2xl']} ${SPACING.xl}`,
+          boxShadow: SHADOWS.lg,
           maxWidth: '600px',
           width: '100%',
         }}>
-          <h1 style={{
-            fontSize: '24px',
-            fontWeight: 600,
-            color: BRAND_COLORS.primary,
-            marginBottom: SPACING.lg,
+          <div style={{
             textAlign: 'center',
+            marginBottom: SPACING.xl,
           }}>
-            Loading Analysis
-          </h1>
+            <div style={{
+              fontSize: '48px',
+              marginBottom: SPACING.md,
+            }}>🔍</div>
+            <h1 style={{
+              fontSize: '28px',
+              fontWeight: 700,
+              color: BRAND_COLORS.primary,
+              marginBottom: SPACING.sm,
+              margin: 0,
+            }}>
+              Analyzing Changes
+            </h1>
+            <p style={{
+              fontSize: '14px',
+              color: '#64748b',
+              margin: 0,
+            }}>
+              This may take a moment...
+            </p>
+          </div>
           <ProgressIndicator
             message={progressMessage}
             step={progressStep}
@@ -191,37 +216,37 @@ function AnalysisContent() {
       <div style={{
         minHeight: '100vh',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: SPACING.xl,
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: '#f8f9fa',
       }}>
         <div style={{
           background: 'white',
-          borderRadius: BORDER_RADIUS.lg,
-          padding: SPACING.xl,
-          boxShadow: SHADOWS.xl,
+          borderRadius: BORDER_RADIUS.xl,
+          padding: `${SPACING['2xl']} ${SPACING.xl}`,
+          boxShadow: SHADOWS.lg,
           maxWidth: '600px',
           width: '100%',
           textAlign: 'center',
         }}>
           <div style={{
-            fontSize: '48px',
+            fontSize: '56px',
             marginBottom: SPACING.lg,
           }}>⚠️</div>
           <h1 style={{
             fontSize: '24px',
-            fontWeight: 600,
-            color: '#e53e3e',
+            fontWeight: 700,
+            color: '#dc2626',
             marginBottom: SPACING.md,
           }}>
-            Error Loading Analysis
+            Analysis Failed
           </h1>
           <p style={{
-            color: '#4a5568',
+            color: '#64748b',
             marginBottom: SPACING.xl,
-            lineHeight: '1.5',
+            lineHeight: '1.6',
+            fontSize: '15px',
           }}>
             {error}
           </p>
@@ -233,18 +258,19 @@ function AnalysisContent() {
               border: 'none',
               borderRadius: BORDER_RADIUS.md,
               padding: `${SPACING.md} ${SPACING.xl}`,
-              fontSize: '16px',
-              fontWeight: 500,
+              fontSize: '15px',
+              fontWeight: 600,
               cursor: 'pointer',
               transition: 'all 0.2s',
+              boxShadow: SHADOWS.sm,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = SHADOWS.lg;
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = SHADOWS.md;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.boxShadow = SHADOWS.sm;
             }}
           >
             Start New Comparison
@@ -255,12 +281,16 @@ function AnalysisContent() {
   }
 
   // Results state
+  const params = decodeComparisonFromURL(searchParams);
+  const repoShortName = params ? getRepoShortName(params.repository || '') : '';
+  const hasInputs = params && (params.valuesFile || params.valuesContent);
+
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: SPACING.xl,
-    }}>
+      background: '#f8f9fa',
+      padding: `${SPACING.xl} ${SPACING.md}`,
+    }}>  
       <div style={{
         maxWidth: '1400px',
         margin: '0 auto',
@@ -268,81 +298,263 @@ function AnalysisContent() {
         {/* Header */}
         <div style={{
           background: 'white',
-          borderRadius: BORDER_RADIUS.lg,
-          padding: SPACING.lg,
+          borderRadius: BORDER_RADIUS.xl,
+          padding: `${SPACING.lg} ${SPACING.xl}`,
           marginBottom: SPACING.lg,
-          boxShadow: SHADOWS.xl,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: SPACING.md,
+          boxShadow: SHADOWS.md,
+          border: '1px solid #e2e8f0',
         }}>
-          <h1 style={{
-            fontSize: '28px',
-            fontWeight: 600,
-            color: BRAND_COLORS.primary,
-            margin: 0,
-          }}>
-            Analysis Results
-          </h1>
           <div style={{
             display: 'flex',
-            gap: SPACING.md,
+            justifyContent: 'space-between',
+            alignItems: 'center',
             flexWrap: 'wrap',
+            gap: SPACING.md,
           }}>
-            <button
-              onClick={handleCopyLink}
-              style={{
-                background: copySuccess ? '#48bb78' : 'white',
-                color: copySuccess ? 'white' : BRAND_COLORS.primary,
-                border: `2px solid ${copySuccess ? '#48bb78' : BRAND_COLORS.primary}`,
-                borderRadius: BORDER_RADIUS.md,
-                padding: `${SPACING.sm} ${SPACING.lg}`,
+            <div>
+              <h1 style={{
+                fontSize: '32px',
+                fontWeight: 700,
+                background: `linear-gradient(135deg, ${BRAND_COLORS.primary} 0%, ${BRAND_COLORS.primaryDark} 100%)`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                margin: 0,
+                marginBottom: '4px',
+              }}>
+                Analysis Results
+              </h1>
+              <p style={{
                 fontSize: '14px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: SPACING.xs,
-              }}
-            >
-              {copySuccess ? '✓ Copied!' : '🔗 Copy Link'}
-            </button>
-            <button
-              onClick={handleNewComparison}
-              style={{
-                background: BRAND_COLORS.primary,
-                color: 'white',
-                border: 'none',
-                borderRadius: BORDER_RADIUS.md,
-                padding: `${SPACING.sm} ${SPACING.lg}`,
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = SHADOWS.md;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              New Comparison
-            </button>
+                color: '#64748b',
+                margin: 0,
+              }}>
+                Comprehensive Helm chart comparison
+              </p>
+            </div>
+            <div style={{
+              display: 'flex',
+              gap: SPACING.sm,
+              flexWrap: 'wrap',
+            }}>
+              <button
+                onClick={handleCopyLink}
+                style={{
+                  background: copySuccess ? '#10b981' : 'white',
+                  color: copySuccess ? 'white' : '#64748b',
+                  border: `1.5px solid ${copySuccess ? '#10b981' : '#e2e8f0'}`,
+                  borderRadius: BORDER_RADIUS.md,
+                  padding: `${SPACING.sm} ${SPACING.md}`,
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: SPACING.xs,
+                }}
+                onMouseEnter={(e) => {
+                  if (!copySuccess) {
+                    e.currentTarget.style.borderColor = BRAND_COLORS.primary;
+                    e.currentTarget.style.color = BRAND_COLORS.primary;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!copySuccess) {
+                    e.currentTarget.style.borderColor = '#e2e8f0';
+                    e.currentTarget.style.color = '#64748b';
+                  }
+                }}
+              >
+                {copySuccess ? '✓ Copied!' : '🔗 Share'}
+              </button>
+              <button
+                onClick={handleNewComparison}
+                style={{
+                  background: BRAND_COLORS.primary,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: BORDER_RADIUS.md,
+                  padding: `${SPACING.sm} ${SPACING.md}`,
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: SHADOWS.sm,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = SHADOWS.md;
+                  e.currentTarget.style.background = BRAND_COLORS.primaryDark;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = SHADOWS.sm;
+                  e.currentTarget.style.background = BRAND_COLORS.primary;
+                }}
+              >
+                New Analysis
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Analysis Context Section */}
+        {params && (
+          <div style={{
+            background: 'white',
+            borderRadius: BORDER_RADIUS.xl,
+            padding: SPACING.xl,
+            boxShadow: SHADOWS.md,
+            border: '1px solid #e5e7eb',
+            marginBottom: SPACING.xl,
+          }}>
+            <h2 style={{
+              fontSize: '18px',
+              fontWeight: 600,
+              color: '#1f2937',
+              marginBottom: SPACING.lg,
+              letterSpacing: '-0.01em',
+            }}>
+              Analysis Context
+            </h2>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: SPACING.lg,
+            }}>
+              {/* Repository */}
+              <div>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: '#6b7280',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  marginBottom: SPACING.xs,
+                }}>
+                  Repository
+                </div>
+                <a
+                  href={params.repository || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: '14px',
+                    color: BRAND_COLORS.primary,
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: SPACING.xs,
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                  onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                >
+                  {params.repository ? getRepoShortName(params.repository) : 'Unknown'}
+                  <span style={{ fontSize: '12px', opacity: 0.7 }}>↗</span>
+                </a>
+              </div>
+
+              {/* Chart Path */}
+              <div>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: '#6b7280',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  marginBottom: SPACING.xs,
+                }}>
+                  Chart Path
+                </div>
+                <div style={{
+                  fontSize: '14px',
+                  color: '#374151',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                  fontWeight: 500,
+                }}>
+                  {params.chartPath}
+                </div>
+              </div>
+
+              {/* Version Comparison */}
+              <div>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: '#6b7280',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  marginBottom: SPACING.xs,
+                }}>
+                  Version Comparison
+                </div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: SPACING.sm,
+                  fontSize: '14px',
+                }}>
+                  <span style={{
+                    background: '#fef3c7',
+                    color: '#92400e',
+                    padding: '4px 10px',
+                    borderRadius: BORDER_RADIUS.sm,
+                    fontWeight: 600,
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                    fontSize: '13px',
+                  }}>
+                    {params.version1}
+                  </span>
+                  <span style={{ color: '#9ca3af', fontWeight: 500 }}>→</span>
+                  <span style={{
+                    background: '#dbeafe',
+                    color: '#1e40af',
+                    padding: '4px 10px',
+                    borderRadius: BORDER_RADIUS.sm,
+                    fontWeight: 600,
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                    fontSize: '13px',
+                  }}>
+                    {params.version2}
+                  </span>
+                </div>
+              </div>
+
+              {/* Inputs */}
+              <div>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: '#6b7280',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  marginBottom: SPACING.xs,
+                }}>
+                  Configuration
+                </div>
+                <div style={{
+                  fontSize: '14px',
+                  color: '#374151',
+                  fontWeight: 500,
+                }}>
+                  {params.valuesFile ? (
+                    <span>{params.valuesFile}</span>
+                  ) : (
+                    <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Defaults only</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Unified Results Layout: Summary at top, Explorer below */}
         {result && (
           <>
             {/* Summary Section */}
             {summary && (
-              <div style={{ marginBottom: SPACING.lg }}>
+              <div style={{ marginBottom: SPACING.xl }}>
                 <ImpactSummaryComponent 
                   summary={summary}
                 />
@@ -352,8 +564,9 @@ function AnalysisContent() {
             {/* Detailed Explorer Section */}
             <div style={{
               background: 'white',
-              borderRadius: BORDER_RADIUS.lg,
-              boxShadow: SHADOWS.xl,
+              borderRadius: BORDER_RADIUS.xl,
+              boxShadow: SHADOWS.md,
+              border: '1px solid #e5e7eb',
               overflow: 'hidden',
             }}>
               <DiffExplorer result={result} />
@@ -373,14 +586,26 @@ export default function AnalysisPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: '#f8f9fa',
       }}>
         <div style={{
           background: 'white',
-          borderRadius: BORDER_RADIUS.lg,
+          borderRadius: BORDER_RADIUS.xl,
           padding: SPACING.xl,
-          boxShadow: SHADOWS.xl,
+          boxShadow: SHADOWS.md,
+          border: '1px solid #e5e7eb',
+          maxWidth: '400px',
+          textAlign: 'center',
         }}>
+          <div style={{
+            fontSize: '20px',
+            fontWeight: 600,
+            color: '#1f2937',
+            marginBottom: SPACING.md,
+            letterSpacing: '-0.01em',
+          }}>
+            Loading Analysis
+          </div>
           <ProgressIndicator
             message="Loading analysis page..."
             step={1}
