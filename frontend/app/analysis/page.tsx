@@ -11,8 +11,6 @@ import { DiffExplorer } from '@/components/explorer/DiffExplorer';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS } from '@/lib/design-tokens';
 
-type ViewMode = 'summary' | 'explorer';
-
 function AnalysisContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -21,14 +19,17 @@ function AnalysisContent() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CompareResponse | null>(null);
   const [summary, setSummary] = useState<ImpactSummary | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('summary');
   const [copySuccess, setCopySuccess] = useState(false);
+  const [progressMessage, setProgressMessage] = useState<string>('Initializing...');
+  const [progressStep, setProgressStep] = useState<number>(0);
+  const [progressTotal] = useState<number>(7);
 
-  // Auto-execute comparison on mount
+  // Auto-execute comparison on mount with progress tracking
   useEffect(() => {
     const executeComparison = async () => {
       setLoading(true);
       setError(null);
+      setProgressStep(0);
 
       // Decode URL params
       const params = decodeComparisonFromURL(searchParams);
@@ -40,30 +41,81 @@ function AnalysisContent() {
       }
 
       try {
-        const response = await fetch(API_ENDPOINTS.compare, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(params),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data: CompareResponse = await response.json();
-
-        if (!data.success) {
-          throw new Error(data.error || 'Comparison failed');
-        }
-
-        setResult(data);
+        setProgressMessage('Initializing analysis...');
+        setProgressStep(1);
+        await new Promise(resolve => setTimeout(resolve, 100));
         
-        // Generate risk assessment if we have structured diff data
-        if (data.structuredDiff && data.structuredDiff.resources) {
-          const assessment = assessRisk(data.structuredDiff.resources);
-          setSummary(assessment);
+        setProgressMessage('Cloning repository...');
+        setProgressStep(2);
+        
+        const progressMessages = [
+          'Cloning repository...',
+          'Extracting version 1...',
+          'Extracting version 2...',
+          'Building chart dependencies...',
+          'Rendering Helm templates...',
+          'Analyzing changes...'
+        ];
+
+        let progressInterval: NodeJS.Timeout | null = null;
+        let messageInterval: NodeJS.Timeout | null = null;
+
+        try {
+          progressInterval = setInterval(() => {
+            setProgressStep((prev) => {
+              if (prev < 6) return prev + 1;
+              return prev;
+            });
+          }, 2000);
+
+          let messageIndex = 0;
+          messageInterval = setInterval(() => {
+            if (messageIndex < progressMessages.length - 1) {
+              messageIndex++;
+              setProgressMessage(progressMessages[messageIndex]);
+            }
+          }, 2000);
+
+          const response = await fetch(API_ENDPOINTS.compare, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(params),
+          });
+
+          if (progressInterval) clearInterval(progressInterval);
+          if (messageInterval) clearInterval(messageInterval);
+          progressInterval = null;
+          messageInterval = null;
+
+          setProgressMessage('Processing results...');
+          setProgressStep(6);
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data: CompareResponse = await response.json();
+
+          if (!data.success) {
+            throw new Error(data.error || 'Comparison failed');
+          }
+
+          setProgressMessage('Analysis complete!');
+          setProgressStep(7);
+
+          setResult(data);
+          
+          // Generate risk assessment if we have structured diff data
+          if (data.structuredDiff && data.structuredDiff.resources) {
+            const assessment = assessRisk(data.structuredDiff.resources);
+            setSummary(assessment);
+          }
+        } catch (err: any) {
+          if (progressInterval) clearInterval(progressInterval);
+          if (messageInterval) clearInterval(messageInterval);
+          throw err;
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unexpected error occurred');
@@ -124,9 +176,9 @@ function AnalysisContent() {
             Loading Analysis
           </h1>
           <ProgressIndicator
-            message="Analyzing differences..."
-            step={3}
-            totalSteps={7}
+            message={progressMessage}
+            step={progressStep}
+            totalSteps={progressTotal}
           />
         </div>
       </div>
@@ -285,72 +337,29 @@ function AnalysisContent() {
           </div>
         </div>
 
-        {/* View Toggle */}
-        {result && summary && (
-          <div style={{
-            background: 'white',
-            borderRadius: BORDER_RADIUS.lg,
-            padding: SPACING.md,
-            marginBottom: SPACING.lg,
-            boxShadow: SHADOWS.md,
-            display: 'flex',
-            gap: SPACING.sm,
-          }}>
-            <button
-              onClick={() => setViewMode('summary')}
-              style={{
-                background: viewMode === 'summary' ? BRAND_COLORS.primary : 'transparent',
-                color: viewMode === 'summary' ? 'white' : BRAND_COLORS.primary,
-                border: `2px solid ${BRAND_COLORS.primary}`,
-                borderRadius: BORDER_RADIUS.md,
-                padding: `${SPACING.sm} ${SPACING.lg}`,
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                flex: 1,
-              }}
-            >
-              Summary View
-            </button>
-            <button
-              onClick={() => setViewMode('explorer')}
-              style={{
-                background: viewMode === 'explorer' ? BRAND_COLORS.primary : 'transparent',
-                color: viewMode === 'explorer' ? 'white' : BRAND_COLORS.primary,
-                border: `2px solid ${BRAND_COLORS.primary}`,
-                borderRadius: BORDER_RADIUS.md,
-                padding: `${SPACING.sm} ${SPACING.lg}`,
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                flex: 1,
-              }}
-            >
-              Detailed Explorer
-            </button>
-          </div>
+        {/* Unified Results Layout: Summary at top, Explorer below */}
+        {result && (
+          <>
+            {/* Summary Section */}
+            {summary && (
+              <div style={{ marginBottom: SPACING.lg }}>
+                <ImpactSummaryComponent 
+                  summary={summary}
+                />
+              </div>
+            )}
+
+            {/* Detailed Explorer Section */}
+            <div style={{
+              background: 'white',
+              borderRadius: BORDER_RADIUS.lg,
+              boxShadow: SHADOWS.xl,
+              overflow: 'hidden',
+            }}>
+              <DiffExplorer result={result} />
+            </div>
+          </>
         )}
-
-        {/* Results Content */}
-        {viewMode === 'summary' && summary ? (
-          <ImpactSummaryComponent 
-            summary={summary}
-            onViewExplorer={() => setViewMode('explorer')}
-          />
-        ) : null}
-
-        {viewMode === 'explorer' && result ? (
-          <div style={{
-            background: 'white',
-            borderRadius: BORDER_RADIUS.lg,
-            boxShadow: SHADOWS.xl,
-            overflow: 'hidden',
-          }}>
-            <DiffExplorer result={result} />
-          </div>
-        ) : null}
       </div>
     </div>
   );
