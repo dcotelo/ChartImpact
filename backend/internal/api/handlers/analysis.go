@@ -60,6 +60,14 @@ func GetAnalysisHandler(store storage.ComparisonStore) http.HandlerFunc {
 		// Check if expired
 		isExpired := stored.ExpiresAt.Before(time.Now())
 
+		// Calculate compression ratio (placeholder logic)
+		var compressionRatio float64
+		if stored.UncompressedSize > 0 {
+			compressionRatio = 1.0
+		} else {
+			compressionRatio = 0.0
+		}
+
 		// Build response
 		response := map[string]interface{}{
 			"success": true,
@@ -79,7 +87,7 @@ func GetAnalysisHandler(store storage.ComparisonStore) http.HandlerFunc {
 				"isExpired":        isExpired,
 				"isDeduplicated":   stored.Deduplicated,
 				"uncompressedSize": stored.UncompressedSize,
-				"compressionRatio": float64(stored.UncompressedSize) / float64(stored.UncompressedSize), // Placeholder
+				"compressionRatio": compressionRatio, // Placeholder
 			},
 		}
 
