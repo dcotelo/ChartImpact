@@ -16,11 +16,7 @@ import (
 // Retrieves a stored comparison result by UUID
 func GetAnalysisHandler(store storage.ComparisonStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if store == nil {
-			respondJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
-				"success": false,
-				"error":   "Storage is not enabled",
-			})
+		if !requireStorage(store, w) {
 			return
 		}
 
@@ -105,11 +101,7 @@ func GetAnalysisHandler(store storage.ComparisonStore) http.HandlerFunc {
 // Lists recent comparisons with optional filters
 func ListAnalysisHandler(store storage.ComparisonStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if store == nil {
-			respondJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
-				"success": false,
-				"error":   "Storage is not enabled",
-			})
+		if !requireStorage(store, w) {
 			return
 		}
 
@@ -178,11 +170,7 @@ func ListAnalysisHandler(store storage.ComparisonStore) http.HandlerFunc {
 // Returns statistics about most compared charts
 func PopularChartsHandler(store storage.ComparisonStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if store == nil {
-			respondJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
-				"success": false,
-				"error":   "Storage is not enabled",
-			})
+		if !requireStorage(store, w) {
 			return
 		}
 

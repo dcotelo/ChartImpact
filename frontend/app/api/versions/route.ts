@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { validateRepository } from '@/lib/api-client';
 
 export const runtime = 'edge';
 
@@ -14,18 +15,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { repository } = body;
     
-    if (!repository) {
+    // Validate repository
+    const validationError = validateRepository(repository);
+    if (validationError) {
       return NextResponse.json<VersionsResponse>({
         success: false,
-        error: 'Repository URL is required'
-      }, { status: 400 });
-    }
-
-    // Validate repository URL format
-    if (!repository.match(/^(https?:\/\/|git@)/)) {
-      return NextResponse.json<VersionsResponse>({
-        success: false,
-        error: 'Invalid repository URL format'
+        error: validationError
       }, { status: 400 });
     }
 

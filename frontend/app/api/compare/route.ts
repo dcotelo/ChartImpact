@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CompareRequest, CompareResponse } from '@/lib/types';
+import { validateRepository } from '@/lib/api-client';
 
 export const runtime = 'edge';
 
@@ -20,12 +21,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate repository URL format
-    if (!body.repository.match(/^(https?:\/\/|git@)/)) {
+    const repoError = validateRepository(body.repository);
+    if (repoError) {
       return NextResponse.json<CompareResponse>({
         success: false,
-        error: 'Invalid repository URL format. Please use:\n' +
-               '  - HTTPS: https://github.com/user/repo.git\n' +
-               '  - SSH: git@github.com:user/repo.git'
+        error: repoError
       }, { status: 400 });
     }
 

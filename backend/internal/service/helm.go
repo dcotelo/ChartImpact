@@ -208,7 +208,7 @@ func (h *HelmService) cloneRepository(ctx context.Context, repoURL, destDir stri
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("git clone failed: %w\nOutput: %s", err, string(output))
+		return util.WrapCommandError("git clone", err, output)
 	}
 
 	// Fetch all tags
@@ -236,7 +236,7 @@ func (h *HelmService) extractVersion(ctx context.Context, repoDir, chartPath, ve
 	// Checkout the specified version
 	checkoutCmd := exec.CommandContext(ctx, "git", "-C", repoDir, "checkout", version)
 	if output, err := checkoutCmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to checkout version %s: %w\nOutput: %s", version, err, string(output))
+		return util.WrapCommandError(fmt.Sprintf("checkout version %s", version), err, output)
 	}
 
 	// Validate chart path exists and has proper structure
