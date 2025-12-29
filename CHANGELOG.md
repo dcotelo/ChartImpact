@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/dcotelo/ChartImpact/compare/v1.4.0...v1.5.0) (2025-12-29)
+
+
+### Features
+
+* Add stored analysis page and analytics dashboard ([#83](https://github.com/dcotelo/ChartImpact/issues/83)) ([31d3248](https://github.com/dcotelo/ChartImpact/commit/31d32482e570246e38d3cbf447eadfe44d8f41db))
+
 ## [1.4.0](https://github.com/dcotelo/ChartImpact/compare/v1.3.0...v1.4.0) (2025-12-29)
 
 
