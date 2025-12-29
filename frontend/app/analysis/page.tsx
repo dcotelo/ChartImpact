@@ -282,7 +282,6 @@ function AnalysisContent() {
 
   // Results state
   const params = decodeComparisonFromURL(searchParams);
-  const repoShortName = params ? getRepoShortName(params.repository || '') : '';
   const hasInputs = params && (params.valuesFile || params.valuesContent);
 
   return (
