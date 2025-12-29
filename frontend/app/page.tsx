@@ -1,53 +1,42 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { CompareForm } from '@/components/CompareForm';
 import { DemoExamples } from '@/components/DemoExamples';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
-import { DiffExplorer } from '@/components/explorer/DiffExplorer';
-import { ImpactSummaryComponent } from '@/components/ImpactSummary';
-import { CompareResponse, CompareRequest, ImpactSummary } from '@/lib/types';
+import { CompareRequest } from '@/lib/types';
 import { API_ENDPOINTS } from '@/lib/api-config';
 import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS } from '@/lib/design-tokens';
 import { 
   decodeComparisonFromURL, 
-  updateBrowserURL, 
-  getCurrentURLParams 
+  getCurrentURLParams,
+  buildAnalysisURL
 } from '@/lib/url-state';
-import { assessRisk } from '@/lib/risk-assessment';
 
 export default function Home() {
-  const [result, setResult] = useState<CompareResponse | null>(null);
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<CompareRequest | undefined>(undefined);
   const [progressMessage, setProgressMessage] = useState<string>('');
   const [progressStep, setProgressStep] = useState<number>(0);
   const [progressTotal] = useState<number>(7);
-  const [impactSummary, setImpactSummary] = useState<ImpactSummary | null>(null);
-  const [showExplorer, setShowExplorer] = useState(false);
 
-  // Load comparison from URL on mount
+  // Load comparison from URL on mount (just to populate form, not execute)
   useEffect(() => {
     const urlParams = getCurrentURLParams();
     const urlComparison = decodeComparisonFromURL(urlParams);
     
     if (urlComparison) {
-      // Auto-load comparison from URL
       setFormData(urlComparison as CompareRequest);
-      // Optionally auto-run the comparison
-      // handleCompare(urlComparison as CompareRequest);
     }
   }, []);
 
   const handleCompare = async (formData: CompareRequest) => {
     setLoading(true);
     setError(null);
-    setResult(null);
     setProgressStep(0);
-    
-    // Update URL with comparison parameters
-    updateBrowserURL(formData);
     
     // Progress steps: 1-Initializing, 2-Cloning, 3-Extracting v1, 4-Extracting v2, 
     // 5-Building dependencies, 6-Rendering templates, 7-Comparing
@@ -104,7 +93,7 @@ export default function Home() {
         setProgressMessage('Processing results...');
         setProgressStep(6);
 
-        let data: CompareResponse;
+        let data;
         try {
           data = await response.json();
         } catch (jsonError) {
@@ -116,24 +105,13 @@ export default function Home() {
           throw new Error(errorMsg);
         }
 
-        setProgressMessage('Analysis complete!');
+        setProgressMessage('Redirecting to results...');
         setProgressStep(7);
-        setResult(data);
         
-        // Generate impact summary if we have structured diff data
-        if (data.structuredDiff && data.structuredDiff.resources) {
-          const summary = assessRisk(data.structuredDiff.resources);
-          setImpactSummary(summary);
-          setShowExplorer(false); // Start with summary view
-        } else {
-          setImpactSummary(null);
-          setShowExplorer(true); // Go straight to explorer if no structured data
-        }
+        // Navigate to analysis page with URL params
+        const analysisURL = buildAnalysisURL(formData);
+        router.push(analysisURL);
         
-        setTimeout(() => {
-          setProgressMessage('');
-          setProgressStep(0);
-        }, 1500);
       } catch (err: any) {
         if (progressInterval) clearInterval(progressInterval);
         if (messageInterval) clearInterval(messageInterval);
@@ -236,92 +214,6 @@ export default function Home() {
               {error}
             </div>
           </div>
-        )}
-
-        {result && (
-          <>
-            <div style={{ 
-              marginTop: SPACING.lg,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: SPACING.sm
-            }}>
-              {/* Back to Summary/Form button - show when in Explorer view */}
-              {showExplorer && (
-                <button
-                  onClick={() => {
-                    // Go back to Impact Summary without clearing results
-                    setShowExplorer(false);
-                  }}
-                  style={{
-                    padding: `${SPACING.md} ${SPACING.lg}`,
-                    background: BRAND_COLORS.primary,
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: BORDER_RADIUS.sm,
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: SPACING.sm,
-                    transition: 'opacity 0.2s',
-                    boxShadow: SHADOWS.sm
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-                >
-                  ← Back to Summary
-                </button>
-              )}
-              <div style={{ marginLeft: 'auto' }}>
-                <button
-                  onClick={() => {
-                    if (formData) {
-                      const url = typeof window !== 'undefined' ? window.location.href : '';
-                      navigator.clipboard.writeText(url).then(() => {
-                        // Success - could add a toast notification in the future
-                        console.log('Link copied to clipboard');
-                      }).catch(() => {
-                        // Fallback for older browsers
-                        alert('Link copied to clipboard!');
-                      });
-                    }
-                  }}
-                  style={{
-                    padding: `${SPACING.sm} ${SPACING.md}`,
-                    background: BRAND_COLORS.primary,
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: BORDER_RADIUS.sm,
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: SPACING.xs
-                  }}
-                >
-                  🔗 Copy Link
-                </button>
-              </div>
-            </div>
-            
-            {/* Show Impact Summary first, then Explorer on demand */}
-            {impactSummary && !showExplorer ? (
-              <ImpactSummaryComponent 
-                summary={impactSummary}
-                onViewExplorer={() => setShowExplorer(true)}
-              />
-            ) : (
-              <div style={{ marginTop: SPACING.md }}>
-                <DiffExplorer 
-                  result={result}
-                />
-              </div>
-            )}
-          </>
         )}
       </div>
     </main>
