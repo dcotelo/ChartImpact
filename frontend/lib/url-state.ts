@@ -117,7 +117,15 @@ export function getCurrentURLParams(): URLSearchParams {
 }
 
 /**
- * Create shareable URL for a comparison
+ * Build URL for analysis results page
+ */
+export function buildAnalysisURL(request: CompareRequest): string {
+  const searchString = encodeComparisonToURL(request);
+  return searchString ? `/analysis?${searchString}` : '/analysis';
+}
+
+/**
+ * Create shareable URL for a comparison (always points to analysis page)
  */
 export function createShareableURL(request: CompareRequest): string {
   if (typeof window === 'undefined') {
@@ -125,7 +133,7 @@ export function createShareableURL(request: CompareRequest): string {
   }
   
   const searchString = encodeComparisonToURL(request);
-  const baseURL = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+  const baseURL = `${window.location.protocol}//${window.location.host}/analysis`;
   
   return searchString ? `${baseURL}?${searchString}` : baseURL;
 }
