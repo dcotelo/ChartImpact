@@ -93,12 +93,12 @@ func CompareHandler(helmService *service.HelmService, store storage.ComparisonSt
 		if store != nil {
 			contentHash := storage.ComputeContentHash(&req)
 			log.Debugf("Content hash: %s", contentHash)
-			
+
 			// Try to find existing comparison
 			existing, err := store.GetByHash(ctx, contentHash)
 			if err == nil && existing != nil {
 				log.Infof("Cache hit for hash %s, returning stored result %s", contentHash[:8], existing.CompareID)
-				
+
 				// Return cached result
 				response := models.CompareResponse{
 					Success:                 true,
@@ -108,7 +108,7 @@ func CompareHandler(helmService *service.HelmService, store storage.ComparisonSt
 					Version1:                existing.Version1,
 					Version2:                existing.Version2,
 				}
-				
+
 				respondJSON(w, http.StatusOK, response)
 				return
 			}
@@ -130,26 +130,26 @@ func CompareHandler(helmService *service.HelmService, store storage.ComparisonSt
 			go func() {
 				storeCtx, storeCancel := context.WithTimeout(context.Background(), 30*time.Second)
 				defer storeCancel()
-				
+
 				retentionDays := util.GetIntEnv("RESULT_TTL_DAYS", 30)
 				contentHash := storage.ComputeContentHash(&req)
-				
+
 				// Ensure compare_id exists in metadata
 				if response.StructuredDiff.Metadata.CompareID == "" {
 					response.StructuredDiff.Metadata.CompareID = uuid.New().String()
 				}
-				
+
 				compareID, err := uuid.Parse(response.StructuredDiff.Metadata.CompareID)
 				if err != nil {
 					log.Errorf("Invalid compare_id format: %v", err)
 					return
 				}
-				
+
 				valuesSHA256 := ""
 				if req.ValuesContent != nil && *req.ValuesContent != "" {
 					valuesSHA256 = storage.ComputeValuesSHA256(*req.ValuesContent)
 				}
-				
+
 				saveReq := &storage.SaveComparisonRequest{
 					CompareID:      compareID,
 					ContentHash:    contentHash,
@@ -164,7 +164,7 @@ func CompareHandler(helmService *service.HelmService, store storage.ComparisonSt
 					HelmVersion:    "", // Could extract from metadata if available
 					RetentionDays:  retentionDays,
 				}
-				
+
 				stored, err := store.Save(storeCtx, saveReq)
 				if err != nil {
 					log.Errorf("Failed to store comparison result: %v", err)

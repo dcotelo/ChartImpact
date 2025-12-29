@@ -202,11 +202,11 @@ func PopularChartsHandler(store storage.ComparisonStore) http.HandlerFunc {
 		}
 
 		respondJSON(w, http.StatusOK, map[string]interface{}{
-			"success":        true,
-			"popularCharts":  analytics.PopularCharts,
+			"success":          true,
+			"popularCharts":    analytics.PopularCharts,
 			"totalComparisons": analytics.TotalComparisons,
-			"periodStart":    analytics.PeriodStart,
-			"periodEnd":      analytics.PeriodEnd,
+			"periodStart":      analytics.PeriodStart,
+			"periodEnd":        analytics.PeriodEnd,
 		})
 	}
 }

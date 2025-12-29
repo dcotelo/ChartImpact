@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package storage
@@ -48,7 +49,7 @@ func setupTestDB(t *testing.T) *PostgresStore {
 
 func teardownTestDB(t *testing.T, store *PostgresStore) {
 	t.Helper()
-	
+
 	// Clean up test data
 	_, err := store.db.Exec("DELETE FROM comparisons WHERE repository LIKE '%test%'")
 	if err != nil {

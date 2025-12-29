@@ -45,7 +45,7 @@ func TestCompressAndDecompress(t *testing.T) {
 	// Verify compression actually reduces size
 	originalJSON, _ := json.Marshal(testData)
 	compressionRatio := float64(len(compressed)) / float64(len(originalJSON))
-	
+
 	t.Logf("Original size: %d bytes", len(originalJSON))
 	t.Logf("Compressed size: %d bytes", len(compressed))
 	t.Logf("Compression ratio: %.2f", compressionRatio)
@@ -68,7 +68,7 @@ func TestCompressLargeData(t *testing.T) {
 		}
 	}
 
-		compressed, _, err := compressJSON(largeData)
+	compressed, _, err := compressJSON(largeData)
 	if err != nil {
 		t.Fatalf("compressJSON failed: %v", err)
 	}
@@ -99,10 +99,10 @@ func TestCompressLargeData(t *testing.T) {
 
 func TestDecompressInvalidData(t *testing.T) {
 	invalidData := []byte("not compressed data")
-	
+
 	var result map[string]interface{}
 	err := decompressJSON(invalidData, &result)
-	
+
 	if err == nil {
 		t.Error("Expected error when decompressing invalid data")
 	}
@@ -110,7 +110,7 @@ func TestDecompressInvalidData(t *testing.T) {
 
 func TestCompressNilData(t *testing.T) {
 	_, _, err := compressJSON(nil)
-	
+
 	// Should handle nil gracefully (marshal to "null")
 	if err != nil {
 		t.Errorf("compressJSON should handle nil, got error: %v", err)
@@ -120,11 +120,11 @@ func TestCompressNilData(t *testing.T) {
 func TestSaveComparisonRequest_Structure(t *testing.T) {
 	// Test that SaveComparisonRequest can be created with all fields
 	req := &SaveComparisonRequest{
-		Repository:   "https://github.com/test/repo.git",
-		ChartPath:    "charts/app",
-		Version1:     "1.0.0",
-		Version2:     "1.1.0",
-		ContentHash:  "abc123",
+		Repository:    "https://github.com/test/repo.git",
+		ChartPath:     "charts/app",
+		Version1:      "1.0.0",
+		Version2:      "1.1.0",
+		ContentHash:   "abc123",
 		RetentionDays: 30,
 	}
 
@@ -186,7 +186,7 @@ func TestAnalyticsFilters(t *testing.T) {
 
 func TestStoredComparison_Expiration(t *testing.T) {
 	now := time.Now()
-	
+
 	tests := []struct {
 		name        string
 		expiresAt   time.Time
@@ -232,32 +232,32 @@ func TestStoredComparison_Expiration(t *testing.T) {
 
 func TestChartPopularity_ChangeRate(t *testing.T) {
 	tests := []struct {
-		name             string
-		comparisonCount  int
-		withChanges      int
-		expectedRateMin  float64
-		expectedRateMax  float64
+		name            string
+		comparisonCount int
+		withChanges     int
+		expectedRateMin float64
+		expectedRateMax float64
 	}{
 		{
-			name:             "all have changes",
-			comparisonCount:  10,
-			withChanges:      10,
-			expectedRateMin:  0.99,
-			expectedRateMax:  1.01,
+			name:            "all have changes",
+			comparisonCount: 10,
+			withChanges:     10,
+			expectedRateMin: 0.99,
+			expectedRateMax: 1.01,
 		},
 		{
-			name:             "half have changes",
-			comparisonCount:  10,
-			withChanges:      5,
-			expectedRateMin:  0.49,
-			expectedRateMax:  0.51,
+			name:            "half have changes",
+			comparisonCount: 10,
+			withChanges:     5,
+			expectedRateMin: 0.49,
+			expectedRateMax: 0.51,
 		},
 		{
-			name:             "none have changes",
-			comparisonCount:  10,
-			withChanges:      0,
-			expectedRateMin:  -0.01,
-			expectedRateMax:  0.01,
+			name:            "none have changes",
+			comparisonCount: 10,
+			withChanges:     0,
+			expectedRateMin: -0.01,
+			expectedRateMax: 0.01,
 		},
 	}
 
@@ -271,7 +271,7 @@ func TestChartPopularity_ChangeRate(t *testing.T) {
 			}
 
 			changeRate := float64(popularity.WithChanges) / float64(popularity.ComparisonCount)
-			
+
 			if changeRate < tt.expectedRateMin || changeRate > tt.expectedRateMax {
 				t.Errorf("Expected change rate between %.2f and %.2f, got %.2f",
 					tt.expectedRateMin, tt.expectedRateMax, changeRate)

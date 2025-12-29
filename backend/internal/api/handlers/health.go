@@ -41,7 +41,7 @@ func HealthHandler(store storage.ComparisonStore) http.HandlerFunc {
 		if store != nil {
 			ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 			defer cancel()
-			
+
 			// Try a simple query to check DB connectivity
 			_, err := store.DeleteExpired(ctx) // This is read-only operation that returns 0 if no expired rows
 			if err != nil {

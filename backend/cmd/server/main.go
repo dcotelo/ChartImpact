@@ -41,7 +41,7 @@ func main() {
 	// Initialize storage (optional, based on feature flag)
 	var store storage.ComparisonStore
 	storageEnabled := util.GetBoolEnv("STORAGE_ENABLED", false)
-	
+
 	if storageEnabled {
 		databaseURL := util.GetStringEnv("DATABASE_URL", "")
 		if databaseURL == "" {
@@ -77,7 +77,7 @@ func main() {
 	api.HandleFunc("/compare", apiHandlers.CompareHandler(helmService, store)).Methods("POST", "OPTIONS")
 	api.HandleFunc("/versions", apiHandlers.VersionsHandler()).Methods("POST", "OPTIONS")
 	api.HandleFunc("/health", apiHandlers.HealthHandler(store)).Methods("GET")
-	
+
 	// Storage-enabled routes
 	if store != nil {
 		api.HandleFunc("/analysis/{id}", apiHandlers.GetAnalysisHandler(store)).Methods("GET", "OPTIONS")

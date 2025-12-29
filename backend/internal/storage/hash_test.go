@@ -2,7 +2,7 @@ package storage
 
 import (
 	"testing"
-	
+
 	"github.com/dcotelo/chartimpact/backend/internal/models"
 )
 
@@ -32,7 +32,7 @@ func TestComputeValuesSHA256(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := ComputeValuesSHA256(tt.input)
-			
+
 			if tt.expect == "empty" {
 				if result != "" {
 					t.Errorf("Expected empty string for empty input, got: %s", result)

@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/google/uuid"
-	
+	"github.com/gorilla/mux"
+
 	"github.com/dcotelo/chartimpact/backend/internal/models"
 	"github.com/dcotelo/chartimpact/backend/internal/storage"
 )
@@ -18,9 +18,9 @@ import (
 // Mock storage implementation for testing
 type MockStorage struct {
 	SaveFunc               func(ctx context.Context, req *storage.SaveComparisonRequest) (*storage.StoredComparison, error)
-	GetByIDFunc        func(ctx context.Context, compareID uuid.UUID) (*storage.StoredComparison, error)
+	GetByIDFunc            func(ctx context.Context, compareID uuid.UUID) (*storage.StoredComparison, error)
 	GetByHashFunc          func(ctx context.Context, contentHash string) (*storage.StoredComparison, error)
-	ListFunc           func(ctx context.Context, filters *storage.ListFilters) ([]*storage.ComparisonSummary, error)
+	ListFunc               func(ctx context.Context, filters *storage.ListFilters) ([]*storage.ComparisonSummary, error)
 	GetAnalyticsFunc       func(ctx context.Context, filters *storage.AnalyticsFilters) (*storage.AnalyticsResult, error)
 	DeleteExpiredFunc      func(ctx context.Context) (int64, error)
 	UpdateLastAccessedFunc func(ctx context.Context, compareID uuid.UUID) error
@@ -86,25 +86,25 @@ func (m *MockStorage) Close() error {
 func TestGetAnalysisHandler_Success(t *testing.T) {
 	testID := uuid.New()
 	now := time.Now()
-	
+
 	mockStore := &MockStorage{
 		GetByIDFunc: func(ctx context.Context, compareID uuid.UUID) (*storage.StoredComparison, error) {
 			if compareID != testID {
 				t.Errorf("Expected compareID %s, got %s", testID, compareID)
 			}
 			return &storage.StoredComparison{
-				CompareID:      testID,
-				Repository:     "https://github.com/test/repo.git",
-				ChartPath:      "charts/app",
-				Version1:       "1.0.0",
-				Version2:       "1.1.0",
-				ContentHash:    "abc123",
+				CompareID:        testID,
+				Repository:       "https://github.com/test/repo.git",
+				ChartPath:        "charts/app",
+				Version1:         "1.0.0",
+				Version2:         "1.1.0",
+				ContentHash:      "abc123",
 				UncompressedSize: 1000,
 				StructuredDiff: &models.StructuredDiffResult{
 					Metadata: models.DiffMetadata{
-						CompareID:      testID.String(),
-						EngineVersion:  "v1",
-						GeneratedAt:    time.Now().Format(time.RFC3339),
+						CompareID:     testID.String(),
+						EngineVersion: "v1",
+						GeneratedAt:   time.Now().Format(time.RFC3339),
 					},
 					Resources: []models.ResourceDiff{},
 					Stats: &models.DiffStats{
@@ -193,26 +193,26 @@ func TestGetAnalysisHandler_InvalidUUID(t *testing.T) {
 func TestGetAnalysisHandler_ExpirationWarning(t *testing.T) {
 	testID := uuid.New()
 	now := time.Now()
-	
+
 	mockStore := &MockStorage{
 		GetByIDFunc: func(ctx context.Context, compareID uuid.UUID) (*storage.StoredComparison, error) {
 			return &storage.StoredComparison{
-				CompareID:      testID,
-				Repository:     "https://github.com/test/repo.git",
-				ChartPath:      "charts/app",
-				Version1:       "1.0.0",
-				Version2:       "1.1.0",
+				CompareID:        testID,
+				Repository:       "https://github.com/test/repo.git",
+				ChartPath:        "charts/app",
+				Version1:         "1.0.0",
+				Version2:         "1.1.0",
 				UncompressedSize: 1000,
 				StructuredDiff: &models.StructuredDiffResult{
 					Metadata: models.DiffMetadata{
-						CompareID:      testID.String(),
-						EngineVersion:  "v1",
-						GeneratedAt:    time.Now().Format(time.RFC3339),
+						CompareID:     testID.String(),
+						EngineVersion: "v1",
+						GeneratedAt:   time.Now().Format(time.RFC3339),
 					},
 					Resources: []models.ResourceDiff{},
 					Stats: &models.DiffStats{
 						Resources: models.DiffStatsResources{},
-						Changes: models.DiffStatsChanges{},
+						Changes:   models.DiffStatsChanges{},
 					},
 				},
 				CreatedAt:      time.Now(),
@@ -302,8 +302,8 @@ func TestListAnalysisHandler_WithFilters(t *testing.T) {
 		},
 	}
 
-	req := httptest.NewRequest("GET", 
-		"/api/analysis?repository=https://github.com/test/repo.git&chartPath=charts/app&limit=25&offset=10", 
+	req := httptest.NewRequest("GET",
+		"/api/analysis?repository=https://github.com/test/repo.git&chartPath=charts/app&limit=25&offset=10",
 		nil)
 	rec := httptest.NewRecorder()
 
