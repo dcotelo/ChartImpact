@@ -1,5 +1,7 @@
 'use client';
 
+export const runtime = 'edge';
+
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { ImpactSummaryComponent } from '@/components/ImpactSummary';
