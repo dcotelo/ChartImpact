@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CompareRequest, CompareResponse, ImpactSummary } from '@/lib/types';
 import { API_ENDPOINTS } from '@/lib/api-config';
@@ -13,7 +13,7 @@ import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS } from '@/lib/design-toke
 
 type ViewMode = 'summary' | 'explorer';
 
-export default function AnalysisPage() {
+function AnalysisContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -353,5 +353,34 @@ export default function AnalysisPage() {
         ) : null}
       </div>
     </div>
+  );
+}
+
+export default function AnalysisPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: BORDER_RADIUS.lg,
+          padding: SPACING.xl,
+          boxShadow: SHADOWS.xl,
+        }}>
+          <ProgressIndicator
+            message="Loading analysis page..."
+            step={1}
+            totalSteps={1}
+          />
+        </div>
+      </div>
+    }>
+      <AnalysisContent />
+    </Suspense>
   );
 }
