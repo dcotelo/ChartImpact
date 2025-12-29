@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/dcotelo/ChartImpact/compare/v1.2.1...v1.3.0) (2025-12-29)
+
+
+### Features
+
+* implement new analysis results page with comparison functionality ([#79](https://github.com/dcotelo/ChartImpact/issues/79)) ([6019f2a](https://github.com/dcotelo/ChartImpact/commit/6019f2a398e0c434c8edd2062d024a25703b1114))
+
 ## [1.2.1](https://github.com/dcotelo/ChartImpact/compare/v1.2.0...v1.2.1) (2025-12-28)
 
 
