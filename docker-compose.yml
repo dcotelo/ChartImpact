@@ -1,6 +1,28 @@
 version: '3.8'
 
 services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: chartimpact-postgres
+    environment:
+      POSTGRES_DB: chartimpact
+      POSTGRES_USER: chartimpact
+      POSTGRES_PASSWORD: chartimpact
+    ports:
+      - "5432:5432"
+    volumes:
+      - chartimpact_pgdata:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chartimpact"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - chartimpact
+
   # Backend API (Go)
   backend:
     build:
@@ -19,6 +41,11 @@ services:
       # Internal diff engine is enabled by default (recommended)
       - INTERNAL_DIFF_ENABLED=true
       - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://frontend:3000
+      # Storage configuration
+      - DATABASE_URL=postgres://chartimpact:chartimpact@postgres:5432/chartimpact?sslmode=disable
+      - DB_MAX_CONNECTIONS=25
+      - RESULT_TTL_DAYS=30
+      - STORAGE_ENABLED=true
     volumes:
       - /tmp/chartimpact:/tmp/chartimpact
     healthcheck:
@@ -27,6 +54,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 5s
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - chartimpact
 
@@ -45,6 +75,9 @@ services:
         condition: service_healthy
     networks:
       - chartimpact
+
+volumes:
+  chartimpact_pgdata:
 
 networks:
   chartimpact:

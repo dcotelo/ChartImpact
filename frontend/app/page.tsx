@@ -44,8 +44,41 @@ export default function Home() {
       <div style={{
         background: `linear-gradient(135deg, ${BRAND_COLORS.primary} 0%, ${BRAND_COLORS.primaryDark} 100%)`,
         padding: SPACING.xl,
-        color: 'white'
+        color: 'white',
+        position: 'relative'
       }}>
+        {/* Analytics Link */}
+        <div style={{
+          position: 'absolute',
+          top: SPACING.md,
+          right: SPACING.lg,
+        }}>
+          <button
+            onClick={() => router.push('/analytics')}
+            style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: BORDER_RADIUS.md,
+              padding: `${SPACING.xs} ${SPACING.md}`,
+              fontSize: '14px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: SPACING.xs,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+            }}
+          >
+            📊 Analytics
+          </button>
+        </div>
         <h1 style={{
           fontSize: '2.5rem',
           marginBottom: SPACING.sm,

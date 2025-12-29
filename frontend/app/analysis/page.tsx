@@ -9,6 +9,7 @@ import { assessRisk } from '@/lib/risk-assessment';
 import { ImpactSummaryComponent } from '@/components/ImpactSummary';
 import { DiffExplorer } from '@/components/explorer/DiffExplorer';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { SPACING, BRAND_COLORS, BORDER_RADIUS, SHADOWS } from '@/lib/design-tokens';
 
 function AnalysisContent() {
@@ -128,10 +129,19 @@ function AnalysisContent() {
   }, [searchParams]);
 
   const handleCopyLink = async () => {
-    const params = decodeComparisonFromURL(searchParams);
-    if (!params) return;
-
-    const shareableURL = createShareableURL(params as CompareRequest);
+    // If we have a stored compareId from the result, use that for a permanent link
+    const compareId = result?.structuredDiff?.metadata?.compareId;
+    
+    let shareableURL: string;
+    if (compareId) {
+      // Permanent link to stored result
+      shareableURL = `${window.location.origin}/analysis/${compareId}`;
+    } else {
+      // Fallback to URL-encoded parameters
+      const params = decodeComparisonFromURL(searchParams);
+      if (!params) return;
+      shareableURL = createShareableURL(params as CompareRequest);
+    }
     
     try {
       await navigator.clipboard.writeText(shareableURL);
@@ -189,70 +199,12 @@ function AnalysisContent() {
   // Error state
   if (error) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: SPACING.xl,
-        background: '#f8f9fa',
-      }}>
-        <div style={{
-          background: 'white',
-          borderRadius: BORDER_RADIUS.xl,
-          padding: `${SPACING['2xl']} ${SPACING.xl}`,
-          boxShadow: SHADOWS.lg,
-          maxWidth: '600px',
-          width: '100%',
-          textAlign: 'center',
-        }}>
-          <div style={{
-            fontSize: '56px',
-            marginBottom: SPACING.lg,
-          }}>⚠️</div>
-          <h1 style={{
-            fontSize: '24px',
-            fontWeight: 700,
-            color: '#dc2626',
-            marginBottom: SPACING.md,
-          }}>
-            Analysis Failed
-          </h1>
-          <p style={{
-            color: '#64748b',
-            marginBottom: SPACING.xl,
-            lineHeight: '1.6',
-            fontSize: '15px',
-          }}>
-            {error}
-          </p>
-          <button
-            onClick={handleNewComparison}
-            style={{
-              background: BRAND_COLORS.primary,
-              color: 'white',
-              border: 'none',
-              borderRadius: BORDER_RADIUS.md,
-              padding: `${SPACING.md} ${SPACING.xl}`,
-              fontSize: '15px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: SHADOWS.sm,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = SHADOWS.md;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = SHADOWS.sm;
-            }}
-          >
-            Start New Comparison
-          </button>
-        </div>
-      </div>
+      <ErrorScreen
+        title="Analysis Failed"
+        message={error}
+        onAction={handleNewComparison}
+        actionLabel="Start New Comparison"
+      />
     );
   }
 
@@ -372,6 +324,53 @@ function AnalysisContent() {
             </div>
           </div>
         </div>
+
+        {/* Stored Result Info Banner */}
+        {result?.structuredDiff?.metadata?.compareId && (
+          <div style={{
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            borderRadius: BORDER_RADIUS.lg,
+            padding: SPACING.lg,
+            marginBottom: SPACING.xl,
+            color: 'white',
+            boxShadow: SHADOWS.md,
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: SPACING.md,
+            }}>
+              <div style={{ fontSize: '24px', flexShrink: 0 }}>💾</div>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  marginBottom: SPACING.xs,
+                }}>
+                  Result Saved
+                </div>
+                <div style={{
+                  fontSize: '14px',
+                  opacity: 0.95,
+                  marginBottom: SPACING.sm,
+                }}>
+                  This analysis has been stored and can be shared via a permanent link.
+                </div>
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  borderRadius: BORDER_RADIUS.md,
+                  padding: `${SPACING.sm} ${SPACING.md}`,
+                  fontFamily: 'monospace',
+                  fontSize: '13px',
+                  wordBreak: 'break-all',
+                  backdropFilter: 'blur(10px)',
+                }}>
+                  {window.location.origin}/analysis/{result.structuredDiff.metadata.compareId}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Analysis Context Section */}
         {params && (

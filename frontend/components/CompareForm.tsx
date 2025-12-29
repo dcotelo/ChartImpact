@@ -3,6 +3,7 @@
 import React, { useState, FormEvent, useEffect, useCallback } from 'react';
 import { CompareRequest } from '@/lib/types';
 import { API_ENDPOINTS } from '@/lib/api-config';
+import { VersionSelector } from './VersionSelector';
 
 interface CompareFormProps {
   onSubmit: (data: CompareRequest) => void;
@@ -181,195 +182,23 @@ export function CompareForm({ onSubmit, loading, initialData }: CompareFormProps
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-        <div>
-          <label style={{
-            display: 'block',
-            marginBottom: '0.5rem',
-            fontWeight: '600',
-            color: '#333'
-          }}>
-            Version 1 (Tag/Commit) *
-          </label>
-          <div style={{ position: 'relative' }}>
-            {loadingVersions ? (
-              <div style={{
-                position: 'relative',
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '1rem',
-                backgroundColor: '#f5f5f5',
-                color: '#999',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                cursor: 'not-allowed'
-              }}>
-                <span style={{
-                  display: 'inline-block',
-                  width: '16px',
-                  height: '16px',
-                  border: '2px solid #e0e0e0',
-                  borderTopColor: '#667eea',
-                  borderRadius: '50%',
-                  animation: 'spin 0.8s linear infinite',
-                  flexShrink: 0
-                }}></span>
-                <span>Loading versions...</span>
-              </div>
-            ) : versions.length > 0 ? (
-              <select
-                value={formData.version1}
-                onChange={(e) => setFormData({ ...formData, version1: e.target.value })}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '6px',
-                  fontSize: '1rem',
-                  backgroundColor: '#fff',
-                  color: '#333',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23666\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 0.75rem center',
-                  paddingRight: '2.5rem'
-                }}
-              >
-                <option value="">Select a version...</option>
-                {versions.map((version, idx) => (
-                  <option key={`v1-${idx}-${version}`} value={version}>
-                    {version}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type="text"
-                value={formData.version1}
-                onChange={(e) => setFormData({ ...formData, version1: e.target.value })}
-                placeholder="Enter version manually"
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '6px',
-                  fontSize: '1rem',
-                  backgroundColor: '#fff'
-                }}
-              />
-            )}
-          </div>
-          {versionsError && (
-            <small style={{ color: '#d32f2f', fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
-              {versionsError}
-            </small>
-          )}
-          {versions.length > 0 && !versionsError && !loadingVersions && (
-            <small style={{ color: '#666', fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
-              {versions.length} version{versions.length !== 1 ? 's' : ''} available
-            </small>
-          )}
-        </div>
-
-        <div>
-          <label style={{
-            display: 'block',
-            marginBottom: '0.5rem',
-            fontWeight: '600',
-            color: '#333'
-          }}>
-            Version 2 (Tag/Commit) *
-          </label>
-          <div style={{ position: 'relative' }}>
-            {loadingVersions ? (
-              <div style={{
-                position: 'relative',
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '1rem',
-                backgroundColor: '#f5f5f5',
-                color: '#999',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                cursor: 'not-allowed'
-              }}>
-                <span style={{
-                  display: 'inline-block',
-                  width: '16px',
-                  height: '16px',
-                  border: '2px solid #e0e0e0',
-                  borderTopColor: '#667eea',
-                  borderRadius: '50%',
-                  animation: 'spin 0.8s linear infinite',
-                  flexShrink: 0
-                }}></span>
-                <span>Loading versions...</span>
-              </div>
-            ) : versions.length > 0 ? (
-              <select
-                value={formData.version2}
-                onChange={(e) => setFormData({ ...formData, version2: e.target.value })}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '6px',
-                  fontSize: '1rem',
-                  backgroundColor: '#fff',
-                  color: '#333',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23666\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 0.75rem center',
-                  paddingRight: '2.5rem'
-                }}
-              >
-                <option value="">Select a version...</option>
-                {versions.map((version, idx) => (
-                  <option key={`v2-${idx}-${version}`} value={version}>
-                    {version}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type="text"
-                value={formData.version2}
-                onChange={(e) => setFormData({ ...formData, version2: e.target.value })}
-                placeholder="Enter version manually"
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '6px',
-                  fontSize: '1rem',
-                  backgroundColor: '#fff'
-                }}
-              />
-            )}
-          </div>
-          {versionsError && (
-            <small style={{ color: '#d32f2f', fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
-              {versionsError}
-            </small>
-          )}
-          {versions.length > 0 && !versionsError && !loadingVersions && (
-            <small style={{ color: '#666', fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
-              {versions.length} version{versions.length !== 1 ? 's' : ''} available
-            </small>
-          )}
-        </div>
+        <VersionSelector
+          value={formData.version1}
+          onChange={(v) => setFormData({ ...formData, version1: v })}
+          versions={versions}
+          loadingVersions={loadingVersions}
+          versionsError={versionsError}
+          label="Version 1 (Tag/Commit)"
+        />
+        
+        <VersionSelector
+          value={formData.version2}
+          onChange={(v) => setFormData({ ...formData, version2: v })}
+          versions={versions}
+          loadingVersions={loadingVersions}
+          versionsError={versionsError}
+          label="Version 2 (Tag/Commit)"
+        />
       </div>
 
       {/* Collapsible Optional Values Section */}
