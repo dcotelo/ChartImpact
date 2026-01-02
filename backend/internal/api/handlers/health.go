@@ -73,15 +73,20 @@ func HealthHandler(store storage.ComparisonStore) http.HandlerFunc {
 			DyffOK:  dyffOK,
 		}
 
-		// Add database status if storage is enabled
+		// Add storage information if enabled
 		if store != nil {
+			storageType := util.GetStringEnv("STORAGE_TYPE", "disk")
+			analyticsSupported := storageType == "postgres"
+
 			responseMap := map[string]interface{}{
-				"status":  response.Status,
-				"version": response.Version,
-				"helmOK":  response.HelmOK,
-				"gitOK":   response.GitOK,
-				"dyffOK":  response.DyffOK,
-				"dbOK":    dbOK,
+				"status":             response.Status,
+				"version":            response.Version,
+				"helmOK":             response.HelmOK,
+				"gitOK":              response.GitOK,
+				"dyffOK":             response.DyffOK,
+				"dbOK":               dbOK,
+				"storageType":        storageType,
+				"analyticsSupported": analyticsSupported,
 			}
 			respondJSON(w, http.StatusOK, responseMap)
 			return

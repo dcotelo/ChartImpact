@@ -15,6 +15,7 @@ import {
 export default function Home() {
   const router = useRouter();
   const [formData, setFormData] = useState<CompareRequest | undefined>(undefined);
+  const [analyticsSupported, setAnalyticsSupported] = useState<boolean>(false);
 
   // Load comparison from URL on mount (just to populate form, not execute)
   useEffect(() => {
@@ -24,6 +25,24 @@ export default function Home() {
     if (urlComparison) {
       setFormData(urlComparison as CompareRequest);
     }
+  }, []);
+
+  // Check if analytics is supported
+  useEffect(() => {
+    const checkAnalyticsSupport = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+        const response = await fetch(`${apiUrl}/api/health`);
+        if (response.ok) {
+          const data = await response.json();
+          setAnalyticsSupported(data.analyticsSupported === true);
+        }
+      } catch (error) {
+        // Fail closed - don't show analytics button if health check fails
+        console.warn('Failed to check analytics support:', error);
+      }
+    };
+    checkAnalyticsSupport();
   }, []);
 
   const handleCompare = (formData: CompareRequest) => {
@@ -47,38 +66,40 @@ export default function Home() {
         color: 'white',
         position: 'relative'
       }}>
-        {/* Analytics Link */}
-        <div style={{
-          position: 'absolute',
-          top: SPACING.md,
-          right: SPACING.lg,
-        }}>
-          <button
-            onClick={() => router.push('/analytics')}
-            style={{
-              background: 'rgba(255, 255, 255, 0.2)',
-              color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              borderRadius: BORDER_RADIUS.md,
-              padding: `${SPACING.xs} ${SPACING.md}`,
-              fontSize: '14px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              gap: SPACING.xs,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-            }}
-          >
-            📊 Analytics
-          </button>
-        </div>
+        {/* Analytics Link - only show when analytics is supported */}
+        {analyticsSupported && (
+          <div style={{
+            position: 'absolute',
+            top: SPACING.md,
+            right: SPACING.lg,
+          }}>
+            <button
+              onClick={() => router.push('/analytics')}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: BORDER_RADIUS.md,
+                padding: `${SPACING.xs} ${SPACING.md}`,
+                fontSize: '14px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: SPACING.xs,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+              }}
+            >
+              📊 Analytics
+            </button>
+          </div>
+        )}
         <h1 style={{
           fontSize: '2.5rem',
           marginBottom: SPACING.sm,

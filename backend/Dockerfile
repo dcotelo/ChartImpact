@@ -58,9 +58,9 @@ COPY --from=builder /build/server .
 # Copy .env.example (optional, can be overridden with volume mount)
 COPY --from=builder /build/.env.example .
 
-# Create temp directory and set permissions
-RUN mkdir -p /tmp/chartimpact && \
-    chown -R chartimpact:chartimpact /app /tmp/chartimpact
+# Create temp directory and data directory, set permissions
+RUN mkdir -p /tmp/chartimpact /data/results && \
+    chown -R chartimpact:chartimpact /app /tmp/chartimpact /data/results
 
 # Switch to non-root user
 USER chartimpact
