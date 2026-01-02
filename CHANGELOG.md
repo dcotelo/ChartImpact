@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/dcotelo/ChartImpact/compare/v1.5.0...v1.5.1) (2026-01-02)
+
+
+### Bug Fixes
+
+* upgrade react-syntax-highlighter from 16.0.0 to 16.1.0 ([#85](https://github.com/dcotelo/ChartImpact/issues/85)) ([a310360](https://github.com/dcotelo/ChartImpact/commit/a310360603a81c94bf79335dfc6e603abbe6900e))
+
 ## [1.5.0](https://github.com/dcotelo/ChartImpact/compare/v1.4.0...v1.5.0) (2025-12-29)
 
 
