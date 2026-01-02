@@ -35,3 +35,8 @@ primary_region = 'gru'
   LOG_FORMAT="text"
   # DEPRECATED: DYFF_ENABLED is deprecated and will be removed in a future version
   DYFF_ENABLED="false"
+  STORAGE_ENABLED="true"
+  STORAGE_TYPE="disk"                # Default changed from postgres to disk
+  DISK_STORAGE_DIR="/data/results"
+  RESULT_TTL_DAYS="30"
+  MAX_DISK_USAGE_MB="0"            # Optional limit
