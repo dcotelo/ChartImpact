@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.3](https://github.com/dcotelo/ChartImpact/compare/v1.5.2...v1.5.3) (2026-01-02)
+
+
+### Bug Fixes
+
+* add option to skip startup cleanup and configure mounts in fly.toml ([#93](https://github.com/dcotelo/ChartImpact/issues/93)) ([435d6a6](https://github.com/dcotelo/ChartImpact/commit/435d6a62b9d997481bbc275ffdb681a12afacf73))
+* increase memory allocation for VM to improve performance ([#91](https://github.com/dcotelo/ChartImpact/issues/91)) ([5b100ea](https://github.com/dcotelo/ChartImpact/commit/5b100ea1817fc3fb590c44a3018348e008bdc04f))
+
 ## [1.5.2](https://github.com/dcotelo/ChartImpact/compare/v1.5.1...v1.5.2) (2026-01-02)
 
 
