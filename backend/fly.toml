@@ -18,7 +18,7 @@ primary_region = 'gru'
 
 [[vm]]
   size = "shared-cpu-1x"
-  memory = "256mb"
+  memory = "512mb"
 [env]
   CORS_ALLOWED_ORIGINS="https://ci.dcotelo.dev,https://*.chartimpact.pages.dev,http://localhost:3000"
   CORS_ALLOWED_METHODS="GET,POST,PUT,DELETE,OPTIONS"
