@@ -59,3 +59,19 @@ func GetStringEnv(key string, defaultValue string) string {
 	}
 	return val
 }
+
+// GetInt64Env retrieves an int64 environment variable with a default value
+func GetInt64Env(key string, defaultValue int64) int64 {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultValue
+	}
+
+	int64Val, err := strconv.ParseInt(val, 10, 64)
+	if err != nil {
+		log.Warnf("Invalid int64 value '%s' for %s, using default: %d", val, key, defaultValue)
+		return defaultValue
+	}
+
+	return int64Val
+}
