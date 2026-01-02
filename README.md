@@ -24,8 +24,8 @@ ChartImpact provides visibility into Helm chart changes, helping teams understan
 - ⚡ **Risk Signal Visibility** - Understand changes to availability-critical resources (Deployments, StatefulSets, Services)
 - 🔐 **Security Impact Awareness** - Surface changes to security-sensitive configurations (RBAC, NetworkPolicies, ServiceAccounts)
 - 🔗 **Shareable Links** - URL-based sharing enables team collaboration on comparison results
-- 💾 **Result Storage & Replay** - Persistent storage of analysis results with 30-day retention, gzip compression, and hash-based deduplication
-- 📈 **Analytics Dashboard** - Insights into most compared charts, change rates, and deployment risk trends
+- 💾 **Result Storage & Replay** - Optional storage: lightweight disk-based caching or full PostgreSQL storage with compression and deduplication
+- 📈 **Analytics Dashboard** - Insights into most compared charts, change rates, and deployment risk trends (PostgreSQL storage only)
 - 🎨 **Modern UI** - Clean, responsive interface with mission-aligned design and consistent terminology
 - 🚀 **Fast & Efficient** - Go backend with Helm Go SDK for optimal performance
 - 🔧 **Flexible** - Support for custom values files or inline values content
@@ -534,7 +534,36 @@ NEXT_PUBLIC_API_URL=http://localhost:8080
 
 ### Storage Configuration
 
-ChartImpact includes an optional PostgreSQL-based storage system for persisting analysis results:
+ChartImpact includes optional storage systems for persisting analysis results. Choose between:
+
+#### Option 1: Disk Storage (Lightweight, Ephemeral)
+
+Simple file-based caching with no database required:
+
+**Features:**
+- File-based JSON storage
+- No in-memory caching
+- Startup-only cleanup (no background processes)
+- Configurable TTL and disk usage limits
+- Atomic writes prevent corruption
+- Safe to delete entire directory
+- Perfect for lightweight deployments
+
+**To Enable Disk Storage:**
+
+```bash
+STORAGE_ENABLED=true
+STORAGE_TYPE=disk
+DISK_STORAGE_DIR=/data/results
+RESULT_TTL_DAYS=30
+MAX_DISK_USAGE_MB=1024  # Optional limit (0 = no limit)
+```
+
+**When to use:** Development, testing, or simple deployments without analytics requirements.
+
+#### Option 2: PostgreSQL Storage (Full-Featured)
+
+Database storage with compression and analytics:
 
 **Features:**
 - 30-day retention with automatic cleanup
@@ -543,11 +572,12 @@ ChartImpact includes an optional PostgreSQL-based storage system for persisting 
 - Async storage (doesn't slow down comparisons)
 - Analytics for popular charts and trends
 
-**To Enable Storage:**
+**To Enable PostgreSQL Storage:**
 
 1. Set environment variables:
    ```bash
    STORAGE_ENABLED=true
+   STORAGE_TYPE=postgres
    DATABASE_URL=postgres://chartimpact:chartimpact@localhost:5432/chartimpact?sslmode=disable
    RESULT_TTL_DAYS=30
    ```
@@ -570,7 +600,11 @@ ChartImpact includes an optional PostgreSQL-based storage system for persisting 
      'SELECT delete_expired_comparisons()');
    ```
 
-**Storage is optional** - ChartImpact works perfectly without it, but you'll miss out on result replay and analytics features.
+**When to use:** Production deployments requiring analytics, long-term storage, and reporting.
+
+---
+
+**Storage is optional** - ChartImpact works perfectly without it, but you'll miss out on result replay features.
 
 For more details, see [STORAGE_SPEC.md](STORAGE_SPEC.md).
 

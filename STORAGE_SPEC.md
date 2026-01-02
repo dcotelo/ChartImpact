@@ -1,6 +1,53 @@
 # ChartImpact — Result Storage & Replay Specification (v1)
 
-## 1. Purpose
+## Storage Options
+
+ChartImpact supports two storage backends:
+
+### Disk Storage (Ephemeral, Lightweight)
+
+**Purpose:** Simple file-based caching for temporary result storage without database overhead.
+
+**Characteristics:**
+- **No in-memory caching** - Direct file reads on every access
+- **No background cleanup** - Cleanup runs only once at startup
+- **Startup cleanup** - Removes expired files and enforces disk limits
+- **Atomic writes** - Temp file + rename prevents corruption
+- **Self-contained files** - Each result includes all metadata for validation
+- **Safe to delete** - Entire directory can be removed without issues
+- **No analytics** - Simple storage only, no aggregate queries
+
+**Use cases:**
+- Development and testing environments
+- Lightweight deployments without database requirements
+- Temporary caching to avoid recomputation
+- Simple single-server deployments
+
+**See Section 13 for detailed disk storage specification.**
+
+### PostgreSQL Storage (Full-Featured)
+
+**Purpose:** Production-grade storage with compression, analytics, and advanced features.
+
+**Characteristics:**
+- **Gzip compression** - ~75% size reduction
+- **Hash-based deduplication** - Identical comparisons stored once
+- **Materialized views** - Fast analytics queries
+- **Background cleanup** - Automated with pg_cron
+- **Immutable storage** - Write-once, read-many
+- **Analytics support** - Popular charts, trends, statistics
+
+**Use cases:**
+- Production deployments
+- Multi-server deployments
+- Analytics and reporting requirements
+- Long-term result history
+
+**See Sections 1-12 for detailed PostgreSQL storage specification.**
+
+---
+
+## 1. Purpose (PostgreSQL Storage)
 
 This specification defines how analysis results are persisted so that:
 - A canonical result link always shows the exact same output
@@ -472,6 +519,255 @@ Key metrics to track:
 
 ---
 
-## 13. Summary (one sentence)
+## 13. Disk Storage Specification (Ephemeral)
+
+### 13.1 Overview
+
+Disk storage provides a lightweight, file-based caching mechanism without database dependencies.
+
+**Key Design Principles:**
+- **Ephemeral by design** - Safe to delete entire directory
+- **No in-memory state** - Stateless, restartable
+- **Startup-only cleanup** - No background processes
+- **Atomic operations** - Corruption-resistant writes
+- **Self-contained files** - All metadata in each file
+
+### 13.2 Storage Format
+
+Each result is stored as a JSON file with deterministic naming:
+
+**Filename:** `{content_hash}.json`
+
+**Content Structure:**
+```json
+{
+  "key": "sha256_content_hash",
+  "createdAt": "2026-01-02T16:00:00Z",
+  "expiresAt": "2026-02-01T16:00:00Z",
+  "engineVersion": "v1",
+  "schemaVersion": "v1",
+  "inputs": {
+    "repository": "https://github.com/example/charts",
+    "chartPath": "charts/myapp",
+    "version1": "1.0.0",
+    "version2": "2.0.0",
+    "valuesFile": "values.yaml",
+    "valuesSha256": "abc123..."
+  },
+  "result": {
+    "metadata": { ... },
+    "resources": [ ... ],
+    "stats": { ... }
+  },
+  "compareId": "uuid-v4",
+  "repository": "https://github.com/example/charts",
+  "chartPath": "charts/myapp",
+  "version1": "1.0.0",
+  "version2": "2.0.0",
+  "helmVersion": "3.12.0"
+}
+```
+
+### 13.3 Content Hash Calculation
+
+The content hash is computed identically to PostgreSQL storage:
+
+```go
+hash := sha256(
+  repository +
+  chartPath +
+  version1 +
+  version2 +
+  valuesFile +
+  sha256(valuesContent) +
+  configuration_flags
+)
+```
+
+This ensures:
+- Deterministic deduplication
+- Identical requests resolve to same file
+- Compatible with future migration to PostgreSQL
+
+### 13.4 Write Operations
+
+**Atomic Write Process:**
+1. Marshal result to JSON
+2. Write to temporary file: `.{hash}.tmp`
+3. Atomic rename to final name: `{hash}.json`
+4. On failure: delete temp file, continue without caching
+
+**Failure Handling:**
+- Directory missing → log warning, continue without caching
+- Disk full → skip write, return result anyway
+- Write error → log warning, serve computed result
+
+### 13.5 Read Operations
+
+**Retrieval by Hash:**
+1. Construct filename from hash
+2. Read file from disk
+3. Parse JSON
+4. Check expiration: if `expiresAt < now()`, delete and return error
+5. Return result
+
+**Retrieval by CompareID:**
+1. Scan directory for all `.json` files
+2. Read and parse each file
+3. Match `compareId` field
+4. Check expiration
+5. Return result or not found
+
+**Performance Note:** Retrieval by ID is O(n) - acceptable for ephemeral storage.
+
+### 13.6 Startup Cleanup
+
+Cleanup runs **once** at application startup:
+
+```go
+func CleanupOnStartup(ctx context.Context) error {
+  // 1. Scan directory
+  files := readDir(storageDir)
+  
+  // 2. Delete expired files
+  for file in files {
+    result := parseFile(file)
+    if result.ExpiresAt.Before(now()) {
+      delete(file)
+      bytesReclaimed += fileSize
+    }
+  }
+  
+  // 3. Enforce max disk usage
+  if totalSize > maxDiskUsage {
+    sortFilesByCreatedAt()  // Oldest first
+    deleteUntilUnderLimit()
+  }
+  
+  // 4. Log summary
+  log.Info("Cleanup completed",
+    "filesScanned", scanned,
+    "filesDeleted", deleted,
+    "bytesReclaimed", reclaimed)
+}
+```
+
+**No Runtime Cleanup:**
+- No background goroutines
+- No periodic scans
+- No TTL timers
+- Files persist until next restart or manual cleanup
+
+### 13.7 Expiration Model
+
+- Each file has `expiresAt` timestamp
+- TTL configured via `RESULT_TTL_DAYS` environment variable
+- Expiration checked on **read access only**
+- Expired files deleted immediately on access
+- No TTL extension on access (immutable expiration)
+
+### 13.8 Disk Usage Limits
+
+Optional max disk usage enforcement:
+
+**Configuration:**
+```bash
+MAX_DISK_USAGE_MB=1024  # 1GB limit
+```
+
+**Enforcement (startup only):**
+1. Calculate total disk usage
+2. If over limit, sort files by `createdAt` (oldest first)
+3. Delete oldest files until under limit
+4. Log deleted count and reclaimed bytes
+
+**No runtime enforcement** - limit checked only at startup.
+
+### 13.9 Configuration
+
+Environment variables:
+
+```bash
+# Storage type selection
+STORAGE_ENABLED=true
+STORAGE_TYPE=disk
+
+# Disk storage configuration
+DISK_STORAGE_DIR=/data/results      # Storage directory path
+RESULT_TTL_DAYS=30                  # Days before expiration
+MAX_DISK_USAGE_MB=0                 # Disk limit in MB (0 = no limit)
+```
+
+### 13.10 Limitations
+
+**By Design:**
+- ❌ No analytics queries
+- ❌ No aggregate statistics
+- ❌ No materialized views
+- ❌ No background cleanup
+- ❌ No distributed storage
+- ❌ O(n) lookup by compareId
+- ❌ No compression (plain JSON)
+
+**Acceptable Because:**
+- ✅ Designed for ephemeral caching, not historical storage
+- ✅ Single-server deployments
+- ✅ Lightweight resource requirements
+- ✅ Simple operational model
+- ✅ Easy to upgrade to PostgreSQL later
+
+### 13.11 Monitoring
+
+Key metrics:
+
+- Directory size (bytes)
+- File count
+- Cleanup effectiveness (files/bytes deleted per startup)
+- Cache hit rate (reused results vs new computations)
+- Read/write error rates
+
+### 13.12 Migration Path
+
+**Disk → PostgreSQL:**
+1. Enable PostgreSQL storage
+2. Set `STORAGE_TYPE=postgres`
+3. Restart application
+4. Disk storage files remain readable
+5. New results stored in PostgreSQL
+6. Optionally migrate historical data:
+   ```go
+   // Read all disk files
+   // Insert into PostgreSQL
+   // Delete disk files
+   ```
+
+### 13.13 Security Considerations
+
+- File permissions: 0644 (owner read/write, group/others read)
+- Directory permissions: 0755
+- No secret redaction (store as-is)
+- Safe for public deployment (no sensitive paths)
+- Atomic writes prevent partial file corruption
+- No symlink following
+
+### 13.14 Testing Strategy
+
+**Unit Tests:**
+- Save/retrieve roundtrip
+- Expiration handling
+- Atomic write verification
+- Cleanup functionality
+- Concurrent access safety
+- Failure mode handling
+
+**Integration Tests:**
+- Full application startup with cleanup
+- Multi-file cleanup scenarios
+- Disk limit enforcement
+- Corrupt file handling
+
+---
+
+## 14. Summary (one sentence)
 
 ChartImpact stores immutable, deduplicated, compressed analysis artifacts with 30-day retention so that every result link is a permanent, exact replay of what was computed at creation time, while enabling analytics on comparison trends and deployment risks.

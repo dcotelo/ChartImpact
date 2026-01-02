@@ -43,19 +43,61 @@ func main() {
 	storageEnabled := util.GetBoolEnv("STORAGE_ENABLED", false)
 
 	if storageEnabled {
-		databaseURL := util.GetStringEnv("DATABASE_URL", "")
-		if databaseURL == "" {
-			log.Warn("STORAGE_ENABLED=true but DATABASE_URL not set, storage will be disabled")
-		} else {
-			var err error
-			store, err = storage.NewPostgresStore(databaseURL, log.StandardLogger())
+		storageType := util.GetStringEnv("STORAGE_TYPE", "disk")
+
+		switch storageType {
+		case "disk":
+			// Disk-only ephemeral storage
+			diskDir := util.GetStringEnv("DISK_STORAGE_DIR", "/data/results")
+			ttlDays := util.GetIntEnv("RESULT_TTL_DAYS", 30)
+			maxDiskMB := util.GetInt64Env("MAX_DISK_USAGE_MB", 0)
+
+			diskConfig := storage.DiskStoreConfig{
+				BaseDir:           diskDir,
+				DefaultTTL:        time.Duration(ttlDays) * 24 * time.Hour,
+				MaxDiskUsageBytes: maxDiskMB * 1024 * 1024, // Convert MB to bytes
+			}
+
+			diskStore, err := storage.NewDiskStore(diskConfig, log.StandardLogger())
 			if err != nil {
-				log.Errorf("Failed to initialize storage: %v", err)
+				log.Errorf("Failed to initialize disk storage: %v", err)
 				log.Warn("Continuing without storage")
 			} else {
-				log.Info("Storage layer initialized successfully")
+				log.Info("Disk storage layer initialized successfully")
+				log.Infof("Storage directory: %s", diskDir)
+				log.Infof("Result TTL: %d days", ttlDays)
+
+				// Perform startup cleanup
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+				defer cancel()
+
+				if err := diskStore.CleanupOnStartup(ctx); err != nil {
+					log.Warnf("Startup cleanup failed: %v", err)
+				}
+
+				store = diskStore
 				defer store.Close()
 			}
+
+		case "postgres":
+			// PostgreSQL storage (existing implementation)
+			databaseURL := util.GetStringEnv("DATABASE_URL", "")
+			if databaseURL == "" {
+				log.Warn("STORAGE_ENABLED=true but DATABASE_URL not set, storage will be disabled")
+			} else {
+				var err error
+				store, err = storage.NewPostgresStore(databaseURL, log.StandardLogger())
+				if err != nil {
+					log.Errorf("Failed to initialize storage: %v", err)
+					log.Warn("Continuing without storage")
+				} else {
+					log.Info("PostgreSQL storage layer initialized successfully")
+					defer store.Close()
+				}
+			}
+
+		default:
+			log.Warnf("Unknown storage type '%s', storage will be disabled", storageType)
 		}
 	} else {
 		log.Info("Storage is disabled (set STORAGE_ENABLED=true to enable)")
