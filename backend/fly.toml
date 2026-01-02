@@ -40,3 +40,8 @@ primary_region = 'gru'
   DISK_STORAGE_DIR="/data/results"
   RESULT_TTL_DAYS="30"
   MAX_DISK_USAGE_MB="0"            # Optional limit
+  SKIP_STARTUP_CLEANUP="true"
+
+  [mounts]
+  source = "results_data"
+  destination = "/data"
