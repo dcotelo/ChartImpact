@@ -43,7 +43,7 @@ func main() {
 	storageEnabled := util.GetBoolEnv("STORAGE_ENABLED", false)
 
 	if storageEnabled {
-		storageType := util.GetStringEnv("STORAGE_TYPE", "postgres")
+		storageType := util.GetStringEnv("STORAGE_TYPE", "disk")
 
 		switch storageType {
 		case "disk":
