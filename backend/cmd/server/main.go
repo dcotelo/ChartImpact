@@ -67,12 +67,17 @@ func main() {
 				log.Infof("Storage directory: %s", diskDir)
 				log.Infof("Result TTL: %d days", ttlDays)
 
-				// Perform startup cleanup
-				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-				defer cancel()
+				// Perform startup cleanup (unless disabled for ephemeral environments)
+				skipCleanup := util.GetBoolEnv("SKIP_STARTUP_CLEANUP", false)
+				if !skipCleanup {
+					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+					defer cancel()
 
-				if err := diskStore.CleanupOnStartup(ctx); err != nil {
-					log.Warnf("Startup cleanup failed: %v", err)
+					if err := diskStore.CleanupOnStartup(ctx); err != nil {
+						log.Warnf("Startup cleanup failed: %v", err)
+					}
+				} else {
+					log.Info("Skipping startup cleanup (SKIP_STARTUP_CLEANUP=true)")
 				}
 
 				store = diskStore
