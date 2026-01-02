@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -553,22 +552,4 @@ func (ds *DiskStore) UpdateLastAccessed(ctx context.Context, compareID uuid.UUID
 func (ds *DiskStore) Close() error {
 	ds.logger.Info("Closing disk storage (no-op)")
 	return nil
-}
-
-// Helper function to copy file (used internally)
-func copyFile(src, dst string) error {
-	sourceFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer sourceFile.Close()
-
-	destFile, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer destFile.Close()
-
-	_, err = io.Copy(destFile, sourceFile)
-	return err
 }
