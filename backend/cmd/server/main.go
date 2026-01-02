@@ -51,7 +51,7 @@ func main() {
 			diskDir := util.GetStringEnv("DISK_STORAGE_DIR", "/data/results")
 			ttlDays := util.GetIntEnv("RESULT_TTL_DAYS", 30)
 			maxDiskMB := util.GetInt64Env("MAX_DISK_USAGE_MB", 0)
-			
+
 			diskConfig := storage.DiskStoreConfig{
 				BaseDir:           diskDir,
 				DefaultTTL:        time.Duration(ttlDays) * 24 * time.Hour,
@@ -66,15 +66,15 @@ func main() {
 				log.Info("Disk storage layer initialized successfully")
 				log.Infof("Storage directory: %s", diskDir)
 				log.Infof("Result TTL: %d days", ttlDays)
-				
+
 				// Perform startup cleanup
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 				defer cancel()
-				
+
 				if err := diskStore.CleanupOnStartup(ctx); err != nil {
 					log.Warnf("Startup cleanup failed: %v", err)
 				}
-				
+
 				store = diskStore
 				defer store.Close()
 			}

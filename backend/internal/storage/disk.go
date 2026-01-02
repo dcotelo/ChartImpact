@@ -17,36 +17,36 @@ import (
 // DiskStore implements ComparisonStore using disk-only ephemeral storage
 // No in-memory caching, no background cleanup - only startup cleanup
 type DiskStore struct {
-	baseDir          string
-	defaultTTL       time.Duration
+	baseDir           string
+	defaultTTL        time.Duration
 	maxDiskUsageBytes int64 // 0 means no limit
-	logger           *log.Logger
+	logger            *log.Logger
 }
 
 // DiskStoreConfig contains configuration for disk storage
 type DiskStoreConfig struct {
-	BaseDir          string        // Directory to store result files
-	DefaultTTL       time.Duration // Default TTL for results
-	MaxDiskUsageBytes int64        // Maximum disk usage in bytes (0 = no limit)
+	BaseDir           string        // Directory to store result files
+	DefaultTTL        time.Duration // Default TTL for results
+	MaxDiskUsageBytes int64         // Maximum disk usage in bytes (0 = no limit)
 }
 
 // ResultFile represents the JSON structure stored on disk
 type ResultFile struct {
-	Key            string                      `json:"key"`
-	CreatedAt      time.Time                   `json:"createdAt"`
-	ExpiresAt      time.Time                   `json:"expiresAt"`
-	EngineVersion  string                      `json:"engineVersion"`
-	SchemaVersion  string                      `json:"schemaVersion"`
-	Inputs         ResultInputs                `json:"inputs"`
-	Result         *models.StructuredDiffResult `json:"result"`
-	CompareID      string                      `json:"compareId"`
-	Repository     string                      `json:"repository"`
-	ChartPath      string                      `json:"chartPath"`
-	Version1       string                      `json:"version1"`
-	Version2       string                      `json:"version2"`
-	ValuesFile     *string                     `json:"valuesFile,omitempty"`
-	ValuesSHA256   *string                     `json:"valuesSha256,omitempty"`
-	HelmVersion    string                      `json:"helmVersion,omitempty"`
+	Key           string                       `json:"key"`
+	CreatedAt     time.Time                    `json:"createdAt"`
+	ExpiresAt     time.Time                    `json:"expiresAt"`
+	EngineVersion string                       `json:"engineVersion"`
+	SchemaVersion string                       `json:"schemaVersion"`
+	Inputs        ResultInputs                 `json:"inputs"`
+	Result        *models.StructuredDiffResult `json:"result"`
+	CompareID     string                       `json:"compareId"`
+	Repository    string                       `json:"repository"`
+	ChartPath     string                       `json:"chartPath"`
+	Version1      string                       `json:"version1"`
+	Version2      string                       `json:"version2"`
+	ValuesFile    *string                      `json:"valuesFile,omitempty"`
+	ValuesSHA256  *string                      `json:"valuesSha256,omitempty"`
+	HelmVersion   string                       `json:"helmVersion,omitempty"`
 }
 
 // ResultInputs contains the input parameters used to generate the result
@@ -162,10 +162,10 @@ func (ds *DiskStore) CleanupOnStartup(ctx context.Context) error {
 
 	elapsed := time.Since(startTime)
 	ds.logger.WithFields(log.Fields{
-		"filesScanned":    filesScanned,
-		"filesDeleted":    filesDeleted,
-		"bytesReclaimed":  bytesReclaimed,
-		"elapsedMs":       elapsed.Milliseconds(),
+		"filesScanned":   filesScanned,
+		"filesDeleted":   filesDeleted,
+		"bytesReclaimed": bytesReclaimed,
+		"elapsedMs":      elapsed.Milliseconds(),
 	}).Info("Startup cleanup completed")
 
 	return nil
