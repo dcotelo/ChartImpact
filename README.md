@@ -36,6 +36,7 @@ ChartImpact provides visibility into Helm chart changes, helping teams understan
 
 - [Mission](#-mission)
 - [Current Features](#-current-features)
+- [Impact Measurement](#-impact-measurement)
 - [Roadmap](#-roadmap)
 - [Architecture](#-architecture)
 - [Getting Started](#-getting-started)
@@ -47,6 +48,41 @@ ChartImpact provides visibility into Helm chart changes, helping teams understan
 - [License](#-license)
 
 
+
+## 📊 Impact Measurement
+
+ChartImpact uses a sophisticated **risk assessment system** to analyze Helm chart changes and categorize their potential impact. The system automatically detects changes affecting **availability** and **security**, presenting them as contextual risk signals with clear explanations.
+
+### Risk Categories
+
+- **🟢 Availability Impact** - Changes affecting uptime, redundancy, or operational stability
+  - Monitored resources: Deployments, StatefulSets, DaemonSets, Services
+  - Key signals: Replica count changes, service port changes, resource limits, update strategies
+
+- **🔐 Security Impact** - Changes affecting access control, network security, or security posture
+  - Monitored resources: NetworkPolicies, ServiceAccounts, RBAC resources, Secrets
+  - Key signals: RBAC permission changes, network policy modifications, security context changes
+
+- **📝 Other Changes** - Configuration changes that may still be significant
+  - Examples: Container images, ConfigMaps, labels, environment variables
+
+### Risk Levels
+
+Each change is assigned a risk level:
+- **High Risk (🔴)** - Significant potential to disrupt service or compromise security
+- **Medium Risk (🟡)** - Requires attention but less likely to cause immediate issues
+- **Low Risk (🟢)** - Minor changes unlikely to cause operational issues
+
+### Decision Support, Not Enforcement
+
+ChartImpact provides **clarity and visibility** without imposing judgment:
+- ✅ Surfaces what's changing and why it matters
+- ✅ Enables informed team decisions
+- ✅ Supports collaboration through shareable results
+- ❌ Does NOT block deployments or enforce policies
+- ❌ Does NOT judge changes as "good" or "bad"
+
+**📖 For detailed information**, see [Impact Measurement Methodology](docs/IMPACT_MEASUREMENT.md)
 
 ## 🗺️ Roadmap
 
