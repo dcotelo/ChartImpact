@@ -24,7 +24,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server ./cmd/server
 
 # Stage 2: Build the runtime image
-FROM alpine:3.19
+FROM alpine:3.23.2
 
 # Install runtime dependencies: Helm, Git, and CA certificates
 # The internal diff engine is used by default (no external diff tools required)
