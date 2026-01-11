@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.4](https://github.com/dcotelo/ChartImpact/compare/v1.5.3...v1.5.4) (2026-01-11)
+
+
+### Bug Fixes
+
+* backend/Dockerfile to reduce vulnerabilities ([#95](https://github.com/dcotelo/ChartImpact/issues/95)) ([399e6c9](https://github.com/dcotelo/ChartImpact/commit/399e6c9f8e57e25cfb23957a5d593af5c4cbe90b))
+
 ## [1.5.3](https://github.com/dcotelo/ChartImpact/compare/v1.5.2...v1.5.3) (2026-01-02)
 
 
