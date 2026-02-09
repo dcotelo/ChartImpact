@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint \"**/*.{js,jsx,ts,tsx}\"",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -18,7 +18,7 @@
     "test:all": "npm test && npm run test:e2e"
   },
   "dependencies": {
-    "next": "^15.5.10",
+    "next": "^16.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-syntax-highlighter": "^16.1.0"
@@ -41,7 +41,7 @@
     "typescript": "^5.3.3"
   },
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=20.9.0",
     "npm": ">=9.0.0"
   },
   "keywords": [

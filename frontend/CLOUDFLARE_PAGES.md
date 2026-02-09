@@ -8,7 +8,7 @@
 - **Build command**: `npm run build`
 - **Build output directory**: `.next`
 - **Root directory**: `frontend`
-- **Node.js version**: 18 (specified in `.node-version`)
+- **Node.js version**: 20 (specified in `.node-version`)
 
 ### Environment Variables
 
