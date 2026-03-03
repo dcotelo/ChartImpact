@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CompareRequest, CompareResponse, ImpactSummary } from '@/lib/types';
 import { API_ENDPOINTS } from '@/lib/api-config';
@@ -24,6 +24,9 @@ function AnalysisContent() {
   const [progressMessage, setProgressMessage] = useState<string>('Initializing...');
   const [progressStep, setProgressStep] = useState<number>(0);
   const [progressTotal] = useState<number>(7);
+  const [contextExpanded, setContextExpanded] = useState(false);
+  const [selectedResource, setSelectedResource] = useState<string | null>(null);
+  const explorerRef = useRef<HTMLDivElement>(null);
 
   // Auto-execute comparison on mount with progress tracking
   useEffect(() => {
@@ -154,6 +157,14 @@ function AnalysisContent() {
 
   const handleNewComparison = () => {
     router.push('/');
+  };
+
+  const handleSelectResourceFromSummary = (resourceId: string) => {
+    setSelectedResource(resourceId);
+    // Small delay so the state propagates before scrolling
+    setTimeout(() => {
+      explorerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   };
 
   // Helper to extract org/repo from URL
@@ -372,154 +383,160 @@ function AnalysisContent() {
           </div>
         )}
 
-        {/* Analysis Context Section */}
+        {/* Analysis Context Section — collapsible, collapsed by default */}
         {params && (
           <div style={{
             background: 'white',
             borderRadius: BORDER_RADIUS.xl,
-            padding: SPACING.xl,
             boxShadow: SHADOWS.md,
             border: '1px solid #e5e7eb',
             marginBottom: SPACING.xl,
+            overflow: 'hidden',
           }}>
-            <h2 style={{
-              fontSize: '18px',
-              fontWeight: 600,
-              color: '#1f2937',
-              marginBottom: SPACING.lg,
-              letterSpacing: '-0.01em',
-            }}>
-              Analysis Context
-            </h2>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: SPACING.lg,
-            }}>
-              {/* Repository */}
-              <div>
-                <div style={{
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: '#6b7280',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  marginBottom: SPACING.xs,
-                }}>
-                  Repository
+            {/* Collapsible header */}
+            <button
+              onClick={() => setContextExpanded(prev => !prev)}
+              style={{
+                width: '100%',
+                padding: `${SPACING.md} ${SPACING.xl}`,
+                background: 'none',
+                border: 'none',
+                borderBottom: contextExpanded ? '1px solid #e5e7eb' : 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                textAlign: 'left',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.md, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: '#6b7280' }}>
+                  Analysis Context
+                </span>
+                {!contextExpanded && (
+                  <span style={{ fontSize: '13px', color: '#374151', display: 'flex', alignItems: 'center', gap: SPACING.sm, flexWrap: 'wrap' }}>
+                    <span style={{ color: '#9ca3af' }}>{params.repository ? getRepoShortName(params.repository) : ''}</span>
+                    <span style={{ color: '#d1d5db' }}>·</span>
+                    <span style={{ fontFamily: 'monospace', color: '#6b7280' }}>{params.chartPath}</span>
+                    <span style={{ color: '#d1d5db' }}>·</span>
+                    <span style={{
+                      background: '#fef3c7', color: '#92400e',
+                      padding: '1px 6px', borderRadius: BORDER_RADIUS.sm,
+                      fontFamily: 'monospace', fontSize: '12px',
+                    }}>{params.version1}</span>
+                    <span style={{ color: '#9ca3af' }}>→</span>
+                    <span style={{
+                      background: '#dbeafe', color: '#1e40af',
+                      padding: '1px 6px', borderRadius: BORDER_RADIUS.sm,
+                      fontFamily: 'monospace', fontSize: '12px',
+                    }}>{params.version2}</span>
+                  </span>
+                )}
+              </div>
+              <span style={{ fontSize: '12px', color: '#9ca3af', flexShrink: 0 }}>
+                {contextExpanded ? '▲ Hide' : '▼ Show'}
+              </span>
+            </button>
+
+            {/* Expanded content */}
+            {contextExpanded && (
+              <div style={{
+                padding: SPACING.xl,
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: SPACING.lg,
+              }}>
+                {/* Repository */}
+                <div>
+                  <div style={{
+                    fontSize: '12px', fontWeight: 600, color: '#6b7280',
+                    textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: SPACING.xs,
+                  }}>
+                    Repository
+                  </div>
+                  <a
+                    href={params.repository || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontSize: '14px', color: BRAND_COLORS.primary,
+                      textDecoration: 'none', fontWeight: 500,
+                      display: 'flex', alignItems: 'center', gap: SPACING.xs,
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                    onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                  >
+                    {params.repository ? getRepoShortName(params.repository) : 'Unknown'}
+                    <span style={{ fontSize: '12px', opacity: 0.7 }}>↗</span>
+                  </a>
                 </div>
-                <a
-                  href={params.repository || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    fontSize: '14px',
-                    color: BRAND_COLORS.primary,
-                    textDecoration: 'none',
+
+                {/* Chart Path */}
+                <div>
+                  <div style={{
+                    fontSize: '12px', fontWeight: 600, color: '#6b7280',
+                    textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: SPACING.xs,
+                  }}>
+                    Chart Path
+                  </div>
+                  <div style={{
+                    fontSize: '14px', color: '#374151',
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
                     fontWeight: 500,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: SPACING.xs,
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
-                  onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
-                >
-                  {params.repository ? getRepoShortName(params.repository) : 'Unknown'}
-                  <span style={{ fontSize: '12px', opacity: 0.7 }}>↗</span>
-                </a>
-              </div>
-
-              {/* Chart Path */}
-              <div>
-                <div style={{
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: '#6b7280',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  marginBottom: SPACING.xs,
-                }}>
-                  Chart Path
-                </div>
-                <div style={{
-                  fontSize: '14px',
-                  color: '#374151',
-                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                  fontWeight: 500,
-                }}>
-                  {params.chartPath}
-                </div>
-              </div>
-
-              {/* Version Comparison */}
-              <div>
-                <div style={{
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: '#6b7280',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  marginBottom: SPACING.xs,
-                }}>
-                  Version Comparison
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: SPACING.sm,
-                  fontSize: '14px',
-                }}>
-                  <span style={{
-                    background: '#fef3c7',
-                    color: '#92400e',
-                    padding: '4px 10px',
-                    borderRadius: BORDER_RADIUS.sm,
-                    fontWeight: 600,
-                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                    fontSize: '13px',
                   }}>
-                    {params.version1}
-                  </span>
-                  <span style={{ color: '#9ca3af', fontWeight: 500 }}>→</span>
-                  <span style={{
-                    background: '#dbeafe',
-                    color: '#1e40af',
-                    padding: '4px 10px',
-                    borderRadius: BORDER_RADIUS.sm,
-                    fontWeight: 600,
-                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                    fontSize: '13px',
-                  }}>
-                    {params.version2}
-                  </span>
+                    {params.chartPath}
+                  </div>
                 </div>
-              </div>
 
-              {/* Inputs */}
-              <div>
-                <div style={{
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: '#6b7280',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  marginBottom: SPACING.xs,
-                }}>
-                  Configuration
+                {/* Version Comparison */}
+                <div>
+                  <div style={{
+                    fontSize: '12px', fontWeight: 600, color: '#6b7280',
+                    textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: SPACING.xs,
+                  }}>
+                    Version Comparison
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.sm, fontSize: '14px' }}>
+                    <span style={{
+                      background: '#fef3c7', color: '#92400e',
+                      padding: '4px 10px', borderRadius: BORDER_RADIUS.sm,
+                      fontWeight: 600,
+                      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                      fontSize: '13px',
+                    }}>
+                      {params.version1}
+                    </span>
+                    <span style={{ color: '#9ca3af', fontWeight: 500 }}>→</span>
+                    <span style={{
+                      background: '#dbeafe', color: '#1e40af',
+                      padding: '4px 10px', borderRadius: BORDER_RADIUS.sm,
+                      fontWeight: 600,
+                      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                      fontSize: '13px',
+                    }}>
+                      {params.version2}
+                    </span>
+                  </div>
                 </div>
-                <div style={{
-                  fontSize: '14px',
-                  color: '#374151',
-                  fontWeight: 500,
-                }}>
-                  {params.valuesFile ? (
-                    <span>{params.valuesFile}</span>
-                  ) : (
-                    <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Defaults only</span>
-                  )}
+
+                {/* Configuration */}
+                <div>
+                  <div style={{
+                    fontSize: '12px', fontWeight: 600, color: '#6b7280',
+                    textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: SPACING.xs,
+                  }}>
+                    Configuration
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#374151', fontWeight: 500 }}>
+                    {params.valuesFile ? (
+                      <span>{params.valuesFile}</span>
+                    ) : (
+                      <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Defaults only</span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -529,21 +546,26 @@ function AnalysisContent() {
             {/* Summary Section */}
             {summary && (
               <div style={{ marginBottom: SPACING.xl }}>
-                <ImpactSummaryComponent 
+                <ImpactSummaryComponent
                   summary={summary}
+                  onSelectResource={handleSelectResourceFromSummary}
                 />
               </div>
             )}
 
             {/* Detailed Explorer Section */}
-            <div style={{
-              background: 'white',
-              borderRadius: BORDER_RADIUS.xl,
-              boxShadow: SHADOWS.md,
-              border: '1px solid #e5e7eb',
-              overflow: 'hidden',
-            }}>
-              <DiffExplorer result={result} />
+            <div
+              ref={explorerRef}
+              style={{
+                background: 'white',
+                borderRadius: BORDER_RADIUS.xl,
+                boxShadow: SHADOWS.md,
+                border: '1px solid #e5e7eb',
+                overflow: 'hidden',
+                scrollMarginTop: SPACING.lg,
+              }}
+            >
+              <DiffExplorer result={result} selectedResource={selectedResource} />
             </div>
           </>
         )}

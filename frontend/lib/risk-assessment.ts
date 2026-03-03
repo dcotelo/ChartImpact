@@ -347,3 +347,109 @@ function analyzeChange(resourceName: string, kind: string, change: ChangeV2): Ri
 
   return null;
 }
+
+/**
+ * Generate a plain-language impact statement from a summary.
+ * e.g. "2 workloads will restart and 1 service port will change."
+ */
+export function generateImpactStatement(summary: ImpactSummary): string | null {
+  if (summary.verdict === 'no-changes') return null;
+
+  const all = [...summary.availabilityImpact, ...summary.securityImpact, ...summary.otherChanges];
+
+  const imageRestarts = new Set<string>();
+  let scaleDown = 0;
+  let scaleUp = 0;
+  let portChanges = 0;
+  let serviceTypeChanges = 0;
+  let rbacChanges = 0;
+  let networkPolicyChanges = 0;
+  let workloadsRemoved = 0;
+  let workloadsAdded = 0;
+  let resourceLimitChanges = 0;
+
+  for (const signal of all) {
+    switch (signal.title) {
+      case 'Container image changed':
+        imageRestarts.add(signal.resource);
+        break;
+      case 'Replica count decreased':
+        scaleDown++;
+        break;
+      case 'Replica count increased':
+        scaleUp++;
+        break;
+      case 'Service port changed':
+        portChanges++;
+        break;
+      case 'Service type changed':
+        serviceTypeChanges++;
+        break;
+      case 'Network policy modified':
+        networkPolicyChanges++;
+        break;
+      case 'RBAC permissions changed':
+        rbacChanges++;
+        break;
+      case 'Resource requirements changed':
+        resourceLimitChanges++;
+        break;
+    }
+    if (signal.title.endsWith(' removed') && AVAILABILITY_CRITICAL_KINDS.includes(signal.kind)) {
+      workloadsRemoved++;
+    }
+    if (signal.title.endsWith(' added') && AVAILABILITY_CRITICAL_KINDS.includes(signal.kind)) {
+      workloadsAdded++;
+    }
+  }
+
+  const parts: string[] = [];
+
+  const restartCount = imageRestarts.size;
+  if (restartCount > 0) {
+    parts.push(`${restartCount} workload${restartCount > 1 ? 's' : ''} will restart`);
+  }
+  if (workloadsRemoved > 0) {
+    parts.push(`${workloadsRemoved} workload${workloadsRemoved > 1 ? 's' : ''} will be deleted`);
+  }
+  if (workloadsAdded > 0) {
+    parts.push(`${workloadsAdded} workload${workloadsAdded > 1 ? 's' : ''} will be added`);
+  }
+  if (scaleDown > 0) {
+    parts.push(`${scaleDown} workload${scaleDown > 1 ? 's' : ''} will scale down`);
+  }
+  if (scaleUp > 0) {
+    parts.push(`${scaleUp} workload${scaleUp > 1 ? 's' : ''} will scale up`);
+  }
+  if (portChanges > 0) {
+    parts.push(`${portChanges} service port${portChanges > 1 ? 's' : ''} will change`);
+  }
+  if (serviceTypeChanges > 0) {
+    parts.push(`${serviceTypeChanges} service type${serviceTypeChanges > 1 ? 's' : ''} will change`);
+  }
+  if (rbacChanges > 0) {
+    parts.push(`${rbacChanges} RBAC permission${rbacChanges > 1 ? 's' : ''} will be modified`);
+  }
+  if (networkPolicyChanges > 0) {
+    parts.push(`${networkPolicyChanges} network polic${networkPolicyChanges > 1 ? 'ies' : 'y'} will change`);
+  }
+  if (resourceLimitChanges > 0 && parts.length === 0) {
+    parts.push(`${resourceLimitChanges} resource limit${resourceLimitChanges > 1 ? 's' : ''} will change`);
+  }
+
+  if (parts.length === 0) {
+    if (summary.verdict === 'low-risk') {
+      return `${summary.totalChangedResources} resource${summary.totalChangedResources !== 1 ? 's' : ''} changed — no significant availability or security impact detected.`;
+    }
+    return null;
+  }
+
+  if (parts.length === 1) return cap(parts[0]) + '.';
+  if (parts.length === 2) return `${cap(parts[0])} and ${parts[1]}.`;
+  const last = parts[parts.length - 1];
+  return `${cap(parts[0])}, ${parts.slice(1, -1).join(', ')}, and ${last}.`;
+}
+
+function cap(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
