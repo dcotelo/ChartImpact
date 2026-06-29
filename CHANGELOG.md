@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/dcotelo/ChartImpact/compare/v1.5.5...v1.6.0) (2026-06-29)
+
+
+### Features
+
+* link impact summary signals to explorer with smooth scroll ([#108](https://github.com/dcotelo/ChartImpact/issues/108)) ([bd76f09](https://github.com/dcotelo/ChartImpact/commit/bd76f096c68ff7f889b8e719a06ccd67e17e2616))
+
 ## [1.5.5](https://github.com/dcotelo/ChartImpact/compare/v1.5.4...v1.5.5) (2026-02-09)
 
 
