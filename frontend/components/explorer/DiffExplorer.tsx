@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { CompareResponse, DiffResultV2 } from '@/lib/types';
 import { ResourceList } from './ResourceList';
 import { ViewPanel } from './ViewPanel';
@@ -13,11 +13,19 @@ import { COLORS } from './utils';
 interface DiffExplorerProps {
   result: CompareResponse;
   diffData?: DiffResultV2;
+  selectedResource?: string | null;
 }
 
-export function DiffExplorer({ result, diffData }: DiffExplorerProps) {
+export function DiffExplorer({ result, diffData, selectedResource: externalSelectedResource }: DiffExplorerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedResource, setSelectedResource] = useState<string | null>(null);
+
+  // Sync with external selection (from ImpactSummary)
+  useEffect(() => {
+    if (externalSelectedResource !== undefined && externalSelectedResource !== null) {
+      setSelectedResource(externalSelectedResource);
+    }
+  }, [externalSelectedResource]);
   const [viewMode, setViewMode] = useState<'tree' | 'table' | 'sidebyside'>('tree');
   const [filters, setFilters] = useState({
     changeType: [] as string[],
