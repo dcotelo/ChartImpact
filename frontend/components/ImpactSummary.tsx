@@ -11,21 +11,24 @@
 
 import { useState } from 'react';
 import { ImpactSummary, RiskSignal } from '@/lib/types';
-import { 
-  SPACING, 
-  SEMANTIC_COLORS, 
-  BORDER_RADIUS, 
-  getRiskColors, 
+import {
+  SPACING,
+  SEMANTIC_COLORS,
+  BORDER_RADIUS,
+  getRiskColors,
   getRiskLabel,
-  FONT_WEIGHTS 
+  FONT_WEIGHTS
 } from '@/lib/design-tokens';
+import { generateImpactStatement } from '@/lib/risk-assessment';
 
 interface ImpactSummaryProps {
   summary: ImpactSummary;
   onViewExplorer?: () => void;
+  onSelectResource?: (resourceId: string) => void;
 }
 
-export function ImpactSummaryComponent({ summary, onViewExplorer }: ImpactSummaryProps) {
+export function ImpactSummaryComponent({ summary, onViewExplorer, onSelectResource }: ImpactSummaryProps) {
+  const impactStatement = generateImpactStatement(summary);
 
   // Verdict styling
   const verdictConfig = {
@@ -77,25 +80,38 @@ export function ImpactSummaryComponent({ summary, onViewExplorer }: ImpactSummar
       }}>
         <div style={{
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           gap: SPACING.md,
           marginBottom: SPACING.sm,
         }}>
-          <span style={{ fontSize: '2rem' }}>{verdict.icon}</span>
-          <div>
+          <span style={{ fontSize: '2.25rem', lineHeight: 1, paddingTop: '2px' }}>{verdict.icon}</span>
+          <div style={{ flex: 1 }}>
             <h2 style={{
               margin: 0,
-              fontSize: '1.5rem',
+              fontSize: '1.75rem',
               color: verdict.color,
               fontWeight: FONT_WEIGHTS.bold,
+              letterSpacing: '-0.02em',
             }}>
               {verdict.message}
             </h2>
+            {impactStatement && (
+              <p style={{
+                margin: 0,
+                marginTop: SPACING.sm,
+                color: SEMANTIC_COLORS.textPrimary,
+                fontSize: '1.05rem',
+                fontWeight: FONT_WEIGHTS.medium,
+                lineHeight: '1.5',
+              }}>
+                {impactStatement}
+              </p>
+            )}
             <p style={{
               margin: 0,
-              marginTop: SPACING.xs,
+              marginTop: impactStatement ? SPACING.xs : SPACING.xs,
               color: SEMANTIC_COLORS.textSecondary,
-              fontSize: '0.95rem',
+              fontSize: '0.9rem',
             }}>
               {verdict.description}
             </p>
@@ -139,6 +155,7 @@ export function ImpactSummaryComponent({ summary, onViewExplorer }: ImpactSummar
           title="⚡ Availability Impact"
           signals={summary.availabilityImpact}
           defaultExpanded={true}
+          onSelectResource={onSelectResource}
         />
       )}
 
@@ -148,6 +165,7 @@ export function ImpactSummaryComponent({ summary, onViewExplorer }: ImpactSummar
           title="🔐 Security Impact"
           signals={summary.securityImpact}
           defaultExpanded={true}
+          onSelectResource={onSelectResource}
         />
       )}
 
@@ -157,6 +175,7 @@ export function ImpactSummaryComponent({ summary, onViewExplorer }: ImpactSummar
           title="📝 Other Changes"
           signals={summary.otherChanges}
           defaultExpanded={false}
+          onSelectResource={onSelectResource}
         />
       )}
 
@@ -188,9 +207,10 @@ interface SectionProps {
   title: string;
   signals: RiskSignal[];
   defaultExpanded: boolean;
+  onSelectResource?: (resourceId: string) => void;
 }
 
-function Section({ title, signals, defaultExpanded }: SectionProps) {
+function Section({ title, signals, defaultExpanded, onSelectResource }: SectionProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   return (
@@ -225,7 +245,7 @@ function Section({ title, signals, defaultExpanded }: SectionProps) {
       {expanded && (
         <div style={{ padding: SPACING.md }}>
           {signals.map((signal, index) => (
-            <RiskSignalCard key={index} signal={signal} />
+            <RiskSignalCard key={index} signal={signal} onSelectResource={onSelectResource} />
           ))}
         </div>
       )}
@@ -235,19 +255,29 @@ function Section({ title, signals, defaultExpanded }: SectionProps) {
 
 interface RiskSignalCardProps {
   signal: RiskSignal;
+  onSelectResource?: (resourceId: string) => void;
 }
 
-function RiskSignalCard({ signal }: RiskSignalCardProps) {
+function RiskSignalCard({ signal, onSelectResource }: RiskSignalCardProps) {
   const riskColors = getRiskColors(signal.level);
+  const [hovered, setHovered] = useState(false);
+  const isClickable = !!onSelectResource;
 
   return (
-    <div style={{
-      marginBottom: SPACING.md,
-      padding: SPACING.md,
-      background: riskColors.bg,
-      border: `1px solid ${riskColors.border}`,
-      borderRadius: BORDER_RADIUS.sm,
-    }}>
+    <div
+      onClick={isClickable ? () => onSelectResource(signal.resource) : undefined}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        marginBottom: SPACING.md,
+        padding: SPACING.md,
+        background: hovered && isClickable ? riskColors.border : riskColors.bg,
+        border: `1px solid ${hovered && isClickable ? riskColors.text : riskColors.border}`,
+        borderRadius: BORDER_RADIUS.sm,
+        cursor: isClickable ? 'pointer' : 'default',
+        transition: 'background 0.15s, border-color 0.15s',
+      }}
+    >
       <div style={{
         display: 'flex',
         alignItems: 'flex-start',
@@ -270,17 +300,30 @@ function RiskSignalCard({ signal }: RiskSignalCardProps) {
             }}>
               {signal.resource}
             </h4>
-            <span style={{
-              padding: `2px ${SPACING.sm}`,
-              background: riskColors.text,
-              color: 'white',
-              borderRadius: BORDER_RADIUS.sm,
-              fontSize: '0.75rem',
-              fontWeight: FONT_WEIGHTS.semibold,
-              textTransform: 'uppercase',
-            }}>
-              {getRiskLabel(signal.level)}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.sm }}>
+              {isClickable && hovered && (
+                <span style={{
+                  fontSize: '0.75rem',
+                  color: riskColors.text,
+                  fontWeight: FONT_WEIGHTS.medium,
+                  whiteSpace: 'nowrap',
+                }}>
+                  ↓ View in explorer
+                </span>
+              )}
+              <span style={{
+                padding: `2px ${SPACING.sm}`,
+                background: riskColors.text,
+                color: 'white',
+                borderRadius: BORDER_RADIUS.sm,
+                fontSize: '0.75rem',
+                fontWeight: FONT_WEIGHTS.semibold,
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
+              }}>
+                {getRiskLabel(signal.level)}
+              </span>
+            </div>
           </div>
           <p style={{
             margin: 0,
